@@ -26,6 +26,7 @@ then
         ${SUDO} -E php /var/www/html/occ log:file --file ${NEXTCLOUD_LOG_PATH}
         mv ${CURRENT_LOG_PATH} ${NEXTCLOUD_LOG_PATH}
     fi
+    ${SUDO} -E php /var/www/html/occ config:system:set skeletondirectory --value=''
 
     create_mount_point
 
