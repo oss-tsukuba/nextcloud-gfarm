@@ -11,6 +11,7 @@ ENV NEXTCLOUD_UPDATE=1
 ENV NEXTCLOUD_LOG_PATH=/var/log/nextcloud.log
 ENV GFARM_USER=user1
 ENV GFARM_DATA_PATH=/home/user1/nextcloud-data
+ENV GFARM_BACKUP_PATH=/home/user1/nextcloud-backup
 
 ARG GFARM_SRC_URL
 ARG GFARM2FS_SRC_URL
@@ -56,6 +57,8 @@ WORKDIR /
 COPY config.sh /
 COPY docker_entrypoint.sh /
 COPY post_process.sh /
+COPY backup.sh /
+COPY restore.sh /
 
 ENTRYPOINT ["/docker_entrypoint.sh"]
 CMD ["/entrypoint.sh", "/post_process.sh", "apache2-foreground"]

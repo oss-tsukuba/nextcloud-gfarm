@@ -16,7 +16,7 @@ function move_existing_files() {
     rm -r ${TMP_DATA_DIR}
 }
 
-if [ ! -f ${POST_FLAG_PATH} -a ! -f ${VOLUME_REUSE_FLAG_PATH} ];
+if [ ! -f ${POST_FLAG_PATH} -a ! -f ${RESTORE_FLAG_PATH} -a ! -f ${VOLUME_REUSE_FLAG_PATH} ];
 then
     ${SUDO} -E php /var/www/html/occ maintenance:mode --on
 

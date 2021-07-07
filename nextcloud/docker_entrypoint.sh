@@ -29,8 +29,14 @@ then
 fi
 
 FILE_NUM=`ls -1a --ignore=. --ignore=.. /var/www/html | wc -l `
-if [ ${FILE_NUM} -ne 0 ];
+if [ ${FILE_NUM} -eq 0 ];
 then
+    ${SUDO} gfls ${GFARM_BACKUP_PATH}
+    if [ ${?} -eq 0 ];
+    then
+        /restore.sh
+    fi
+else
     touch ${VOLUME_REUSE_FLAG_PATH}
 fi
 
