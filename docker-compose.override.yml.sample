@@ -15,3 +15,51 @@ services:
   mariadb:
     env_file:
       - ./mariadb.env
+
+# Configure proxy, letsencrypt-companion, omgwtfssl containers
+# according to a Nextcloud docker compose example below.
+#
+#     https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/with-nginx-proxy/mariadb/apache/docker-compose.yml
+####
+#
+#  proxy:
+#    build: ./proxy
+#    ports:
+#      - 80:80
+#      - 443:443
+#    volumes:
+#      - certs:/etc/nginx/certs:ro
+#      - vhost.d:/etc/nginx/vhost.d
+#      - html:/usr/share/nginx/html
+#      - /var/run/docker.sock:/tmp/docker.sock:ro
+#    networks:
+#      - default
+#
+#  letsencrypt-companion:
+#    image: jrcs/letsencrypt-nginx-proxy-companion
+#    volumes:
+#      - certs:/etc/nginx/certs
+#      - vhost.d:/etc/nginx/vhost.d
+#      - html:/usr/share/nginx/html
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#    networks:
+#      - default
+#    depends_on:
+#      - proxy
+#
+#  omgwtfssl:
+#    image: paulczar/omgwtfssl
+#    environment:
+#      - SSL_SUBJECT=servhostname.local
+#      - CA_SUBJECT=my@example.com
+#      - SSL_KEY=/certs/servhostname.local.key
+#      - SSL_CSR=/certs/servhostname.local.csr
+#      - SSL_CERT=/certs/servhostname.local.crt
+#      - SSL_DNS=servhostname.local
+#    volumes:
+#      - certs:/certs
+#
+#volumes:
+#  certs:
+#  vhost.d:
+#  html:

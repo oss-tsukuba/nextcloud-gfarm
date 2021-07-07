@@ -193,6 +193,27 @@ Gfarm 対応 Nextcloud コンテナはシステム全体のバックアップを
 ただ、バックアップ以降に Nextcloud システムの操作を行っていた場合、ファイルそのものに対する変更は保持されますが、Nextcloud の設定やメタデータ(バージョン履歴など)は復元されない場合があります。
 
 
+# HTTPS 対応
+
+HTTPS アクセスに対応する方法は Nextcloud の下記ドキュメントを参照してください。
+
+- https://github.com/nextcloud/docker/tree/master#https---ssl-encryption
+- https://github.com/nextcloud/docker/tree/master/.examples
+
+例として以下のような方法があります。
+
+- acme-companion + nginx-proxy
+    - Automated Certificate Management Environment(ACME) プロトコルにより Let's Encrypt 等の認証局で自動的に証明書の発行と取得を行います。ACME は認証局がそのドメインの Web サーバ、DNS サーバ、メールアドレスのいずれかにアクセスすることでドメインを保持していることを確認します。そのため、この方法はグローバルアクセス可能なドメインを保持している場合に利用できます。
+- omgwtfssl + nginx-proxy
+    - omgwtfssl コンテナ内で認証局を構築し、その認証局で自己署名証明書を発行します。グローバルアクセス可能なドメインを保持していない場合、手早く HTTPS 対応したい場合に利用できます。
+    - Web ブラウザを利用するホストに omgwtfssl コンテナ内で作成した認証局の証明書をインポートしてください。インポート手順は利用する OS のドキュメントを参照してください。
+- 既存 Web サーバのリーバスプロキシ化
+    - 稼働中の Web サーバでリバースプロキシの設定を行い、Nextcloud コンテナへ転送します。
+    - Web サーバのリバースプロキシ機能の有無、設定方法については利用中の Web サーバのドキュメントを参照してください。
+
+リバースプロキシ経由でアクセスするため、nextcloud.env に環境変数 NEXTCLOUD_TRUSTED_DOMAINS を設定してください。
+
+
 # Nextcloud のアップデート
 
 Nextcloud のバージョンをアップデートしたい場合は下記の手順を実施してください。
