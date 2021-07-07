@@ -104,9 +104,21 @@ nextcloud.env は Gfarm 対応 Nextcloud で利用する環境変数の設定フ
 - GFARM_BACKUP_PATH
     - Nextcloud がシステムのバックアップを保存する際に使用する Gfarm 上のディレクトリです。GFARM_USER で指定したユーザでアクセス可能な Gfarm 上のディレクトリを指定してください。また Gfarm 上のそのパスにディレクトリを作成しておいてください。
     - 初期値は /home/user1/nextcloud-backup です。
+- GFARM_ATTR_CACHE_TIMEOUT
+    - Nextcloud から Gfarm を使用する際のファイル・ディレクトリ属性のキャッシュ有効時間です。
+    - 初期値は 180 秒です。
 - TZ
     - コンテナ内で使用するタイムゾーンを指定してください。
     - 初期値は Asia/Tokyo です。
+- FUSE_ENTRY_TIMEOUT
+    - Nextcloud から gfarm2fs を使用する際のディレクトリエントリのキャッシュ有効時間です。
+    - 初期値は 180 秒です。
+- FUSE_NEGATIVE_TIMEOUT
+    - Nextcloud から gfarm2fs を使用する際のディレクトリエントリのネガティブキャッシュ有効時間です。
+    - 初期値は 5 秒です。
+- FUSE_ATTR_TIMEOUT
+    - Nextcloud から gfarm2fs を使用する際のファイル・ディレクトリ属性のキャッシュ有効時間です。
+    - 初期値は 180 秒です。
 
 
 以下は通常変更不要な項目です。

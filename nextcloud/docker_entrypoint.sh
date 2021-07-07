@@ -19,6 +19,13 @@ then
     cp /gfarm2.conf /usr/local/etc
     echo "" >> /usr/local/etc/gfarm2.conf
     echo "local_user_map /var/www/.gfarm_map" >> /usr/local/etc/gfarm2.conf
+    set +e
+    RESULT=`grep attr_cache_timeout /usr/local/etc/gfarm2.conf`
+    set -e
+    if [ ${RESULT:-1} -eq 1 ];
+    then
+        echo "attr_cache_timeout ${GFARM_ATTR_CACHE_TIMEOUT:-180}" >> /usr/local/etc/gfarm2.conf
+    fi
     chown ${NEXTCLOUD_USER}:root /usr/local/etc/gfarm2.conf
 
     ${SUDO} gfsudo gfchmod 770 ${GFARM_DATA_PATH}

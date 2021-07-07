@@ -4,7 +4,7 @@ NEXTCLOUD_USER=www-data
 SUDO="sudo -s -u ${NEXTCLOUD_USER}"
 DATA_DIR=${NEXTCLOUD_DATA_DIR:-/var/www/html/data}
 TMP_DATA_DIR="${DATA_DIR}.bak"
-MNT_OPT="-o modules=subdir,subdir=${GFARM_DATA_PATH:-/}"
+MNT_OPT="-o modules=subdir,subdir=${GFARM_DATA_PATH:-/},entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT}"
 
 SYSTEM_DIR=html
 SYSTEM_ARCH=${SYSTEM_DIR}.tar.gz
