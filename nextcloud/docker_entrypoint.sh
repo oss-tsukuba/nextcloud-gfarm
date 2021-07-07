@@ -23,6 +23,9 @@ then
 
     ${SUDO} gfsudo gfchmod 770 ${GFARM_DATA_PATH}
 
+    mkdir -p /var/spool/cron/crontabs
+    echo "${NEXTCLOUD_BACKUP_TIME:-0 3 * * *} /backup.sh" >> /var/spool/cron/crontabs/${NEXTCLOUD_USER}
+
     mkdir -p ${NEXTCLOUD_SPOOL_PATH}
     chown ${NEXTCLOUD_USER}:root ${NEXTCLOUD_SPOOL_PATH}
     touch ${INIT_FLAG_PATH}

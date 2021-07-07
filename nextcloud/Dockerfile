@@ -9,9 +9,11 @@ ENV NEXTCLOUD_ADMIN_USER=admin
 ENV NEXTCLOUD_ADMIN_PASSWORD_FILE=/run/secrets/admin_password
 ENV NEXTCLOUD_UPDATE=1
 ENV NEXTCLOUD_LOG_PATH=/var/log/nextcloud.log
+ENV NEXTCLOUD_BACKUP_TIME='0 3 * * *'
 ENV GFARM_USER=user1
 ENV GFARM_DATA_PATH=/home/user1/nextcloud-data
 ENV GFARM_BACKUP_PATH=/home/user1/nextcloud-backup
+ENV TZ=Asia/Tokyo
 
 ARG GFARM_SRC_URL
 ARG GFARM2FS_SRC_URL
@@ -30,6 +32,7 @@ RUN apt-get update && apt-get install -y \
  fuse \
  mariadb-client \
  unzip \
+ supervisor \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -53,12 +56,16 @@ RUN ARCH=`ls -1 | grep gfarm2fs | grep zip` && \
 RUN ldconfig
 
 WORKDIR /
+RUN mkdir -p /var/spool/cron/crontabs
+COPY crontab.tmpl /var/spool/cron/crontabs/www-data
 
 COPY config.sh /
 COPY docker_entrypoint.sh /
 COPY post_process.sh /
 COPY backup.sh /
 COPY restore.sh /
+COPY supervisord.conf /
+COPY do_cron.sh /
 
 ENTRYPOINT ["/docker_entrypoint.sh"]
-CMD ["/entrypoint.sh", "/post_process.sh", "apache2-foreground"]
+CMD ["/entrypoint.sh", "/post_process.sh", "supervisord", "-c", "/supervisord.conf"]
