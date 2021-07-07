@@ -5,14 +5,8 @@ services:
     hostname: nextcloud
     networks:
       - default
-    env_file:
-      - ./nextcloud.env
     build:
       context: ./nextcloud
-      args:
-        NEXTCLOUD_VERSION: 21
-        GFARM_SRC_URL: https://github.com/oss-tsukuba/gfarm/archive/refs/tags/2.7.19.zip
-        GFARM2FS_SRC_URL: https://github.com/oss-tsukuba/gfarm2fs/archive/refs/tags/1.2.15.zip
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - ./gfarm2rc:/gfarm2rc:ro

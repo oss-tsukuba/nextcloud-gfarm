@@ -5,3 +5,4 @@ admin_password
 db_password
 nextcloud.env
 mariadb.env
+docker-compose.override.yml
