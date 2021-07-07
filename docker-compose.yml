@@ -1,0 +1,69 @@
+version: '3.4'
+
+services:
+  nextcloud:
+    hostname: nextcloud
+    networks:
+      - default
+    env_file:
+      - ./nextcloud.env
+    build:
+      context: ./nextcloud
+      args:
+        NEXTCLOUD_VERSION: 21
+        GFARM_SRC_URL: https://github.com/oss-tsukuba/gfarm/archive/refs/tags/2.7.19.zip
+        GFARM2FS_SRC_URL: https://github.com/oss-tsukuba/gfarm2fs/archive/refs/tags/1.2.15.zip
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - ./gfarm2rc:/gfarm2rc:ro
+      - ./gfarm_shared_key:/gfarm_shared_key:ro
+      - ./gfarm2.conf:/gfarm2.conf:ro
+      - nextcloud:/var/www/html
+      - log:/var/log
+    depends_on: 
+      - mariadb
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    cap_add:
+      - SYS_ADMIN
+      - SYS_PTRACE
+    devices:
+      - /dev/fuse
+    privileged: false
+    secrets:
+      - admin_password
+      - db_password
+
+  mariadb:
+    hostname: mariadb
+    networks:
+      - default
+    environment:
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD_FILE=/run/secrets/db_password
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
+    image: mariadb
+    volumes:
+      - db:/var/lib/mysql
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    secrets:
+      - db_password
+
+secrets:
+  admin_password:
+    file: ./admin_password
+  db_password:
+    file: ./db_password
+
+volumes:
+  nextcloud:
+  log:
+  db:
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 192.168.224.0/24

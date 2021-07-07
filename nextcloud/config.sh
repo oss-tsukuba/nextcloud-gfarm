@@ -1,0 +1,12 @@
+#!/bin/bash
+
+NEXTCLOUD_USER=www-data
+SUDO="sudo -s -u ${NEXTCLOUD_USER}"
+DATA_DIR=${NEXTCLOUD_DATA_DIR:-/var/www/html/data}
+TMP_DATA_DIR="${DATA_DIR}.bak"
+MNT_OPT="-o modules=subdir,subdir=${GFARM_DATA_PATH:-/}"
+
+NEXTCLOUD_SPOOL_PATH=/var/spool/nextcloud
+INIT_FLAG_PATH=${NEXTCLOUD_SPOOL_PATH}/init
+VOLUME_REUSE_FLAG_PATH=${NEXTCLOUD_SPOOL_PATH}/reuse
+POST_FLAG_PATH=${NEXTCLOUD_SPOOL_PATH}/post

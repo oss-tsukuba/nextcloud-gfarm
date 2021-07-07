@@ -1,0 +1,7 @@
+gfarm2.conf
+gfarm2rc
+gfarm_shared_key
+admin_password
+db_password
+nextcloud.env
+mariadb.env
