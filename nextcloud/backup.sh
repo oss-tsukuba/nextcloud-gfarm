@@ -2,22 +2,34 @@
 
 set -eu
 
+source /config-env.sh
 source /config.sh
+
+# www-data only
+[ $(whoami) = "www-data" ] || exit 1
 
 if [ -f ${MYSQL_PASSWORD_FILE:-/} ];
 then
     PASSWORD=`cat ${MYSQL_PASSWORD_FILE}`
-else 
+else
     PASSWORD=${MYSQL_PASSWORD}
 fi
+
+TMPDIR=$(mktemp --directory)
+
+remove_tmpdir()
+{
+    rm -rf "${TMPDIR}"
+}
+
+trap remove_tmpdir EXIT
+
+cd ${TMPDIR}
 
 php /var/www/html/occ maintenance:mode --on
 fusermount -u ${DATA_DIR}
 
-cd /tmp
-rm -rf ${SYSTEM_ARCH} ${DB_ARCH} ${LOG_ARCH} ${DB_FILE} ${SYSTEM_DIR}
-
-cp -r /var/www/html .
+cp -pr /var/www/html ./${SYSTEM_DIR}
 tar czpf ${SYSTEM_ARCH} ${SYSTEM_DIR}
 
 mysqldump \
@@ -33,9 +45,13 @@ gfarm2fs ${MNT_OPT} ${DATA_DIR}
 php /var/www/html/occ maintenance:mode --off
 
 gfmkdir -p ${GFARM_BACKUP_PATH}
-gfreg ${SYSTEM_ARCH} ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}
-gfreg ${DB_ARCH} ${GFARM_BACKUP_PATH}/${DB_ARCH}
-gfreg ${LOG_ARCH} ${GFARM_BACKUP_PATH}/${LOG_ARCH}
-gfls -l ${GFARM_BACKUP_PATH}
 
-rm -rf ${SYSTEM_ARCH} ${DB_ARCH} ${LOG_ARCH} ${DB_FILE} ${SYSTEM_DIR}
+gfreg ${SYSTEM_ARCH} ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp
+gfreg ${DB_ARCH} ${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp
+gfreg ${LOG_ARCH} ${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp
+
+gfmv ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}
+gfmv ${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp ${GFARM_BACKUP_PATH}/${DB_ARCH}
+gfmv ${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp ${GFARM_BACKUP_PATH}/${LOG_ARCH}
+
+gfls -l ${GFARM_BACKUP_PATH}

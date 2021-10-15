@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -eu
+#set -x
 
 source /config.sh
 
@@ -12,29 +13,29 @@ function create_mount_point() {
 }
 
 function move_existing_files() {
-    ${SUDO} rsync -rlpt ${TMP_DATA_DIR}/ ${DATA_DIR}/
+    ${SUDO_USER} rsync -rlpt ${TMP_DATA_DIR}/ ${DATA_DIR}/
     rm -r ${TMP_DATA_DIR}
 }
 
 if [ ! -f ${POST_FLAG_PATH} -a ! -f ${RESTORE_FLAG_PATH} -a ! -f ${VOLUME_REUSE_FLAG_PATH} ];
 then
-    ${SUDO} -E php /var/www/html/occ maintenance:mode --on
+    ${SUDO_USER} -E php /var/www/html/occ maintenance:mode --on
 
-    CURRENT_LOG_PATH=`${SUDO} -E php /var/www/html/occ log:file | grep 'Log file:' | awk '{ print $3 }'`
+    CURRENT_LOG_PATH=`${SUDO_USER} -E php /var/www/html/occ log:file | grep 'Log file:' | awk '{ print $3 }'`
     if [ "${CURRENT_LOG_PATH}" != "${NEXTCLOUD_LOG_PATH}" ];
     then
-        ${SUDO} -E php /var/www/html/occ log:file --file ${NEXTCLOUD_LOG_PATH}
+        ${SUDO_USER} -E php /var/www/html/occ log:file --file ${NEXTCLOUD_LOG_PATH}
         mv ${CURRENT_LOG_PATH} ${NEXTCLOUD_LOG_PATH}
     fi
-    ${SUDO} -E php /var/www/html/occ config:system:set skeletondirectory --value=''
+    ${SUDO_USER} -E php /var/www/html/occ config:system:set skeletondirectory --value=''
 
     create_mount_point
 
-    ${SUDO} gfarm2fs ${MNT_OPT} ${DATA_DIR}
+    ${SUDO_USER} gfarm2fs ${MNT_OPT} ${DATA_DIR}
 
     move_existing_files
 
-    ${SUDO} -E php /var/www/html/occ maintenance:mode --off
+    ${SUDO_USER} -E php /var/www/html/occ maintenance:mode --off
     touch ${POST_FLAG_PATH}
 fi
 
@@ -47,7 +48,7 @@ then
         create_mount_point
     fi
 
-    ${SUDO} gfarm2fs ${MNT_OPT} ${DATA_DIR}
+    ${SUDO_USER} gfarm2fs ${MNT_OPT} ${DATA_DIR}
 
     if [ ${FILE_NUM} -gt 0 ];
     then
