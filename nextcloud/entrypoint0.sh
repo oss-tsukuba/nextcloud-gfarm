@@ -10,11 +10,6 @@ CONFIG_ENV=/config-env.sh
 MYSQL_PASSWORD_FILE_2=/var/www/nextcloud_db_password
 NEXTCLOUD_ADMIN_PASSWORD_FILE_2=/var/www/nextcloud_admin_password
 
-cp ${MYSQL_PASSWORD_FILE} ${MYSQL_PASSWORD_FILE_2}
-cp ${NEXTCLOUD_ADMIN_PASSWORD_FILE} ${NEXTCLOUD_ADMIN_PASSWORD_FILE_2}
-chown www-data ${MYSQL_PASSWORD_FILE_2} ${NEXTCLOUD_ADMIN_PASSWORD_FILE_2}
-chmod 600 ${MYSQL_PASSWORD_FILE_2} ${NEXTCLOUD_ADMIN_PASSWORD_FILE_2}
-
 # for backup.sh
 cat <<EOF > ${CONFIG_ENV}
 ### from netcloud-gfarm/nextcloud/Dockerfile
@@ -45,31 +40,53 @@ export PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT}
 export PHP_UPLOAD_LIMIT=${PHP_UPLOAD_LIMIT}
 EOF
 
-cat ${CONFIG_ENV}
+### for debug
+#cat ${CONFIG_ENV}
 
-if [ ! -f ${INIT_FLAG_PATH} ];
-then
-    cp /gfarm2rc /var/www/.gfarm2rc
-    chown ${NEXTCLOUD_USER}:root /var/www/.gfarm2rc
+chown0() {
+    chown -R ${NEXTCLOUD_USER}:root "$@"
+}
 
-    echo "${GFARM_USER} ${NEXTCLOUD_USER}" > /var/www/.gfarm_map
-    chown ${NEXTCLOUD_USER}:root /var/www/.gfarm_map
+copy0() {
+    src="$1"
+    dst="$2"
 
-    cp /gfarm_shared_key /var/www/.gfarm_shared_key
-    chmod 600 /var/www/.gfarm_shared_key
-    chown ${NEXTCLOUD_USER}:root /var/www/.gfarm_shared_key
+    rm -rf "$dst"
+    cp -pr "$src" "$dst"
+    chmod -R go-rwx "$dst"
+    chown0 "$dst"
+}
 
-    cp /gfarm2.conf /usr/local/etc
-    echo "" >> /usr/local/etc/gfarm2.conf
-    echo "local_user_map /var/www/.gfarm_map" >> /usr/local/etc/gfarm2.conf
-    set +e
-    RESULT=`grep attr_cache_timeout /usr/local/etc/gfarm2.conf`
-    set -e
-    if [ ${RESULT:-1} -eq 1 ];
-    then
-        echo "attr_cache_timeout ${GFARM_ATTR_CACHE_TIMEOUT:-180}" >> /usr/local/etc/gfarm2.conf
-    fi
-    chown ${NEXTCLOUD_USER}:root /usr/local/etc/gfarm2.conf
+copy0 "${MYSQL_PASSWORD_FILE}" "${MYSQL_PASSWORD_FILE_2}"
+copy0 "${NEXTCLOUD_ADMIN_PASSWORD_FILE}" "${NEXTCLOUD_ADMIN_PASSWORD_FILE_2}"
+
+HOMEDIR="/var/www"
+
+GFARM_USERMAP="${HOMEDIR}/.gfarm_usermap"
+echo "${GFARM_USER} ${NEXTCLOUD_USER}" > "${GFARM_USERMAP}"
+chown0 "${GFARM_USERMAP}"
+
+GFARM_SHARED_KEY="${HOMEDIR}/.gfarm_shared_key"
+copy0 "/gfarm_shared_key" "${GFARM_SHARED_KEY}"
+
+GFARM2RC="${HOMEDIR}/.gfarm2rc"
+copy0 "/gfarm2rc" "${GFARM2RC}"
+
+GFARM_CONF="/usr/local/etc/gfarm2.conf"
+cp "/gfarm2.conf" "${GFARM_CONF}"
+echo >> "${GFARM_CONF}"
+echo "local_user_map ${GFARM_USERMAP}" >> "${GFARM_CONF}"
+echo "attr_cache_timeout ${GFARM_ATTR_CACHE_TIMEOUT:-180}" >> "${GFARM_CONF}"
+chown0 "${GFARM_CONF}"
+
+DOT_GLOBUS="${HOMEDIR}/.globus"
+copy0 "/dot_globus" "${DOT_GLOBUS}"
+
+#TODO secret for grid-proxy-init passphrase
+#TODO secret for myproxy password
+
+if [ ! -f ${INIT_FLAG_PATH} ]; then
+    sed -i -e 's/^NAME_COMPATIBILITY=STRICT_RFC2818$/NAME_COMPATIBILITY=HYBRID/' /etc/grid-security/gsi.conf
 
     ${SUDO_USER} gfmkdir -p ${GFARM_DATA_PATH}
     #${SUDO_USER} gfchown ${GFARM_USER}:gfarmadm ${GFARM_DATA_PATH}
@@ -78,22 +95,21 @@ then
     mkdir -p /var/spool/cron/crontabs
     echo "${NEXTCLOUD_BACKUP_TIME:-0 3 * * *} /backup.sh" >> /var/spool/cron/crontabs/${NEXTCLOUD_USER}
 
-    mkdir -p ${NEXTCLOUD_SPOOL_PATH}
-    chown ${NEXTCLOUD_USER}:root ${NEXTCLOUD_SPOOL_PATH}
-    touch ${INIT_FLAG_PATH}
+    FLAG_DIR=$(dirname ${INIT_FLAG_PATH})
+    mkdir -p "${FLAG_DIR}"
+    chown0 "${FLAG_DIR}"
+    touch "${INIT_FLAG_PATH}"
 fi
 
-MYSQL_PASSWORD=$(cat ${MYSQL_PASSWORD_FILE})
-until mysqladmin ping -h ${MYSQL_HOST} -u ${MYSQL_USER} -p${MYSQL_PASSWORD}; do
+MYSQL_PASSWORD="$(cat ${MYSQL_PASSWORD_FILE})"
+until mysqladmin ping -h ${MYSQL_HOST} -u ${MYSQL_USER} -p"${MYSQL_PASSWORD}"; do
     echo 'waiting for starting mysql server (${MYSQL_HOST}) ...'
     sleep 1
 done
 
-FILE_NUM=`ls -1a --ignore=. --ignore=.. /var/www/html | wc -l `
-if [ ${FILE_NUM} -eq 0 ];
-then
-    if ${SUDO_USER} gftest -d ${GFARM_BACKUP_PATH};
-    then
+FILE_NUM=$(ls -1a --ignore=. --ignore=.. ${HOMEDIR}/html | wc -l)
+if [ ${FILE_NUM} -eq 0 ]; then
+    if ${SUDO_USER} gftest -d ${GFARM_BACKUP_PATH}; then
         /restore.sh
     fi
 else

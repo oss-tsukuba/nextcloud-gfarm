@@ -3,12 +3,13 @@ version: '3.4'
 services:
   nextcloud:
     hostname: nextcloud
-    networks:
-      - default
     build:
       context: ./nextcloud
+      args:
+        NEXTCLOUD_VERSION: 21
+        GFARM_SRC_URL: https://github.com/oss-tsukuba/gfarm/archive/refs/tags/2.7.19.tar.gz
+        GFARM2FS_SRC_URL: https://github.com/oss-tsukuba/gfarm2fs/archive/refs/tags/1.2.15.tar.gz
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - ./gfarm2rc:/gfarm2rc:ro
       - ./gfarm_shared_key:/gfarm_shared_key:ro
       - ./gfarm2.conf:/gfarm2.conf:ro
@@ -17,11 +18,11 @@ services:
     depends_on:
       - mariadb
     security_opt:
-      - seccomp:unconfined
+      ### for fuse
       - apparmor:unconfined
     cap_add:
+      ### for fuse
       - SYS_ADMIN
-      - SYS_PTRACE
     devices:
       - /dev/fuse:/dev/fuse
     privileged: false
@@ -31,8 +32,6 @@ services:
 
   mariadb:
     hostname: mariadb
-    networks:
-      - default
     environment:
       - MYSQL_DATABASE=nextcloud
       - MYSQL_USER=nextcloud
@@ -55,9 +54,3 @@ volumes:
   nextcloud:
   log:
   db:
-
-networks:
-  default:
-    ipam:
-      config:
-        - subnet: 10.9.8.0/24

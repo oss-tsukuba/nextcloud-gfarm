@@ -2,15 +2,8 @@ version: '3.4'
 
 services:
   nextcloud:
-    ports:
-      - 80:80
     env_file:
       - ./nextcloud.env
-    build:
-      args: 
-        NEXTCLOUD_VERSION: 21
-        GFARM_SRC_URL: https://github.com/oss-tsukuba/gfarm/archive/refs/tags/2.7.18.zip
-        GFARM2FS_SRC_URL: https://github.com/oss-tsukuba/gfarm2fs/archive/refs/tags/1.2.15.zip
 
   mariadb:
     env_file:

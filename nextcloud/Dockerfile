@@ -3,37 +3,17 @@ ARG NEXTCLOUD_VERSION
 FROM nextcloud:${NEXTCLOUD_VERSION}
 RUN echo ${NEXTCLOUD_VERSION}
 
-# overridable
-ENV MYSQL_DATABASE=nextcloud
-ENV MYSQL_USER=nextcloud
-ENV MYSQL_PASSWORD_FILE=/run/secrets/db_password
-ENV MYSQL_HOST=mariadb
-ENV NEXTCLOUD_ADMIN_USER=admin
-ENV NEXTCLOUD_ADMIN_PASSWORD_FILE=/run/secrets/admin_password
-ENV NEXTCLOUD_UPDATE=1
-ENV NEXTCLOUD_LOG_PATH=/var/log/nextcloud.log
-ENV NEXTCLOUD_BACKUP_TIME='0 3 * * *'
-ENV GFARM_USER=user1
-ENV GFARM_DATA_PATH=/home/user1/nextcloud-data
-ENV GFARM_BACKUP_PATH=/home/user1/nextcloud-backup
-ENV GFARM_ATTR_CACHE_TIMEOUT=180
-ENV TZ=Asia/Tokyo
-ENV FUSE_ENTRY_TIMEOUT=180
-ENV FUSE_NEGATIVE_TIMEOUT=5
-ENV FUSE_ATTR_TIMEOUT=180
-
 ARG GFARM_SRC_URL
 ARG GFARM2FS_SRC_URL
 
 RUN apt-get update && apt-get install -y \
   sudo \
+  netbase \
   libssl-dev \
   libldap2-dev \
   libpq-dev \
   libglobus-gssapi-gsi-dev \
   pkg-config \
-  postgresql \
-  postgresql-client \
   libfuse-dev \
   libacl1-dev \
   fuse \
@@ -72,18 +52,40 @@ RUN mkdir -p /var/spool/cron/crontabs
 COPY crontab.tmpl /var/spool/cron/crontabs/www-data
 
 COPY config.sh /
-COPY docker_entrypoint.sh /
+COPY entrypoint0.sh /
 COPY post_process.sh /
 COPY backup.sh /
 COPY restore.sh /
 COPY supervisord.conf /
 COPY do_cron.sh /
 
+# overridable
+ENV MYSQL_DATABASE=nextcloud
+ENV MYSQL_USER=nextcloud
+ENV MYSQL_PASSWORD_FILE=/run/secrets/db_password
+ENV MYSQL_HOST=mariadb
+ENV NEXTCLOUD_ADMIN_USER=admin
+ENV NEXTCLOUD_ADMIN_PASSWORD_FILE=/run/secrets/admin_password
+ENV NEXTCLOUD_UPDATE=1
+ENV NEXTCLOUD_LOG_PATH=/var/log/nextcloud.log
+ENV NEXTCLOUD_BACKUP_TIME='0 3 * * *'
+ENV NEXTCLOUD_TRUSTED_DOMAINS='localhost'
+ENV GFARM_USER=user1
+ENV GFARM_DATA_PATH=/home/user1/nextcloud-data
+ENV GFARM_BACKUP_PATH=/home/user1/nextcloud-backup
+ENV GFARM_ATTR_CACHE_TIMEOUT=180
+ENV TZ=Asia/Tokyo
+ENV FUSE_ENTRY_TIMEOUT=180
+ENV FUSE_NEGATIVE_TIMEOUT=5
+ENV FUSE_ATTR_TIMEOUT=180
+
 # Run in the following order:
-#   1. /docker_entrypoint.sh
+#   1. /entrypoint0.sh
 #   2. /entrypoint.sh (from Nextcloud official image)
 #   3. /post_process.sh
 #   4. supervisord: apache and cron
 
-ENTRYPOINT ["/docker_entrypoint.sh"]
+WORKDIR /var/www
+
+ENTRYPOINT ["/entrypoint0.sh"]
 CMD ["/entrypoint.sh", "/post_process.sh", "supervisord", "-c", "/supervisord.conf"]

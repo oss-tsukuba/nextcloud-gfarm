@@ -1,8 +1,9 @@
-gfarm2.conf
-gfarm2rc
-gfarm_shared_key
-admin_password
-db_password
-nextcloud.env
-mariadb.env
-docker-compose.override.yml
+/.env
+/docker-compose.override.yml
+/admin_password
+/db_password
+/gfarm2.conf
+/gfarm2rc
+/gfarm_shared_key
+/nextcloud.env
+/mariadb.env

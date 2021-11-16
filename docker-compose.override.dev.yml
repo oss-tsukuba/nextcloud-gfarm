@@ -1,0 +1,36 @@
+version: '3.4'
+
+# variables from .env
+
+services:
+  nextcloud:
+    build:
+      args:
+        - http_proxy=${http_proxy}
+        - https_proxy=${https_proxy}
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - GFARM_USER=user1
+      - GFARM_DATA_PATH=/home/user1/nextcloud-data
+      - GFARM_BACKUP_PATH=/home/user1/nextcloud-backup
+      - NEXTCLOUD_BACKUP_TIME=0 3 * * *
+      - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS}
+    volumes:
+      - /work/gfarm/docker/dev/mnt/COPY_DIR/gfarm2.conf:/gfarm2.conf:ro
+      - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.gfarm2rc:/gfarm2rc:ro
+      - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.gfarm_shared_key:/gfarm_shared_key:ro
+      - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.globus:/dot_globus:ro
+      - /work/gfarm/docker/dev/mnt/COPY_DIR/CERTS:/etc/grid-security/certificates:ro
+    networks:
+      gfarm_dev:
+    ports:
+      - 28080:80
+
+  mariadb:
+    networks:
+      gfarm_dev:
+
+networks:
+  gfarm_dev:
+    external: true
