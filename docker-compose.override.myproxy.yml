@@ -1,0 +1,33 @@
+version: '3.4'
+
+# variables from .env
+
+services:
+  nextcloud:
+    build:
+      args:
+        - http_proxy=${http_proxy}
+        - https_proxy=${https_proxy}
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - GFARM_USER=${GFARM_USER}
+      - GFARM_DATA_PATH=${GFARM_DATA_PATH}
+      - GFARM_BACKUP_PATH=${GFARM_BACKUP_PATH}
+      - NEXTCLOUD_BACKUP_TIME=${NEXTCLOUD_BACKUP_TIME}
+      - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS}
+      - OVERWRITEHOST=${OVERWRITEHOST}
+      - GRID_PROXY_HOURS=${GRID_PROXY_HOURS}
+      - MYPROXY_SERVER=${MYPROXY_SERVER}
+    volumes:
+      - ${GFARM2_CONF}:/gfarm2.conf:ro
+      - ${GFARM2RC}:/gfarm2rc:ro
+      - ${CERTIFICATES}:/etc/grid-security/certificates:ro
+    secrets:
+      - myproxy_password
+    ports:
+      - 28080:80
+
+secrets:
+  myproxy_password:
+    file: ./myproxy_password
