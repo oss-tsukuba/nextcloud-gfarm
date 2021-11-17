@@ -6,13 +6,12 @@ source /config-env.sh
 source /config.sh
 
 # www-data only
-[ $(whoami) = "www-data" ] || exit 1
+[ $(whoami) = "${NEXTCLOUD_USER}" ] || exit 1
 
-if [ -f ${MYSQL_PASSWORD_FILE:-/} ];
-then
-    PASSWORD=`cat ${MYSQL_PASSWORD_FILE}`
+if [ -f ${MYSQL_PASSWORD_FILE:-/} ]; then
+    PASSWORD="$(cat ${MYSQL_PASSWORD_FILE})"
 else
-    PASSWORD=${MYSQL_PASSWORD}
+    PASSWORD="${MYSQL_PASSWORD}"
 fi
 
 TMPDIR=$(mktemp --directory)
@@ -35,7 +34,7 @@ tar czpf ${SYSTEM_ARCH} ${SYSTEM_DIR}
 mysqldump \
     -h ${MYSQL_HOST} \
     -u root \
-    -p${PASSWORD} \
+    -p"${PASSWORD}" \
     -x --all-databases > ${DB_FILE}
 gzip -c ${DB_FILE} > ${DB_ARCH}
 
@@ -49,6 +48,8 @@ gfmkdir -p ${GFARM_BACKUP_PATH}
 gfreg ${SYSTEM_ARCH} ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp
 gfreg ${DB_ARCH} ${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp
 gfreg ${LOG_ARCH} ${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp
+
+gfchmod 400 ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp ${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp ${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp
 
 gfmv ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}
 gfmv ${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp ${GFARM_BACKUP_PATH}/${DB_ARCH}

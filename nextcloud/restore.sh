@@ -36,7 +36,7 @@ then
     gunzip ${DB_ARCH}
     mysql -h ${MYSQL_HOST} \
         -u root \
-        -p`cat ${MYSQL_PASSWORD_FILE}` < ${DB_FILE}
+        -p"$(cat ${MYSQL_PASSWORD_FILE})" < ${DB_FILE}
 
     DATA_DIR=${NEXTCLOUD_DATA_DIR:-/var/www/html/data}
     MNT_OPT="-o modules=subdir,subdir=${GFARM_DATA_PATH:-/}"
