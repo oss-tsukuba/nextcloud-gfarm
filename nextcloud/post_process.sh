@@ -8,7 +8,7 @@ source /config.sh
 function create_mount_point() {
     mv ${DATA_DIR} ${TMP_DATA_DIR}
     mkdir -p ${DATA_DIR}
-    chmod 770 ${DATA_DIR}
+    chmod 750 ${DATA_DIR}
     chown ${NEXTCLOUD_USER}:root ${DATA_DIR}
 }
 

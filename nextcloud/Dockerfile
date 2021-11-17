@@ -66,7 +66,6 @@ ENV MYSQL_PASSWORD_FILE=/run/secrets/db_password
 ENV MYSQL_HOST=mariadb
 ENV NEXTCLOUD_ADMIN_USER=admin
 ENV NEXTCLOUD_ADMIN_PASSWORD_FILE=/run/secrets/admin_password
-ENV NEXTCLOUD_UPDATE=1
 ENV NEXTCLOUD_LOG_PATH=/var/log/nextcloud.log
 ENV NEXTCLOUD_BACKUP_TIME='0 3 * * *'
 ENV NEXTCLOUD_TRUSTED_DOMAINS='localhost'
@@ -78,6 +77,9 @@ ENV TZ=Asia/Tokyo
 ENV FUSE_ENTRY_TIMEOUT=180
 ENV FUSE_NEGATIVE_TIMEOUT=5
 ENV FUSE_ATTR_TIMEOUT=180
+ENV MYPROXY_PASSWORD_FILE=/run/secrets/myproxy_password
+ENV GRID_PROXY_PASSWORD_FILE=/run/secrets/grid_proxy_password
+ENV GRID_PROXY_HOURS=168
 
 # Run in the following order:
 #   1. /entrypoint0.sh
@@ -87,5 +89,6 @@ ENV FUSE_ATTR_TIMEOUT=180
 
 WORKDIR /var/www
 
+ENV NEXTCLOUD_UPDATE=1
 ENTRYPOINT ["/entrypoint0.sh"]
 CMD ["/entrypoint.sh", "/post_process.sh", "supervisord", "-c", "/supervisord.conf"]

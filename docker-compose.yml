@@ -29,6 +29,8 @@ services:
     secrets:
       - admin_password
       - db_password
+      # - myproxy_password
+      # - grid_proxy_password
 
   mariadb:
     hostname: mariadb
@@ -49,6 +51,10 @@ secrets:
     file: ./admin_password
   db_password:
     file: ./db_password
+  # myproxy_password:
+  #   file: ./myproxy_password
+  # grid_proxy_password:
+  #   file: ./grid_proxy_password
 
 volumes:
   nextcloud:

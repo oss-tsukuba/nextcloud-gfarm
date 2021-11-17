@@ -1,7 +1,9 @@
 #!/bin/bash
 
+# -*- mode: shell-script; indent-tabs-mode: nil; sh-basic-offset: 4; -*-
+
 set -eu
-#set -x
+set -x
 
 source /config.sh
 
@@ -82,15 +84,16 @@ chown0 "${GFARM_CONF}"
 DOT_GLOBUS="${HOMEDIR}/.globus"
 copy0 "/dot_globus" "${DOT_GLOBUS}"
 
-#TODO secret for grid-proxy-init passphrase
-#TODO secret for myproxy password
+if [ -f "${GRID_PROXY_PASSWORD_FILE}" ]; then
+    cat "${GRID_PROXY_PASSWORD_FILE}" | \
+        ${SUDO_USER} grid-proxy-init -pwstdin -hours ${GRID_PROXY_HOURS}
+    ${SUDO_USER} grid-proxy-info
+fi
+
+#TODO secret for myproxy password, MYPROXY_PASSWORD_FILE
 
 if [ ! -f ${INIT_FLAG_PATH} ]; then
     sed -i -e 's/^NAME_COMPATIBILITY=STRICT_RFC2818$/NAME_COMPATIBILITY=HYBRID/' /etc/grid-security/gsi.conf
-
-    ${SUDO_USER} gfmkdir -p ${GFARM_DATA_PATH}
-    #${SUDO_USER} gfchown ${GFARM_USER}:gfarmadm ${GFARM_DATA_PATH}
-    ${SUDO_USER} gfchmod 770 ${GFARM_DATA_PATH}
 
     mkdir -p /var/spool/cron/crontabs
     echo "${NEXTCLOUD_BACKUP_TIME:-0 3 * * *} /backup.sh" >> /var/spool/cron/crontabs/${NEXTCLOUD_USER}
@@ -100,6 +103,16 @@ if [ ! -f ${INIT_FLAG_PATH} ]; then
     chown0 "${FLAG_DIR}"
     touch "${INIT_FLAG_PATH}"
 fi
+
+# check accessibility to Gfarm
+num_gfsd=$(${SUDO_USER} gfsched | wc -l)
+if [ $num_gfsd -le 0 ]; then
+    echo "No accessibility to Gfarm" >&2
+    exit 1
+fi
+
+${SUDO_USER} gfmkdir -p ${GFARM_DATA_PATH}
+${SUDO_USER} gfchmod 750 ${GFARM_DATA_PATH}
 
 MYSQL_PASSWORD="$(cat ${MYSQL_PASSWORD_FILE})"
 until mysqladmin ping -h ${MYSQL_HOST} -u ${MYSQL_USER} -p"${MYSQL_PASSWORD}"; do

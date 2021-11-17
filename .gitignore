@@ -2,6 +2,8 @@
 /docker-compose.override.yml
 /admin_password
 /db_password
+/grid_proxy_password
+/myproxy_password
 /gfarm2.conf
 /gfarm2rc
 /gfarm_shared_key
