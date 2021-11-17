@@ -14,7 +14,7 @@ else
     PASSWORD="${MYSQL_PASSWORD}"
 fi
 
-TMPDIR=$(mktemp --directory)
+TMPDIR="$(mktemp --directory)"
 
 remove_tmpdir()
 {
@@ -23,10 +23,10 @@ remove_tmpdir()
 
 trap remove_tmpdir EXIT
 
-cd ${TMPDIR}
+cd "${TMPDIR}"
 
 php /var/www/html/occ maintenance:mode --on
-fusermount -u ${DATA_DIR}
+fusermount -u "${DATA_DIR}"
 
 cp -pr /var/www/html ./${SYSTEM_DIR}
 tar czpf ${SYSTEM_ARCH} ${SYSTEM_DIR}
@@ -38,21 +38,21 @@ mysqldump \
     -x --all-databases > ${DB_FILE}
 gzip -c ${DB_FILE} > ${DB_ARCH}
 
-gzip -c ${NEXTCLOUD_LOG_PATH} > ${LOG_ARCH}
+gzip -c "${NEXTCLOUD_LOG_PATH}" > ${LOG_ARCH}
 
-gfarm2fs ${MNT_OPT} ${DATA_DIR}
+gfarm2fs ${MNT_OPT} "${DATA_DIR}"
 php /var/www/html/occ maintenance:mode --off
 
-gfmkdir -p ${GFARM_BACKUP_PATH}
+gfmkdir -p "${GFARM_BACKUP_PATH}"
 
-gfreg ${SYSTEM_ARCH} ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp
-gfreg ${DB_ARCH} ${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp
-gfreg ${LOG_ARCH} ${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp
+gfreg ${SYSTEM_ARCH} "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp"
+gfreg ${DB_ARCH} "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp"
+gfreg ${LOG_ARCH} "${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp"
 
-gfchmod 400 ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp ${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp ${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp
+gfchmod 400 "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp"
 
-gfmv ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp ${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}
-gfmv ${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp ${GFARM_BACKUP_PATH}/${DB_ARCH}
-gfmv ${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp ${GFARM_BACKUP_PATH}/${LOG_ARCH}
+gfmv "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}"
+gfmv "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${DB_ARCH}"
+gfmv "${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${LOG_ARCH}"
 
-gfls -l ${GFARM_BACKUP_PATH}
+gfls -l "${GFARM_BACKUP_PATH}"
