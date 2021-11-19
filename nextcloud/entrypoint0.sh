@@ -117,7 +117,7 @@ if [ ! -f ${INIT_FLAG_PATH} ]; then
     touch "${INIT_FLAG_PATH}"
 fi
 
-# check accessibility to Gfarm
+echo "checking accessibility to Gfarm"
 num_gfsd=$(${SUDO_USER} gfsched | wc -l)
 if [ $num_gfsd -le 0 ]; then
     echo "No accessibility to Gfarm" >&2
@@ -139,7 +139,7 @@ if [ ${FILE_NUM} -eq 0 ]; then
         /restore.sh
     fi
 else
-    touch ${VOLUME_REUSE_FLAG_PATH}
+    touch "${VOLUME_REUSE_FLAG_PATH}"
 fi
 
 # for debug

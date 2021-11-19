@@ -1,11 +1,18 @@
 #!/bin/bash
 
 set -u
+set -o pipefail
+#set -x
 
 source /config.sh
 
 # root only
 [ $(id -u) -eq 0 ] || exit 1
+
+if [ -f "${RESTORE_FLAG_PATH}" ]; then
+    echo "restore.sh is ignored (already restored)" >&2
+    exit 1
+fi
 
 TMPDIR=$(mktemp --directory)
 
@@ -14,7 +21,12 @@ remove_tmpdir()
     rm -rf "${TMPDIR}"
 }
 
-trap remove_tmpdir EXIT
+finalize()
+{
+    remove_tmpdir
+}
+
+trap finalize EXIT
 
 cd ${TMPDIR}
 
@@ -28,8 +40,7 @@ LOG_BACKUP_STATUS=${?}
 
 set -e
 
-if [ ${NEXTCLOUD_BACKUP_STATUS} -eq 0 -a ${DB_BACKUP_STATUS} -eq 0 -a ${LOG_BACKUP_STATUS} -eq 0 ];
-then
+if [ ${NEXTCLOUD_BACKUP_STATUS} -eq 0 -a ${DB_BACKUP_STATUS} -eq 0 -a ${LOG_BACKUP_STATUS} -eq 0 ]; then
     tar xzpf ${SYSTEM_ARCH}
     rsync -a ${SYSTEM_DIR} /var/www
 
@@ -37,13 +48,6 @@ then
     mysql -h ${MYSQL_HOST} \
         -u root \
         -p"$(cat ${MYSQL_PASSWORD_FILE})" < ${DB_FILE}
-
-    DATA_DIR=${NEXTCLOUD_DATA_DIR:-/var/www/html/data}
-    MNT_OPT="-o modules=subdir,subdir=${GFARM_DATA_PATH:-/}"
-    ${SUDO_USER} gfarm2fs ${MNT_OPT} "${DATA_DIR}"
-    ${SUDO_USER} -E php /var/www/html/occ maintenance:mode --off
-
-    ${SUDO_USER} fusermount -u "${DATA_DIR}"
 
     gunzip ${LOG_ARCH}
     mv ${LOG_FILE} "${NEXTCLOUD_LOG_PATH}"
