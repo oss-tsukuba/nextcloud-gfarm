@@ -61,29 +61,6 @@ COPY do_cron.sh /
 COPY common-lib.sh /
 COPY copy_gfarm_shared_key.sh /
 
-# overridable
-ENV MYSQL_DATABASE=nextcloud
-ENV MYSQL_USER=nextcloud
-ENV MYSQL_PASSWORD_FILE=/run/secrets/db_password
-ENV MYSQL_HOST=mariadb
-ENV NEXTCLOUD_ADMIN_USER=admin
-ENV NEXTCLOUD_ADMIN_PASSWORD_FILE=/run/secrets/admin_password
-ENV NEXTCLOUD_LOG_PATH=/var/log/nextcloud.log
-ENV NEXTCLOUD_BACKUP_TIME='0 3 * * *'
-ENV NEXTCLOUD_TRUSTED_DOMAINS='localhost'
-ENV GFARM_USER=user1
-ENV GFARM_DATA_PATH=/home/user1/nextcloud-data
-ENV GFARM_BACKUP_PATH=/home/user1/nextcloud-backup
-ENV GFARM_ATTR_CACHE_TIMEOUT=180
-ENV TZ=Asia/Tokyo
-ENV FUSE_ENTRY_TIMEOUT=180
-ENV FUSE_NEGATIVE_TIMEOUT=5
-ENV FUSE_ATTR_TIMEOUT=180
-ENV MYPROXY_SERVER=
-ENV MYPROXY_PASSWORD_FILE=/run/secrets/myproxy_password
-ENV GRID_PROXY_PASSWORD_FILE=/run/secrets/grid_proxy_password
-ENV GRID_PROXY_HOURS=168
-
 # Run in the following order:
 #   1. /entrypoint0.sh
 #   2. /entrypoint.sh (from Nextcloud official image)
@@ -92,6 +69,5 @@ ENV GRID_PROXY_HOURS=168
 
 WORKDIR /var/www
 
-ENV NEXTCLOUD_UPDATE=1
 ENTRYPOINT ["/entrypoint0.sh"]
 CMD ["/entrypoint.sh", "/post_process.sh", "supervisord", "-c", "/supervisord.conf"]

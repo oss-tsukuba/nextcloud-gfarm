@@ -1,18 +1,43 @@
 #!/bin/bash
 
-NEXTCLOUD_USER=www-data
+# overridable
+TZ=${TZ:-"Asia/Tokyo"}
+GFARM_USER=${GFARM_USER:-"user1"}
+GFARM_DATA_PATH=${GFARM_DATA_PATH:-"/home/user1/nextcloud-data"}
+GFARM_BACKUP_PATH=${GFARM_BACKUP_PATH:-"/home/user1/nextcloud-backup"}
+GFARM_ATTR_CACHE_TIMEOUT=${GFARM_ATTR_CACHE_TIMEOUT:-"180"}
+FUSE_ENTRY_TIMEOUT=${FUSE_ENTRY_TIMEOUT:-"180"}
+FUSE_NEGATIVE_TIMEOUT=${FUSE_NEGATIVE_TIMEOUT:-"5"}
+FUSE_ATTR_TIMEOUT=${FUSE_ATTR_TIMEOUT:-"180"}
+MYPROXY_SERVER=${MYPROXY_SERVER:-""}
+MYPROXY_PASSWORD_FILE=${MYPROXY_PASSWORD_FILE:-"/run/secrets/myproxy_password"}
+GRID_PROXY_PASSWORD_FILE=${GRID_PROXY_PASSWORD_FILE:-"/run/secrets/grid_proxy_password"}
+GRID_PROXY_HOURS=${GRID_PROXY_HOURS:-"168"}
+
+MYSQL_DATABASE=${MYSQL_DATABASE:-"nextcloud"}
+MYSQL_USER=${MYSQL_USER:-"nextcloud"}
+MYSQL_PASSWORD_FILE=${MYSQL_PASSWORD_FILE:-"/run/secrets/db_password"}
+MYSQL_HOST=${MYSQL_HOST:-"mariadb"}
+NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-"admin"}
+NEXTCLOUD_ADMIN_PASSWORD_FILE=${NEXTCLOUD_ADMIN_PASSWORD_FILE:-"/run/secrets/admin_password"}
+NEXTCLOUD_LOG_PATH=${NEXTCLOUD_LOG_PATH:-"/var/log/nextcloud.log"}
+NEXTCLOUD_BACKUP_TIME=${NEXTCLOUD_BACKUP_TIME:-'0 3 * * *'}
+NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS:-'localhost'}
+
+##########################################################
+NEXTCLOUD_USER="www-data"
 HOMEDIR="/var/www"
 SUDO_USER="sudo -s -u ${NEXTCLOUD_USER}"
-DATA_DIR="${NEXTCLOUD_DATA_DIR:-/var/www/html/data}"
+DATA_DIR="/var/www/html/data"
 TMP_DATA_DIR="${DATA_DIR}.bak"
 MNT_OPT="-o nonempty,modules=subdir,subdir=${GFARM_DATA_PATH},entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},auto_cache,big_writes"
 
-SYSTEM_DIR=html
-SYSTEM_ARCH=${SYSTEM_DIR}.tar.gz
-DB_FILE=dbdump.mysql
-DB_ARCH=${DB_FILE}.gz
-LOG_FILE=nextcloud.log
-LOG_ARCH=${LOG_FILE}.gz
+SYSTEM_DIR="html"
+SYSTEM_ARCH="${SYSTEM_DIR}.tar.gz"
+DB_FILE="dbdump.mysql"
+DB_ARCH="${DB_FILE}.gz"
+LOG_FILE="nextcloud.log"
+LOG_ARCH="${LOG_FILE}.gz"
 
 NEXTCLOUD_SPOOL_PATH="/var/spool/nextcloud"
 INIT_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/init"

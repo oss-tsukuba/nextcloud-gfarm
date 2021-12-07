@@ -14,7 +14,7 @@ CONFIG_ENV=/config-env.sh
 MYSQL_PASSWORD_FILE_2=/var/www/nextcloud_db_password
 NEXTCLOUD_ADMIN_PASSWORD_FILE_2=/var/www/nextcloud_admin_password
 
-# for backup.sh
+# for backup.sh (executed by www-data)
 cat <<EOF > ${CONFIG_ENV}
 ### from netcloud-gfarm/nextcloud/Dockerfile
 export MYSQL_DATABASE=${MYSQL_DATABASE}
@@ -24,8 +24,7 @@ export MYSQL_HOST=${MYSQL_HOST}
 
 export NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
 export NEXTCLOUD_ADMIN_PASSWORD_FILE=${NEXTCLOUD_ADMIN_PASSWORD_FILE_2}
-export NEXTCLOUD_UPDATE=${NEXTCLOUD_UPDATE}
-export NEXTCLOUD_LOG_PATH=${NEXTCLOUD_LOG_PATH}
+export NEXTCLOUD_LOG_PATH="${NEXTCLOUD_LOG_PATH}"
 export NEXTCLOUD_BACKUP_TIME="${NEXTCLOUD_BACKUP_TIME}"
 
 export GFARM_USER=${GFARM_USER}
@@ -125,6 +124,13 @@ if [ ${FILE_NUM} -eq 0 ]; then
 else
     touch "${VOLUME_REUSE_FLAG_PATH}"
 fi
+
+# from: https://hub.docker.com/_/nextcloud/
+# The install and update script is only triggered when a default
+# command is used (apache-foreground or php-fpm). If you use a custom
+# command you have to enable the install / update with
+# NEXTCLOUD_UPDATE (default: 0)
+export NEXTCLOUD_UPDATE=1
 
 # for debug
 #exec bash -x "$@"
