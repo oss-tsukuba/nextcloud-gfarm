@@ -58,6 +58,8 @@ COPY backup.sh /
 COPY restore.sh /
 COPY supervisord.conf /
 COPY do_cron.sh /
+COPY common-lib.sh /
+COPY copy_gfarm_shared_key.sh /
 
 # overridable
 ENV MYSQL_DATABASE=nextcloud

@@ -7,6 +7,7 @@ set -o pipefail
 #set -x
 
 source /config.sh
+source /common-lib.sh
 
 CONFIG_ENV=/config-env.sh
 
@@ -46,20 +47,6 @@ EOF
 ### for debug
 #cat ${CONFIG_ENV}
 
-chown0() {
-    chown -R ${NEXTCLOUD_USER}:root "$@"
-}
-
-copy0() {
-    src="$1"
-    dst="$2"
-
-    rm -rf "$dst"
-    cp -pr "$src" "$dst"
-    chmod -R go-rwx "$dst"
-    chown0 "$dst"
-}
-
 copy0 "${MYSQL_PASSWORD_FILE}" "${MYSQL_PASSWORD_FILE_2}"
 copy0 "${NEXTCLOUD_ADMIN_PASSWORD_FILE}" "${NEXTCLOUD_ADMIN_PASSWORD_FILE_2}"
 
@@ -81,10 +68,7 @@ if [ -f "/gfarm2rc" ]; then
     copy0 "/gfarm2rc" "${GFARM2RC}"
 fi
 
-if [ -f "/gfarm_shared_key" ]; then
-    GFARM_SHARED_KEY="${HOMEDIR}/.gfarm_shared_key"
-    copy0 "/gfarm_shared_key" "${GFARM_SHARED_KEY}"
-fi
+/copy_gfarm_shared_key.sh
 
 if [ -d "/dot_globus" ]; then
     DOT_GLOBUS="${HOMEDIR}/.globus"

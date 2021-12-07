@@ -54,3 +54,6 @@ logs:
 
 logs-follow:
 	$(COMPOSE) logs --follow
+
+copy-gfarm_shared_key:
+	$(COMPOSE) exec -u root nextcloud /copy_gfarm_shared_key.sh
