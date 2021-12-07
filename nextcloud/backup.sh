@@ -1,19 +1,21 @@
 #!/bin/bash
 
+# -*- mode: shell-script; indent-tabs-mode: nil; sh-basic-offset: 4; -*-
+
 set -eu
 set -o pipefail
 #set -x
 
-source /config-env.sh
-source /config.sh
+source /nc-gfarm/config.sh
+source ${CONFIG_ENV}
 
 BACKUP_FLAG="${NEXTCLOUD_SPOOL_PATH}/backup"
 
-# www-data only
+# ${NEXTCLOUD_USER} only
 [ $(whoami) = "${NEXTCLOUD_USER}" ] || exit 1
 
-if [ -f ${MYSQL_PASSWORD_FILE:-/} ]; then
-    PASSWORD="$(cat ${MYSQL_PASSWORD_FILE})"
+if [ -f "${MYSQL_PASSWORD_FILE_FOR_USER:-/}" ]; then
+    PASSWORD="$(cat ${MYSQL_PASSWORD_FILE_FOR_USER})"
 else
     PASSWORD="${MYSQL_PASSWORD}"
 fi

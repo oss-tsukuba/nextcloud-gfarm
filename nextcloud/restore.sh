@@ -1,10 +1,12 @@
 #!/bin/bash
 
+# -*- mode: shell-script; indent-tabs-mode: nil; sh-basic-offset: 4; -*-
+
 set -u
 set -o pipefail
 #set -x
 
-source /config.sh
+source /nc-gfarm/config.sh
 
 # root only
 [ $(id -u) -eq 0 ] || exit 1
@@ -40,17 +42,19 @@ LOG_BACKUP_STATUS=${?}
 
 set -e
 
-if [ ${NEXTCLOUD_BACKUP_STATUS} -eq 0 -a ${DB_BACKUP_STATUS} -eq 0 -a ${LOG_BACKUP_STATUS} -eq 0 ]; then
+if [ ${NEXTCLOUD_BACKUP_STATUS} -eq 0 -a ${DB_BACKUP_STATUS} -eq 0 ]; then
     tar xzpf ${SYSTEM_ARCH}
-    rsync -a ${SYSTEM_DIR} /var/www
+    rsync -a ${SYSTEM_DIR} "${HOMEDIR}"
 
     gunzip ${DB_ARCH}
     mysql -h ${MYSQL_HOST} \
         -u root \
         -p"$(cat ${MYSQL_PASSWORD_FILE})" < ${DB_FILE}
 
-    gunzip ${LOG_ARCH}
-    mv ${LOG_FILE} "${NEXTCLOUD_LOG_PATH}"
+    if [ ${LOG_BACKUP_STATUS} -eq 0 ]; then
+        gunzip ${LOG_ARCH}
+        mv ${LOG_FILE} "${NEXTCLOUD_LOG_PATH}"
+    fi
 
     touch "${RESTORE_FLAG_PATH}"
 fi

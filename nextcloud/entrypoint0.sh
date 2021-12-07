@@ -4,26 +4,21 @@
 
 set -eu
 set -o pipefail
-#set -x
 
-source /config.sh
-source /common-lib.sh
+source /nc-gfarm/config.sh
+source ${CONFIG_LIB}
 
-CONFIG_ENV=/config-env.sh
-
-MYSQL_PASSWORD_FILE_2=/var/www/nextcloud_db_password
-NEXTCLOUD_ADMIN_PASSWORD_FILE_2=/var/www/nextcloud_admin_password
-
-# for backup.sh (executed by www-data)
-cat <<EOF > ${CONFIG_ENV}
-### from netcloud-gfarm/nextcloud/Dockerfile
+cat <<EOF > "${CONFIG_ENV}"
+### from /nc-gfarm/config.sh
 export MYSQL_DATABASE=${MYSQL_DATABASE}
 export MYSQL_USER=${MYSQL_USER}
-export MYSQL_PASSWORD_FILE=${MYSQL_PASSWORD_FILE_2}
+export MYSQL_PASSWORD_FILE="${MYSQL_PASSWORD_FILE}"
+export MYSQL_PASSWORD_FILE_FOR_USER="${MYSQL_PASSWORD_FILE_FOR_USER}"
 export MYSQL_HOST=${MYSQL_HOST}
 
 export NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
-export NEXTCLOUD_ADMIN_PASSWORD_FILE=${NEXTCLOUD_ADMIN_PASSWORD_FILE_2}
+export NEXTCLOUD_ADMIN_PASSWORD_FILE="${NEXTCLOUD_ADMIN_PASSWORD_FILE}"
+export NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER="${NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER}"
 export NEXTCLOUD_LOG_PATH="${NEXTCLOUD_LOG_PATH}"
 export NEXTCLOUD_BACKUP_TIME="${NEXTCLOUD_BACKUP_TIME}"
 
@@ -38,18 +33,17 @@ export FUSE_ENTRY_TIMEOUT=${FUSE_ENTRY_TIMEOUT}
 export FUSE_NEGATIVE_TIMEOUT=${FUSE_NEGATIVE_TIMEOUT}
 export FUSE_ATTR_TIMEOUT=${FUSE_ATTR_TIMEOUT}
 
-### from nextcloud/Dockerfile
+### from official nextcloud/Dockerfile
 export PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT}
 export PHP_UPLOAD_LIMIT=${PHP_UPLOAD_LIMIT}
 EOF
 
-### for debug
-#cat ${CONFIG_ENV}
+### export environment variables
+source "${CONFIG_ENV}"
 
-copy0 "${MYSQL_PASSWORD_FILE}" "${MYSQL_PASSWORD_FILE_2}"
-copy0 "${NEXTCLOUD_ADMIN_PASSWORD_FILE}" "${NEXTCLOUD_ADMIN_PASSWORD_FILE_2}"
-
-HOMEDIR="/var/www"
+copy0 "${MYSQL_PASSWORD_FILE}" "${MYSQL_PASSWORD_FILE_FOR_USER}"
+### unnecessary
+#copy0 "${NEXTCLOUD_ADMIN_PASSWORD_FILE}" "${NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER}"
 
 GFARM_USERMAP="${HOMEDIR}/.gfarm_usermap"
 echo "${GFARM_USER} ${NEXTCLOUD_USER}" > "${GFARM_USERMAP}"
@@ -67,7 +61,7 @@ if [ -f "/gfarm2rc" ]; then
     copy0 "/gfarm2rc" "${GFARM2RC}"
 fi
 
-/copy_gfarm_shared_key.sh
+"${COPY_GFARM_SHARED_KEY_SH}"
 
 if [ -d "/dot_globus" ]; then
     DOT_GLOBUS="${HOMEDIR}/.globus"
@@ -92,7 +86,7 @@ if [ ! -f ${INIT_FLAG_PATH} ]; then
     sed -i -e 's/^NAME_COMPATIBILITY=STRICT_RFC2818$/NAME_COMPATIBILITY=HYBRID/' /etc/grid-security/gsi.conf
 
     mkdir -p /var/spool/cron/crontabs
-    echo "${NEXTCLOUD_BACKUP_TIME:-0 3 * * *} /backup.sh" >> /var/spool/cron/crontabs/${NEXTCLOUD_USER}
+    echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> /var/spool/cron/crontabs/${NEXTCLOUD_USER}
 
     FLAG_DIR=$(dirname ${INIT_FLAG_PATH})
     mkdir -p "${FLAG_DIR}"
@@ -116,10 +110,10 @@ until mysqladmin ping -h ${MYSQL_HOST} -u ${MYSQL_USER} -p"${MYSQL_PASSWORD}"; d
     sleep 1
 done
 
-FILE_NUM=$(ls -1a --ignore=. --ignore=.. ${HOMEDIR}/html | wc -l)
+FILE_NUM=$(ls -1a --ignore=. --ignore=.. "${HOMEDIR}/html" | wc -l)
 if [ ${FILE_NUM} -eq 0 ]; then
     if ${SUDO_USER} gftest -d "${GFARM_BACKUP_PATH}"; then
-        /restore.sh
+        "${RESTORE_SH}"
     fi
 else
     touch "${VOLUME_REUSE_FLAG_PATH}"

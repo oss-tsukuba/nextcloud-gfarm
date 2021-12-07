@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# overridable
+if [ ${NEXTCLOUD_GFARM_DEBUG:-0} -ne 0 ]; then
+    set -x
+fi
+
+# overridable in docker-compose.yml
 TZ=${TZ:-"Asia/Tokyo"}
 GFARM_USER=${GFARM_USER:-"user1"}
 GFARM_DATA_PATH=${GFARM_DATA_PATH:-"/home/user1/nextcloud-data"}
@@ -25,6 +29,15 @@ NEXTCLOUD_BACKUP_TIME=${NEXTCLOUD_BACKUP_TIME:-'0 3 * * *'}
 NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS:-'localhost'}
 
 ##########################################################
+
+NCGFARM_DIR="/nc-gfarm"
+CONFIG_LIB="${NCGFARM_DIR}/common-lib.sh"
+CONFIG_ENV="${NCGFARM_DIR}/config-env.sh"
+
+BACKUP_SH="${NCGFARM_DIR}/backup.sh"
+RESTORE_SH="${NCGFARM_DIR}/restore.sh"
+COPY_GFARM_SHARED_KEY_SH="${NCGFARM_DIR}/copy_gfarm_shared_key.sh"
+
 NEXTCLOUD_USER="www-data"
 HOMEDIR="/var/www"
 SUDO_USER="sudo -s -u ${NEXTCLOUD_USER}"
@@ -44,6 +57,9 @@ INIT_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/init"
 VOLUME_REUSE_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/reuse"
 RESTORE_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/restore"
 POST_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/post"
+
+MYSQL_PASSWORD_FILE_FOR_USER="${HOMEDIR}/nextcloud_db_password"
+NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER="${HOMEDIR}/nextcloud_admin_password"
 
 GFARM_SHARED_KEY_ORIG="/gfarm_shared_key"
 GFARM_SHARED_KEY="${HOMEDIR}/.gfarm_shared_key"

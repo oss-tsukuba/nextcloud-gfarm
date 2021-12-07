@@ -1,8 +1,10 @@
-chown0() {
+chown0()
+{
     chown -R ${NEXTCLOUD_USER}:root "$@"
 }
 
-copy0() {
+copy0()
+{
     src="$1"
     dst="$2"
 

@@ -18,6 +18,7 @@ services:
       - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS}
       #- OVERWRITEHOST=${OVERWRITEHOST}
       - GRID_PROXY_HOURS=8760
+      - NEXTCLOUD_GFARM_DEBUG=1
     volumes:
       - /work/gfarm/docker/dev/mnt/COPY_DIR/gfarm2.conf:/gfarm2.conf:ro
       - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.gfarm2rc:/gfarm2rc:ro

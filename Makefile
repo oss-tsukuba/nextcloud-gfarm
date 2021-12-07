@@ -55,5 +55,8 @@ logs:
 logs-follow:
 	$(COMPOSE) logs --follow
 
+backup:
+	$(COMPOSE) exec -u www-data nextcloud /nc-gfarm/backup.sh
+
 copy-gfarm_shared_key:
-	$(COMPOSE) exec -u root nextcloud /copy_gfarm_shared_key.sh
+	$(COMPOSE) exec -u root nextcloud /nc-gfarm/copy_gfarm_shared_key.sh
