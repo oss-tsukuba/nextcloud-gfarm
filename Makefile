@@ -60,6 +60,12 @@ logs-follow:
 occ-add-missing-indices:
 	$(OCC) db:add-missing-indices
 
+occ-maintenancemode-on:
+	$(OCC) maintenance:mode --on
+
+occ-maintenancemode-off:
+	$(OCC) maintenance:mode --off
+
 backup:
 	$(COMPOSE) exec -u www-data nextcloud /nc-gfarm/backup.sh
 
