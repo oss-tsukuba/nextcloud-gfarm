@@ -8,6 +8,8 @@ COMPOSE_V2 = docker compose
 COMPOSE = $(SUDO) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) $(COMPOSE_V1)
 #COMPOSE = $(SUDO) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) $(COMPOSE_V2)
 
+OCC = $(COMPOSE) exec -u www-data nextcloud php /var/www/html/occ
+
 ps:
 	$(COMPOSE) ps
 
@@ -54,6 +56,9 @@ logs:
 
 logs-follow:
 	$(COMPOSE) logs --follow
+
+occ-add-missing-indices:
+	$(OCC) db:add-missing-indices
 
 backup:
 	$(COMPOSE) exec -u www-data nextcloud /nc-gfarm/backup.sh
