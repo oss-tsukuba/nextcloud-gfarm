@@ -2,7 +2,7 @@
 
 # -*- mode: shell-script; indent-tabs-mode: nil; sh-basic-offset: 4; -*-
 
-set -u
+set -eu
 set -o pipefail
 #set -x
 
@@ -32,22 +32,16 @@ trap finalize EXIT
 
 cd ${TMPDIR}
 
-# When these files don't exist, this script fails by -e option.
 ${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}" > ${SYSTEM_ARCH}
-NEXTCLOUD_BACKUP_STATUS=${?}
 ${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${DB_ARCH}" > ${DB_ARCH}
-DB_BACKUP_STATUS=${?}
 
-set -e
+tar xzpf ${SYSTEM_ARCH}
+rsync -a ${SYSTEM_DIR_NAME}/ "${HTML_DIR}/"
+chown -R ${NEXTCLOUD_USER}:${NEXTCLOUD_USER} "${HTML_DIR}"
 
-if [ ${NEXTCLOUD_BACKUP_STATUS} -eq 0 -a ${DB_BACKUP_STATUS} -eq 0 ]; then
-    tar xzpf ${SYSTEM_ARCH}
-    rsync -a ${SYSTEM_DIR_NAME}/ "${HTML_DIR}/"
+gunzip ${DB_ARCH}
+mysql -h ${MYSQL_HOST} \
+      -u root \
+      -p"$(cat ${MYSQL_PASSWORD_FILE})" < ${DB_FILE_NAME}
 
-    gunzip ${DB_ARCH}
-    mysql -h ${MYSQL_HOST} \
-        -u root \
-        -p"$(cat ${MYSQL_PASSWORD_FILE})" < ${DB_FILE_NAME}
-
-    touch "${RESTORE_FLAG_PATH}"
-fi
+touch "${RESTORE_FLAG_PATH}"

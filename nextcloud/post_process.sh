@@ -4,7 +4,6 @@
 
 set -eu
 set -o pipefail
-#set -x
 
 source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
@@ -17,6 +16,9 @@ create_mount_point()
 }
 
 # before mount_gfarm2fs
+if [ ! -d "${DATA_DIR}" ]; then
+   ${SUDO_USER} mkdir -p "${DATA_DIR}"
+fi
 FILE_NUM=$(${SUDO_USER} ls -1a --ignore=. --ignore=.. "${DATA_DIR}" | wc -l)
 if [ ${FILE_NUM} -gt 0 ]; then  # not empty
     # new container ==> initial data files exist

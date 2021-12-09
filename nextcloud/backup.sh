@@ -4,7 +4,6 @@
 
 set -eu
 set -o pipefail
-#set -x
 
 source /nc-gfarm/config.sh
 source ${CONFIG_ENV}
@@ -22,53 +21,21 @@ fi
 
 TMPDIR="$(mktemp --directory)"
 
-mount_gfarm()
-{
-    gfarm2fs ${MNT_OPT} "${DATA_DIR}"
-}
-
-maintenance_mode_off()
-{
-    ${OCC} maintenance:mode --off
-}
-
 remove_tmpdir()
 {
     rm -f "${BACKUP_FLAG}"
     rm -rf "${TMPDIR}"
 }
 
-FUSEMOUNT=1
-MAINTENACE=0
-
-mount_and_start()
-{
-    if [ ${FUSEMOUNT} -eq 0 ]; then
-        mount_gfarm
-        FUSEMOUNT=1
-    fi
-    if [ ${MAINTENACE} -eq 1 ]; then
-        maintenance_mode_off
-        MAINTENACE=0
-    fi
-}
-
 reset_on_error()
 {
-    mount_and_start
+    ${OCC} maintenance:mode --off
     remove_tmpdir
 }
 
 trap reset_on_error ERR
 trap remove_tmpdir EXIT
 
-umount_retry()
-{
-    while ! fusermount -u "${DATA_DIR}"; do
-        echo "retrying umount..."
-        sleep 1
-    done
-}
 
 if [ -f "${BACKUP_FLAG}" ]; then
     echo "another backup.sh is running" >&2
@@ -79,12 +46,9 @@ touch "${BACKUP_FLAG}"
 cd "${TMPDIR}"
 
 ${OCC} maintenance:mode --on
-MAINTENACE=1
+rsync -rlpt --exclude="/data/" "${HTML_DIR}/" ./${SYSTEM_DIR_NAME}/
+${OCC} maintenance:mode --off
 
-umount_retry
-FUSEMOUNT=0
-
-rsync -a "${HTML_DIR}/" ./${SYSTEM_DIR_NAME}/
 tar czpf ${SYSTEM_ARCH} ${SYSTEM_DIR_NAME}
 
 mysqldump \
@@ -94,12 +58,18 @@ mysqldump \
     -x --all-databases > ${DB_FILE_NAME}
 gzip -c ${DB_FILE_NAME} > ${DB_ARCH}
 
-mount_and_start
-
 gfmkdir -p "${GFARM_BACKUP_PATH}"
 
-gfreg ${SYSTEM_ARCH} "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp"
-gfreg ${DB_ARCH} "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp"
+if which gfcp; then
+    GFCP=gfcp
+    GF_SCHEME="gfarm:"
+else
+    GFCP=gfreg
+    GF_SCHEME=""
+fi
+
+${GFCP} ${SYSTEM_ARCH} "${GF_SCHEME}${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp"
+${GFCP} ${DB_ARCH} "${GF_SCHEME}${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp"
 
 gfchmod 600 "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp"
 
