@@ -24,9 +24,10 @@ MYSQL_PASSWORD_FILE=${MYSQL_PASSWORD_FILE:-"/run/secrets/db_password"}
 MYSQL_HOST=${MYSQL_HOST:-"mariadb"}
 NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-"admin"}
 NEXTCLOUD_ADMIN_PASSWORD_FILE=${NEXTCLOUD_ADMIN_PASSWORD_FILE:-"/run/secrets/admin_password"}
-NEXTCLOUD_LOG_PATH=${NEXTCLOUD_LOG_PATH:-"/var/log/nextcloud.log"}
 NEXTCLOUD_BACKUP_TIME=${NEXTCLOUD_BACKUP_TIME:-'0 3 * * *'}
 NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS:-'localhost'}
+
+NEXTCLOUD_DEFAULT_PHONE_REGION=${NEXTCLOUD_DEFAULT_PHONE_REGION:-"JP"}
 
 ##########################################################
 
@@ -39,18 +40,23 @@ RESTORE_SH="${NCGFARM_DIR}/restore.sh"
 COPY_GFARM_SHARED_KEY_SH="${NCGFARM_DIR}/copy_gfarm_shared_key.sh"
 
 NEXTCLOUD_USER="www-data"
-HOMEDIR="/var/www"
 SUDO_USER="sudo -s -u ${NEXTCLOUD_USER}"
-DATA_DIR="/var/www/html/data"
+
+HOMEDIR="/var/www"
+HTML_DIR="${HOMEDIR}/html"
+DATA_DIR="${HTML_DIR}/data"
 TMP_DATA_DIR="${DATA_DIR}.bak"
+NEXTCLOUD_LOG_PATH="${HTML_DIR}/nextcloud.log"
+
+OCC="php ${HTML_DIR}/occ"
+OCC_USER="${SUDO_USER} -E ${OCC}"
+
 MNT_OPT="-o nonempty,modules=subdir,subdir=${GFARM_DATA_PATH},entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},auto_cache,big_writes"
 
-SYSTEM_DIR="html"
-SYSTEM_ARCH="${SYSTEM_DIR}.tar.gz"
-DB_FILE="dbdump.mysql"
-DB_ARCH="${DB_FILE}.gz"
-LOG_FILE="nextcloud.log"
-LOG_ARCH="${LOG_FILE}.gz"
+SYSTEM_DIR_NAME="html"
+SYSTEM_ARCH="${SYSTEM_DIR_NAME}.tar.gz"
+DB_FILE_NAME="dbdump.mysql"
+DB_ARCH="${DB_FILE_NAME}.gz"
 
 NEXTCLOUD_SPOOL_PATH="/var/spool/nextcloud"
 INIT_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/init"

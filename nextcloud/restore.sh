@@ -35,26 +35,19 @@ cd ${TMPDIR}
 # When these files don't exist, this script fails by -e option.
 ${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}" > ${SYSTEM_ARCH}
 NEXTCLOUD_BACKUP_STATUS=${?}
-${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${DB_ARCH}" > ${DB_FILE}.gz
+${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${DB_ARCH}" > ${DB_ARCH}
 DB_BACKUP_STATUS=${?}
-${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${LOG_ARCH}" > ${LOG_ARCH}
-LOG_BACKUP_STATUS=${?}
 
 set -e
 
 if [ ${NEXTCLOUD_BACKUP_STATUS} -eq 0 -a ${DB_BACKUP_STATUS} -eq 0 ]; then
     tar xzpf ${SYSTEM_ARCH}
-    rsync -a ${SYSTEM_DIR} "${HOMEDIR}"
+    rsync -a ${SYSTEM_DIR_NAME}/ "${HTML_DIR}/"
 
     gunzip ${DB_ARCH}
     mysql -h ${MYSQL_HOST} \
         -u root \
-        -p"$(cat ${MYSQL_PASSWORD_FILE})" < ${DB_FILE}
-
-    if [ ${LOG_BACKUP_STATUS} -eq 0 ]; then
-        gunzip ${LOG_ARCH}
-        mv ${LOG_FILE} "${NEXTCLOUD_LOG_PATH}"
-    fi
+        -p"$(cat ${MYSQL_PASSWORD_FILE})" < ${DB_FILE_NAME}
 
     touch "${RESTORE_FLAG_PATH}"
 fi

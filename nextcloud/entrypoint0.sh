@@ -22,6 +22,8 @@ export NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER="${NEXTCLOUD_ADMIN_PASSWORD_FILE_F
 export NEXTCLOUD_LOG_PATH="${NEXTCLOUD_LOG_PATH}"
 export NEXTCLOUD_BACKUP_TIME="${NEXTCLOUD_BACKUP_TIME}"
 
+export NEXTCLOUD_DEFAULT_PHONE_REGION=${NEXTCLOUD_DEFAULT_PHONE_REGION}
+
 export GFARM_USER=${GFARM_USER}
 export GFARM_DATA_PATH="${GFARM_DATA_PATH}"
 export GFARM_BACKUP_PATH="${GFARM_BACKUP_PATH}"
@@ -110,8 +112,8 @@ until mysqladmin ping -h ${MYSQL_HOST} -u ${MYSQL_USER} -p"${MYSQL_PASSWORD}"; d
     sleep 1
 done
 
-FILE_NUM=$(ls -1a --ignore=. --ignore=.. "${HOMEDIR}/html" | wc -l)
-if [ ${FILE_NUM} -eq 0 ]; then
+FILE_NUM=$(ls -1a --ignore=. --ignore=.. "${HTML_DIR}/" | wc -l)
+if [ ${FILE_NUM} -eq 0 ]; then  # empty
     if ${SUDO_USER} gftest -d "${GFARM_BACKUP_PATH}"; then
         "${RESTORE_SH}"
     fi

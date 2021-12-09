@@ -29,7 +29,7 @@ mount_gfarm()
 
 maintenance_mode_off()
 {
-    php /var/www/html/occ maintenance:mode --off
+    ${OCC} maintenance:mode --off
 }
 
 remove_tmpdir()
@@ -78,23 +78,21 @@ touch "${BACKUP_FLAG}"
 
 cd "${TMPDIR}"
 
-php /var/www/html/occ maintenance:mode --on
+${OCC} maintenance:mode --on
 MAINTENACE=1
 
 umount_retry
 FUSEMOUNT=0
 
-cp -pr /var/www/html ./${SYSTEM_DIR}
-tar czpf ${SYSTEM_ARCH} ${SYSTEM_DIR}
+rsync -a "${HTML_DIR}/" ./${SYSTEM_DIR_NAME}/
+tar czpf ${SYSTEM_ARCH} ${SYSTEM_DIR_NAME}
 
 mysqldump \
     -h ${MYSQL_HOST} \
     -u root \
     -p"${PASSWORD}" \
-    -x --all-databases > ${DB_FILE}
-gzip -c ${DB_FILE} > ${DB_ARCH}
-
-gzip -c "${NEXTCLOUD_LOG_PATH}" > ${LOG_ARCH}
+    -x --all-databases > ${DB_FILE_NAME}
+gzip -c ${DB_FILE_NAME} > ${DB_ARCH}
 
 mount_and_start
 
@@ -102,13 +100,11 @@ gfmkdir -p "${GFARM_BACKUP_PATH}"
 
 gfreg ${SYSTEM_ARCH} "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp"
 gfreg ${DB_ARCH} "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp"
-gfreg ${LOG_ARCH} "${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp"
 
-gfchmod 600 "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp"
+gfchmod 600 "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp"
 
 gfmv "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}"
 gfmv "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${DB_ARCH}"
-gfmv "${GFARM_BACKUP_PATH}/${LOG_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${LOG_ARCH}"
 
 gfls -l "${GFARM_BACKUP_PATH}"
 echo "Backup is complete."

@@ -7,62 +7,56 @@ set -o pipefail
 #set -x
 
 source /nc-gfarm/config.sh
+source ${CONFIG_LIB}
 
 create_mount_point()
 {
-    mv "${DATA_DIR}" "${TMP_DATA_DIR}"
-    mkdir -p "${DATA_DIR}"
-    chmod 750 "${DATA_DIR}"
-    chown ${NEXTCLOUD_USER}:root "${DATA_DIR}"
+    ${SUDO_USER} mv "${DATA_DIR}" "${TMP_DATA_DIR}"
+    ${SUDO_USER} mkdir -p "${DATA_DIR}"
+    ${SUDO_USER} chmod 750 "${DATA_DIR}"
 }
 
-move_existing_files()
-{
-    ${SUDO_USER} rsync -rlpt "${TMP_DATA_DIR}/" "${DATA_DIR}/"
-    rm -r "${TMP_DATA_DIR}"
-}
-
-is_mounted()
-{
-    df "${DATA_DIR}" | egrep -q '^gfarm2fs\s'
-}
-
-if [ ! -f "${POST_FLAG_PATH}" -a ! -f "${RESTORE_FLAG_PATH}" -a ! -f "${VOLUME_REUSE_FLAG_PATH}" -a ! -d "${DATA_DIR}" ]; then
-    ${SUDO_USER} -E php /var/www/html/occ maintenance:mode --on
-
-    CURRENT_LOG_PATH=`${SUDO_USER} -E php /var/www/html/occ log:file | grep 'Log file:' | awk '{ print $3 }'`
-    if [ "${CURRENT_LOG_PATH}" != "${NEXTCLOUD_LOG_PATH}" ]; then
-        ${SUDO_USER} -E php /var/www/html/occ log:file --file "${NEXTCLOUD_LOG_PATH}"
-        mv "${CURRENT_LOG_PATH}" "${NEXTCLOUD_LOG_PATH}"
-    fi
-    ${SUDO_USER} -E php /var/www/html/occ config:system:set skeletondirectory --value=''
-
+# before mount_gfarm2fs
+FILE_NUM=$(${SUDO_USER} ls -1a --ignore=. --ignore=.. "${DATA_DIR}" | wc -l)
+if [ ${FILE_NUM} -gt 0 ]; then  # not empty
+    # new container ==> initial data files exist
     create_mount_point
-
-    ${SUDO_USER} gfarm2fs ${MNT_OPT} "${DATA_DIR}"
-
-    move_existing_files
-
-    touch "${POST_FLAG_PATH}"
 fi
 
-if ! is_mounted; then
-    FILE_NUM=$(ls -1a --ignore=. --ignore=.. "${DATA_DIR}" | wc -l)
-    if [ ${FILE_NUM} -gt 0 ]; then
-        create_mount_point
+mount_gfarm2fs
+
+if [ ${FILE_NUM} -gt 0 ]; then  # not empty
+    GFARM_DIR_FILE_NUM=$(${SUDO_USER} ls -1a --ignore=. --ignore=.. "${DATA_DIR}" | wc -l)
+    if [ ${GFARM_DIR_FILE_NUM} -eq 0 ]; then
+        # empty GFARM_DATA_PATH ==> copy files
+        ${SUDO_USER} rsync -rlpt "${TMP_DATA_DIR}/" "${DATA_DIR}/"
+    fi
+    ${SUDO_USER} rm -rf "${TMP_DATA_DIR}"
+fi
+
+# initialization after creating new (or renew) container
+if [ ! -f "${POST_FLAG_PATH}" ]; then
+    ${OCC_USER} maintenance:mode --on || true
+
+    # may fail
+    #set +e +o pipefail
+    CURRENT_LOG_PATH=`${OCC_USER} log:file | grep 'Log file:' | awk '{ print $3 }'`
+    #set -e -o pipefail
+    if [ "${CURRENT_LOG_PATH}" != "${NEXTCLOUD_LOG_PATH}" ]; then
+        ${OCC_USER} log:file --file "${NEXTCLOUD_LOG_PATH}"
+        ${SUDO_USER} mv "${CURRENT_LOG_PATH}" "${NEXTCLOUD_LOG_PATH}"
     fi
 
-    ${SUDO_USER} gfarm2fs ${MNT_OPT} "${DATA_DIR}"
+    ${OCC_USER} config:system:set skeletondirectory --value=''
+    ${OCC_USER} config:system:set default_phone_region --value="${NEXTCLOUD_DEFAULT_PHONE_REGION}"
 
-    if [ ${FILE_NUM} -gt 0 ]; then
-        move_existing_files
-    fi
+    touch "${POST_FLAG_PATH}"
 fi
 
 # backup.sh requires ${NEXTCLOUD_LOG_PATH}
 touch "${NEXTCLOUD_LOG_PATH}"
 
-# fail before initializing Nextcloud.
-${SUDO_USER} -E php /var/www/html/occ maintenance:mode --off || true
+# fail before initializing Nextcloud
+${OCC_USER} maintenance:mode --off || true
 
 exec "$@"

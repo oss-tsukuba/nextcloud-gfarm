@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y \
   supervisor \
   vim \
   less \
+  libmagickcore-6.q16-6-extra \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
