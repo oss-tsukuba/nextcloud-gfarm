@@ -3,9 +3,6 @@ ARG NEXTCLOUD_VERSION
 FROM nextcloud:${NEXTCLOUD_VERSION}
 RUN echo ${NEXTCLOUD_VERSION}
 
-ARG GFARM_SRC_URL
-ARG GFARM2FS_SRC_URL
-
 RUN apt-get update && apt-get install -y \
   sudo \
   netbase \
@@ -23,25 +20,44 @@ RUN apt-get update && apt-get install -y \
   mariadb-client \
   tar \
   supervisor \
+  git \
   vim \
   less \
   libmagickcore-6.q16-6-extra \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+ARG GFARM_SRC_URL
+ARG GFARM_SRC_GIT_URL
+ARG GFARM_SRC_GIT_BRANCH
+ARG GFARM2FS_SRC_URL
+ARG GFARM2FS_SRC_GIT_URL
+ARG GFARM2FS_SRC_GIT_BRANCH
+
 RUN cd /root \
-  && curl -sLJO ${GFARM_SRC_URL} \
-  && ARCH=`ls -1 gfarm-*.tar.gz` \
-  && tar xf ${ARCH} \
-  && DIRNAME=`echo ${ARCH} | sed 's/\.tar\.gz$//g'` \
+  && if [ -n "${GFARM_SRC_URL}" ]; then \
+       curl -sLJO ${GFARM_SRC_URL} \
+       && ARCH=`ls -1 gfarm-*.tar.gz` \
+       && tar xf ${ARCH} \
+       && DIRNAME=`echo ${ARCH} | sed 's/\.tar\.gz$//g'` \
+     ; else \
+       DIRNAME=gfarm \
+       && git clone -b ${GFARM_SRC_GIT_BRANCH} --depth 1 ${GFARM_SRC_GIT_URL} ${DIRNAME} \
+     ; fi \
+  && echo DIRNAME=${DIRNAME} \
   && cd ${DIRNAME} \
   && ./configure --with-globus --without-openldap --without-postgresql \
   && make -j \
   && make -j install \
-  && curl -sLJO ${GFARM2FS_SRC_URL} \
-  && ARCH=`ls -1 gfarm2fs-*.tar.gz` \
-  && tar xf ${ARCH} \
-  && DIRNAME=`echo ${ARCH} | sed 's/\.tar\.gz$//g'` \
+  && if [ -n "${GFARM2FS_SRC_URL}" ]; then \
+       curl -sLJO ${GFARM2FS_SRC_URL} \
+       && ARCH=`ls -1 gfarm2fs-*.tar.gz` \
+       && tar xf ${ARCH} \
+       && DIRNAME=`echo ${ARCH} | sed 's/\.tar\.gz$//g'` \
+     ; else \
+       DIRNAME=gfarm2fs \
+       && git clone -b ${GFARM2FS_SRC_GIT_BRANCH} --depth 1 ${GFARM2FS_SRC_GIT_URL} ${DIRNAME} \
+     ; fi \
   && cd ${DIRNAME} \
   && ./configure \
   && make -j \
