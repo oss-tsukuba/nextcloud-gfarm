@@ -8,6 +8,9 @@ COMPOSE_V2 = docker compose
 COMPOSE = $(SUDO) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) $(COMPOSE_V1)
 #COMPOSE = $(SUDO) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) $(COMPOSE_V2)
 
+EXEC = $(COMPOSE) exec -u www-data nextcloud
+EXEC_ROOT = $(COMPOSE) exec -u root nextcloud
+
 OCC = $(COMPOSE) exec -u www-data nextcloud php /var/www/html/occ
 
 ps:
@@ -23,10 +26,12 @@ down:
 down-REMOVE_VOLUMES:
 	$(COMPOSE) down --volumes --remove-orphans
 
-reborn update:
+reborn:
 	$(COMPOSE) build
 	$(MAKE) down
 	$(COMPOSE) up -d
+	sleep 1
+	$(MAKE) auth-init
 
 reborn-withlog:
 	$(MAKE) reborn
@@ -46,10 +51,10 @@ restart-withlog:
 	$(COMPOSE) logs --follow
 
 shell:
-	$(COMPOSE) exec -u www-data nextcloud /bin/bash
+	$(EXEC) /bin/bash
 
 shell-root:
-	$(COMPOSE) exec nextcloud bash
+	$(EXEC_ROOT) bash
 
 logs:
 	$(COMPOSE) logs
@@ -67,7 +72,25 @@ occ-maintenancemode-off:
 	$(OCC) maintenance:mode --off
 
 backup:
-	$(COMPOSE) exec -u www-data nextcloud /nc-gfarm/backup.sh
+	$(EXEC) /nc-gfarm/backup.sh
+
+auth-init:
+	$(MAKE) grid-proxy-init
+	$(MAKE) myproxy-logon
+
+grid-proxy-init:
+	$(EXEC) /nc-gfarm/grid-proxy-init.sh
+
+grid-proxy-init-withlog:
+	$(MAKE) grid-proxy-init
+	$(MAKE) logs-follow
+
+myproxy-logon:
+	$(EXEC) /nc-gfarm/myproxy-logon.sh
+
+myproxy-logon-withlog:
+	$(MAKE) myproxy-logon
+	$(MAKE) logs-follow
 
 copy-gfarm_shared_key:
-	$(COMPOSE) exec -u root nextcloud /nc-gfarm/copy_gfarm_shared_key.sh
+	$(EXEC_ROOT) /nc-gfarm/copy_gfarm_shared_key.sh

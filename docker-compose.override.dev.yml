@@ -10,8 +10,7 @@ services:
         - http_proxy=${http_proxy}
         - https_proxy=${https_proxy}
     environment:
-      - http_proxy=${http_proxy}
-      - https_proxy=${https_proxy}
+      # override
       - GFARM_USER=user1
       - GFARM_DATA_PATH=/home/user1/nextcloud-data
       - GFARM_BACKUP_PATH=/home/user1/nextcloud-backup
@@ -26,8 +25,8 @@ services:
       - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.gfarm_shared_key:/gfarm_shared_key:ro
       - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.globus:/dot_globus:ro
       - /work/gfarm/docker/dev/mnt/COPY_DIR/CERTS:/etc/grid-security/certificates:ro
-    secrets:
-      - grid_proxy_password
+    #secrets:
+    #  - grid_proxy_password
     networks:
       gfarm_dev:
     ports:
@@ -41,6 +40,6 @@ networks:
   gfarm_dev:
     external: true
 
-secrets:
-  grid_proxy_password:
-    file: ./grid_proxy_password
+#secrets:
+#  grid_proxy_password:
+#    file: ./grid_proxy_password

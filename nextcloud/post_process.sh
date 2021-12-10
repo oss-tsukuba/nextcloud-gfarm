@@ -46,7 +46,9 @@ if [ ! -f "${POST_FLAG_PATH}" ]; then
     #set -e -o pipefail
     if [ "${CURRENT_LOG_PATH}" != "${NEXTCLOUD_LOG_PATH}" ]; then
         ${OCC_USER} log:file --file "${NEXTCLOUD_LOG_PATH}"
-        ${SUDO_USER} mv "${CURRENT_LOG_PATH}" "${NEXTCLOUD_LOG_PATH}"
+        if [ -f "${CURRENT_LOG_PATH}" ]; then
+            ${SUDO_USER} mv "${CURRENT_LOG_PATH}" "${NEXTCLOUD_LOG_PATH}"
+        fi
     fi
 
     ${OCC_USER} config:system:set skeletondirectory --value=''

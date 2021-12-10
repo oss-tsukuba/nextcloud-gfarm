@@ -4,7 +4,6 @@
 
 set -eu
 set -o pipefail
-#set -x
 
 source /nc-gfarm/config.sh
 
@@ -32,6 +31,7 @@ trap finalize EXIT
 
 cd ${TMPDIR}
 
+echo "Restore is starting...."
 ${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}" > ${SYSTEM_ARCH}
 ${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${DB_ARCH}" > ${DB_ARCH}
 
@@ -45,3 +45,4 @@ mysql -h ${MYSQL_HOST} \
       -p"$(cat ${MYSQL_PASSWORD_FILE})" < ${DB_FILE_NAME}
 
 touch "${RESTORE_FLAG_PATH}"
+echo "Restore is complete."

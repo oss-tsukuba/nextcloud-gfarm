@@ -29,8 +29,13 @@ export GFARM_DATA_PATH="${GFARM_DATA_PATH}"
 export GFARM_BACKUP_PATH="${GFARM_BACKUP_PATH}"
 export GFARM_ATTR_CACHE_TIMEOUT=${GFARM_ATTR_CACHE_TIMEOUT}
 
+export MYPROXY_SERVER=${MYPROXY_SERVER}
+export MYPROXY_USER=${MYPROXY_USER}
+export GRID_PROXY_HOURS=${GRID_PROXY_HOURS}
+
 export TZ=${TZ}
 
+export GFARM_ATTR_CACHE_TIMEOUT=${GFARM_ATTR_CACHE_TIMEOUT}
 export FUSE_ENTRY_TIMEOUT=${FUSE_ENTRY_TIMEOUT}
 export FUSE_NEGATIVE_TIMEOUT=${FUSE_NEGATIVE_TIMEOUT}
 export FUSE_ATTR_TIMEOUT=${FUSE_ATTR_TIMEOUT}
@@ -40,8 +45,8 @@ export PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT}
 export PHP_UPLOAD_LIMIT=${PHP_UPLOAD_LIMIT}
 EOF
 
-### export environment variables
-source "${CONFIG_ENV}"
+### reload and export environment variables
+source /nc-gfarm/config.sh
 
 copy0 "${MYSQL_PASSWORD_FILE}" "${MYSQL_PASSWORD_FILE_FOR_USER}"
 ### unnecessary
@@ -52,36 +57,48 @@ echo "${GFARM_USER} ${NEXTCLOUD_USER}" > "${GFARM_USERMAP}"
 chown0 "${GFARM_USERMAP}"
 
 GFARM_CONF="/usr/local/etc/gfarm2.conf"
+[ -s "/gfarm2.conf" ]
 cp "/gfarm2.conf" "${GFARM_CONF}"
 echo >> "${GFARM_CONF}"
 echo "local_user_map ${GFARM_USERMAP}" >> "${GFARM_CONF}"
 echo "attr_cache_timeout ${GFARM_ATTR_CACHE_TIMEOUT:-180}" >> "${GFARM_CONF}"
 chown0 "${GFARM_CONF}"
 
-if [ -f "/gfarm2rc" ]; then
+if [ -s "/gfarm2rc" ]; then
     GFARM2RC="${HOMEDIR}/.gfarm2rc"
     copy0 "/gfarm2rc" "${GFARM2RC}"
 fi
 
 "${COPY_GFARM_SHARED_KEY_SH}"
 
-if [ -d "/dot_globus" ]; then
-    DOT_GLOBUS="${HOMEDIR}/.globus"
-    copy0 "/dot_globus" "${DOT_GLOBUS}"
+USE_GSI=0
+
+if [ -d "${GLOBUS_USER_DIR_ORIG}" ]; then
+    copy0 "${GLOBUS_USER_DIR_ORIG}" "${GLOBUS_USER_DIR}"
+    USE_GSI=1
 fi
 
 if [ -f "${GRID_PROXY_PASSWORD_FILE}" ]; then
     cat "${GRID_PROXY_PASSWORD_FILE}" | \
         ${SUDO_USER} grid-proxy-init -pwstdin -hours "${GRID_PROXY_HOURS}"
-    ${SUDO_USER} grid-proxy-info
+    USE_GSI=1
 fi
 
-if [ -f "${MYPROXY_PASSWORD_FILE}" -a -n "${MYPROXY_SERVER}" ]; then
-    MYPROXY_USER=${MYPROXY_USER:-${GFARM_USER}}
-    cat "${MYPROXY_PASSWORD_FILE}" | \
-        ${SUDO_USER} myproxy-logon --stdin_pass \
-        -s "${MYPROXY_SERVER}" -l "${MYPROXY_USER}" -t "${GRID_PROXY_HOURS}"
-    ${SUDO_USER} grid-proxy-info
+if [ -n "${MYPROXY_SERVER}" ]; then
+    USE_GSI=1
+    if [ -f "${MYPROXY_PASSWORD_FILE}" ]; then
+        cat "${MYPROXY_PASSWORD_FILE}" | \
+            ${SUDO_USER} myproxy-logon --stdin_pass \
+            -s "${MYPROXY_SERVER}" -l "${MYPROXY_USER}" \
+            -t "${GRID_PROXY_HOURS}"
+    fi
+fi
+
+if [ ${USE_GSI} -eq 1 ]; then
+    while ! ${SUDO_USER} grid-proxy-info; do
+        echo "INFO: To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH}, waiting for ..."
+        sleep 5
+    done
 fi
 
 if [ ! -f ${INIT_FLAG_PATH} ]; then
@@ -96,10 +113,10 @@ if [ ! -f ${INIT_FLAG_PATH} ]; then
     touch "${INIT_FLAG_PATH}"
 fi
 
-echo "checking accessibility to Gfarm"
+echo "checking availability to Gfarm (wait for a while ...)"
 num_gfsd=$(${SUDO_USER} gfsched | wc -l)
 if [ $num_gfsd -le 0 ]; then
-    echo "No accessibility to Gfarm" >&2
+    echo "Not available to Gfarm" >&2
     exit 1
 fi
 

@@ -8,6 +8,8 @@ set -o pipefail
 source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
 
-if [ -f "${GFARM_SHARED_KEY_ORIG}" ]; then
-    copy0 "${GFARM_SHARED_KEY_ORIG}" "${GFARM_SHARED_KEY}"
+if [ ! -r "${GLOBUS_USER_KEY}" ]; then
+    exit 0
 fi
+
+retry_command grid-proxy-init -hours "${GRID_PROXY_HOURS}"

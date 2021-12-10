@@ -6,7 +6,6 @@ set -eu
 set -o pipefail
 
 source /nc-gfarm/config.sh
-source ${CONFIG_ENV}
 
 BACKUP_FLAG="${NEXTCLOUD_SPOOL_PATH}/backup"
 
@@ -47,15 +46,14 @@ cd "${TMPDIR}"
 
 ${OCC} maintenance:mode --on
 rsync -rlpt --exclude="/data/" "${HTML_DIR}/" ./${SYSTEM_DIR_NAME}/
-${OCC} maintenance:mode --off
-
-tar czpf ${SYSTEM_ARCH} ${SYSTEM_DIR_NAME}
-
 mysqldump \
     -h ${MYSQL_HOST} \
     -u root \
     -p"${PASSWORD}" \
     -x --all-databases > ${DB_FILE_NAME}
+${OCC} maintenance:mode --off
+
+tar czpf ${SYSTEM_ARCH} ${SYSTEM_DIR_NAME}
 gzip -c ${DB_FILE_NAME} > ${DB_ARCH}
 
 gfmkdir -p "${GFARM_BACKUP_PATH}"

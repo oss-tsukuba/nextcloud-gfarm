@@ -23,3 +23,14 @@ gfarm2fs_is_mounted()
 {
     df "${DATA_DIR}" | egrep -q '^gfarm2fs\s'
 }
+
+retry_command()
+{
+    MAX_RETRY=3
+    COUNT=1
+    until "$@"; do
+        [ ${COUNT} -ge ${MAX_RETRY} ] && return 1  # FAIL
+        echo "Retry [$(( COUNT++ ))/${MAX_RETRY}]: $@"
+    done
+    return 0
+}
