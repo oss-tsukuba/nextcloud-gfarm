@@ -74,7 +74,7 @@ services:
       - /dev/fuse:/dev/fuse
     privileged: false
     secrets:
-      - admin_password
+      - nextcloud_admin_password
       - db_password
       # - myproxy_password
       # - grid_proxy_password
@@ -97,8 +97,8 @@ services:
     image: redis:alpine
 
 secrets:
-  admin_password:
-    file: ./admin_password
+  nextcloud_admin_password:
+    file: ./nextcloud_admin_password
   db_password:
     file: ./db_password
   # myproxy_password:

@@ -19,7 +19,7 @@ $ cd nextcloud-gfarm
 $ cp /path/to/gfarm2.conf .
 $ cp /path/to/gfarm2rc .
 $ cp /path/to/gfarm_shared_key .
-$ vi admin_password
+$ vi nextcloud_admin_password
 $ vi db_password
 $ cp docker-compose.override.yml.sample docker-compose.override.yml
 $ vi docker-compose.override.yml
@@ -28,7 +28,7 @@ $ sudo docker-compose build --pull nextcloud
 $ sudo docker-compose up -d nextcloud
 ```
 
-admin_password は Nextcloud 管理者のパスワード、db_password はデータベースサーバのパスワードです。
+nextcloud_admin_password は Nextcloud 管理者のパスワード、db_password はデータベースサーバのパスワードです。
 各ファイルにパスワードを直接記載してください。
 
 docker-compose.override.yml は docker-compose.yml の設定をオーバーライドするための設定ファイルです。
@@ -73,7 +73,7 @@ nextcloud.env は Gfarm 対応 Nextcloud で利用する環境変数の設定フ
     - 初期値は admin です。
 - NEXTCLOUD_ADMIN_PASSWORD_FILE
     - コンテナ内で Nextcloud の管理者アカウントのパスワードを格納したファイルが配置されるパスです。
-    - 初期値は /run/secrets/admin_password です。
+    - 初期値は /run/secrets/nextcloud_admin_password です。
 - NEXTCLOUD_LOG_PATH
     - コンテナ内で Nextcloud のログを配置するパスです。
     - 初期値は /var/log/nextcloud.log です。

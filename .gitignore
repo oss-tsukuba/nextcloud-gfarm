@@ -1,7 +1,7 @@
 *~
 /.env
 /docker-compose.override.yml
-/admin_password
+/nextcloud_admin_password
 /db_password
 /grid_proxy_password
 /myproxy_password
