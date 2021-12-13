@@ -10,13 +10,9 @@ services:
         - http_proxy=${http_proxy}
         - https_proxy=${https_proxy}
     environment:
-      # override
       - GFARM_USER=user1
       - GFARM_DATA_PATH=/home/user1/nextcloud-data
       - GFARM_BACKUP_PATH=/home/user1/nextcloud-backup
-      - NEXTCLOUD_BACKUP_TIME=0 3 * * *
-      - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS}
-      #- OVERWRITEHOST=${OVERWRITEHOST}
       - GRID_PROXY_HOURS=8760
       - NEXTCLOUD_GFARM_DEBUG=1
     volumes:
@@ -24,13 +20,14 @@ services:
       - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.gfarm2rc:/gfarm2rc:ro
       - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.gfarm_shared_key:/gfarm_shared_key:ro
       - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.globus:/dot_globus:ro
+      - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/x509up_u1000:/globus_user_proxy:ro
       - /work/gfarm/docker/dev/mnt/COPY_DIR/CERTS:/etc/grid-security/certificates:ro
     #secrets:
     #  - grid_proxy_password
     networks:
       gfarm_dev:
     ports:
-      - 28080:80
+      - ${HTTP_PORT}:80
 
   mariadb:
     networks:

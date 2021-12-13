@@ -30,7 +30,6 @@ reborn:
 	$(COMPOSE) build
 	$(MAKE) down
 	$(COMPOSE) up -d
-	sleep 1
 	$(MAKE) auth-init
 
 reborn-withlog:
@@ -45,6 +44,7 @@ stop:
 
 restart:
 	$(COMPOSE) restart
+	$(MAKE) auth-init
 
 restart-withlog:
 	$(MAKE) restart
@@ -55,6 +55,9 @@ shell:
 
 shell-root:
 	$(EXEC_ROOT) bash
+
+shell-proxy:
+	$(COMPOSE) exec proxy /bin/bash
 
 logs:
 	$(COMPOSE) logs
@@ -78,19 +81,31 @@ auth-init:
 	$(MAKE) grid-proxy-init
 	$(MAKE) myproxy-logon
 
-grid-proxy-init:
-	$(EXEC) /nc-gfarm/grid-proxy-init.sh
-
 grid-proxy-init-withlog:
 	$(MAKE) grid-proxy-init
 	$(MAKE) logs-follow
 
-myproxy-logon:
-	$(EXEC) /nc-gfarm/myproxy-logon.sh
+grid-proxy-info:
+	$(EXEC) grid-proxy-info
+
+grid-proxy-init:
+	$(EXEC) /nc-gfarm/grid-proxy-init.sh
+
+grid-proxy-init-force:
+	$(EXEC) /nc-gfarm/grid-proxy-init.sh --force
 
 myproxy-logon-withlog:
 	$(MAKE) myproxy-logon
 	$(MAKE) logs-follow
 
+myproxy-logon:
+	$(EXEC) /nc-gfarm/myproxy-logon.sh
+
+myproxy-logon-force:
+	$(EXEC) /nc-gfarm/myproxy-logon.sh --force
+
 copy-gfarm_shared_key:
 	$(EXEC_ROOT) /nc-gfarm/copy_gfarm_shared_key.sh
+
+copy-globus_user_proxy:
+	$(EXEC_ROOT) /nc-gfarm/copy_globus_user_proxy.sh

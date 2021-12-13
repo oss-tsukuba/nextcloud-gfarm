@@ -8,7 +8,13 @@ set -o pipefail
 source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
 
+FORCE=${1:-}
+
 if [ -z "${MYPROXY_SERVER}" ]; then
+    exit 0
+fi
+
+if [ "$FORCE" != '--force' ] && globus_cred_ok; then
     exit 0
 fi
 

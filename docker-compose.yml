@@ -1,45 +1,63 @@
 version: '3.4'
 
+# use variables from .env
+
 services:
   nextcloud:
     hostname: nextcloud
     build:
       context: ./nextcloud
       args:
-        - http_proxy=${http_proxy:-}
-        - https_proxy=${https_proxy:-}
-        - NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION:-21}
         #- GFARM_SRC_URL=https://github.com/oss-tsukuba/gfarm/archive/refs/tags/2.7.19.tar.gz
         - GFARM_SRC_GIT_URL=https://github.com/oss-tsukuba/gfarm.git
         - GFARM_SRC_GIT_BRANCH=2.7
         #- GFARM2FS_SRC_URL=https://github.com/oss-tsukuba/gfarm2fs/archive/refs/tags/1.2.15.tar.gz
         - GFARM2FS_SRC_GIT_URL=https://github.com/oss-tsukuba/gfarm2fs.git
         - GFARM2FS_SRC_GIT_BRANCH=master
+        ### mandatory
+        - NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION:-21}
+        ### optional
+        - http_proxy=${http_proxy:-}
+        - https_proxy=${https_proxy:-}
+    ### use reverse proxy or need to override in docker-compose.override.yml
+    #ports:
+    #  - ${HTTP_PORT}:80
     environment:
-      - NEXTCLOUD_GFARM_DEBUG=${NEXTCLOUD_GFARM_DEBUG:-0}
-      - http_proxy=${http_proxy:-}
-      - https_proxy=${https_proxy:-}
+      ### mandatory
       - GFARM_USER=${GFARM_USER}
       - GFARM_DATA_PATH=${GFARM_DATA_PATH}
       - GFARM_BACKUP_PATH=${GFARM_BACKUP_PATH}
-      - NEXTCLOUD_BACKUP_TIME=${NEXTCLOUD_BACKUP_TIME}
-      - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS}
-      - OVERWRITEHOST=${OVERWRITEHOST}
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+
+      ### optional
+      - NEXTCLOUD_GFARM_DEBUG=${NEXTCLOUD_GFARM_DEBUG:-0}
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - TZ=${TZ:-Asia/Tokyo}
+      - NEXTCLOUD_BACKUP_TIME=${NEXTCLOUD_BACKUP_TIME:-'0 2 * * *'}
+      - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS:-}
+      - OVERWRITEHOST=${OVERWRITEHOST:-}
+      - OVERWRITEPROTOCOL=${OVERWRITEPROTOCOL:-}
+      - OVERWRITEWEBROOT=${OVERWRITEWEBROOT:-}
+      - OVERWRITECONDADDR=${OVERWRITECONDADDR:-}
       - GRID_PROXY_HOURS=${GRID_PROXY_HOURS:-168}
       - MYPROXY_SERVER=${MYPROXY_SERVER:-}
-      - MYPROXY_USER=${MYPROXY_USER}
+      - MYPROXY_USER=${MYPROXY_USER:-}
       - GFARM_ATTR_CACHE_TIMEOUT=${GFARM_ATTR_CACHE_TIMEOUT:-180}
       - FUSE_ENTRY_TIMEOUT=${FUSE_ENTRY_TIMEOUT:-180}
       - FUSE_NEGATIVE_TIMEOUT=${FUSE_NEGATIVE_TIMEOUT:-5}
       - FUSE_ATTR_TIMEOUT=${FUSE_ATTR_TIMEOUT:-180}
     volumes:
-      - ${GFARM2_CONF}:/gfarm2.conf:ro
-      - ${GFARM2RC:-/dev/null}:/gfarm2rc:ro
-      ### need to override when required
-      #- ${GFARM_SHARED_KEY}:/gfarm_shared_key:ro
-      #- ${GRID_CERTIFICATES}:/etc/grid-security/certificates:ro
       - nextcloud:/var/www/html
       - log:/var/log
+      ### mandatory
+      - ${GFARM2_CONF}:/gfarm2.conf:ro
+
+      ### optional
+      - ${GFARM2RC:-/dev/null}:/gfarm2rc:ro
+      - ${GFARM_SHARED_KEY:-/dev/null}:/gfarm_shared_key:ro
+      - ${GRID_CERTIFICATES:-/dev/null}:/etc/grid-security/certificates:ro
+      - ${GRID_USER_PROXY_CERT:-/dev/null}:/grid_user_proxy
     #depends_on:
     #  - mariadb
     security_opt:

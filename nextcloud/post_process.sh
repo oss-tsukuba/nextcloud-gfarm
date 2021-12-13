@@ -54,6 +54,13 @@ if [ ! -f "${POST_FLAG_PATH}" ]; then
     ${OCC_USER} config:system:set skeletondirectory --value=''
     ${OCC_USER} config:system:set default_phone_region --value="${NEXTCLOUD_DEFAULT_PHONE_REGION}"
 
+    # update NEXTCLOUD_TRUSTED_DOMAINS
+    ${OCC_USER} config:system:delete trusted_domains
+    index=0
+    for domain in ${NEXTCLOUD_TRUSTED_DOMAINS} ${VIRTUAL_HOST}; do
+        ${OCC_USER} config:system:set trusted_domains $((index++)) --value=${domain}
+    done
+
     touch "${POST_FLAG_PATH}"
 fi
 

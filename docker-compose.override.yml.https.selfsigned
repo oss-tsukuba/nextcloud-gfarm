@@ -1,0 +1,49 @@
+version: '3.4'
+
+# variables from .env
+
+services:
+  nextcloud:
+    environment:
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
+    networks:
+      - proxy-tier
+      - default
+
+  proxy:
+    build: ./proxy
+    ports:
+      - ${HTTP_PORT}:${HTTP_PORT}
+      - ${HTTPS_PORT}:${HTTPS_PORT}
+    environment:
+      - DEFAULT_HOST=${VIRTUAL_HOST}
+      - HTTP_PORT=${HTTP_PORT}
+      - HTTPS_PORT=${HTTPS_PORT}
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - certs:/etc/nginx/certs:ro
+    networks:
+      - proxy-tier
+
+  omgwtfssl:
+    image: paulczar/omgwtfssl
+    restart: "no"
+    environment:
+      - SSL_SUBJECT=${VIRTUAL_HOST}
+      - CA_SUBJECT=ca@nextcloud-gfarm.example.com
+      - SSL_KEY=/certs/${VIRTUAL_HOST}.key
+      - SSL_CSR=/certs/${VIRTUAL_HOST}.csr
+      - SSL_CERT=/certs/${VIRTUAL_HOST}.crt
+      - SSL_DNS=${VIRTUAL_HOST}
+    volumes:
+      - certs:/certs
+
+volumes:
+  vhost.d:
+  html:
+  certs:
+
+networks:
+  proxy-tier:

@@ -69,8 +69,10 @@ if [ -s "/gfarm2rc" ]; then
     copy0 "/gfarm2rc" "${GFARM2RC}"
 fi
 
+### check gfarm_shared_key
 "${COPY_GFARM_SHARED_KEY_SH}"
 
+### check globus credential
 USE_GSI=0
 
 if [ -d "${GLOBUS_USER_DIR_ORIG}" ]; then
@@ -78,13 +80,18 @@ if [ -d "${GLOBUS_USER_DIR_ORIG}" ]; then
     USE_GSI=1
 fi
 
-if [ -f "${GRID_PROXY_PASSWORD_FILE}" ]; then
+if [ -s "${GLOBUS_USER_PROXY_ORIG}" ]; then
+    "${COPY_GLOBUS_USER_PROXY_SH}"
+    USE_GSI=1
+fi
+
+if [ -f "${GRID_PROXY_PASSWORD_FILE}" ] && ! globus_cred_ok; then
     cat "${GRID_PROXY_PASSWORD_FILE}" | \
         ${SUDO_USER} grid-proxy-init -pwstdin -hours "${GRID_PROXY_HOURS}"
     USE_GSI=1
 fi
 
-if [ -n "${MYPROXY_SERVER}" ]; then
+if [ -n "${MYPROXY_SERVER}" ] && ! globus_cred_ok; then
     USE_GSI=1
     if [ -f "${MYPROXY_PASSWORD_FILE}" ]; then
         cat "${MYPROXY_PASSWORD_FILE}" | \
@@ -95,7 +102,7 @@ if [ -n "${MYPROXY_SERVER}" ]; then
 fi
 
 if [ ${USE_GSI} -eq 1 ]; then
-    while ! ${SUDO_USER} grid-proxy-info; do
+    while ! globus_cred_ok; do
         echo "INFO: To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH}, waiting for ..."
         sleep 5
     done
@@ -114,7 +121,7 @@ if [ ! -f ${INIT_FLAG_PATH} ]; then
 fi
 
 echo "checking availability to Gfarm (wait for a while ...)"
-num_gfsd=$(${SUDO_USER} gfsched | wc -l)
+num_gfsd=$(${SUDO_USER} gfsched -n 1 | wc -l)
 if [ $num_gfsd -le 0 ]; then
     echo "Not available to Gfarm" >&2
     exit 1
