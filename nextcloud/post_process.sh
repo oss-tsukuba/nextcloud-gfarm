@@ -57,7 +57,7 @@ if [ ! -f "${POST_FLAG_PATH}" ]; then
     # update NEXTCLOUD_TRUSTED_DOMAINS
     ${OCC_USER} config:system:delete trusted_domains
     index=0
-    for domain in ${NEXTCLOUD_TRUSTED_DOMAINS} ${VIRTUAL_HOST}; do
+    for domain in ${NEXTCLOUD_TRUSTED_DOMAINS}; do
         ${OCC_USER} config:system:set trusted_domains $((index++)) --value=${domain}
     done
 

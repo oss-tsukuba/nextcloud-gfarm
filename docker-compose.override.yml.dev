@@ -33,6 +33,10 @@ services:
     networks:
       gfarm_dev:
 
+  redis:
+    networks:
+      gfarm_dev:
+
 networks:
   gfarm_dev:
     external: true

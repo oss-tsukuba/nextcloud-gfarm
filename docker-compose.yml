@@ -23,6 +23,8 @@ services:
     #ports:
     #  - ${HTTP_PORT}:80
     environment:
+      - REDIS_HOST=redis
+
       ### mandatory
       - GFARM_USER=${GFARM_USER}
       - GFARM_DATA_PATH=${GFARM_DATA_PATH}
@@ -57,9 +59,11 @@ services:
       - ${GFARM2RC:-/dev/null}:/gfarm2rc:ro
       - ${GFARM_SHARED_KEY:-/dev/null}:/gfarm_shared_key:ro
       - ${GRID_CERTIFICATES:-/dev/null}:/etc/grid-security/certificates:ro
-      - ${GRID_USER_PROXY_CERT:-/dev/null}:/grid_user_proxy
-    #depends_on:
-    #  - mariadb
+      - ${GRID_DOT_GLOBUS_DIR:-/dev/null}:/dot_globus:ro
+      - ${GRID_USER_PROXY_CERT:-/dev/null}:/grid_user_proxy:ro
+    depends_on:
+      - mariadb
+      - redis
     security_opt:
       ### for fuse
       - apparmor:unconfined
@@ -88,6 +92,9 @@ services:
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     secrets:
       - db_password
+
+  redis:
+    image: redis:alpine
 
 secrets:
   admin_password:
