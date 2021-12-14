@@ -6,12 +6,13 @@ set -eu
 set -o pipefail
 
 source /nc-gfarm/config.sh
+source ${CONFIG_LIB}
 
 # root only
 [ $(id -u) -eq 0 ] || exit 1
 
 if [ -f "${RESTORE_FLAG_PATH}" ]; then
-    echo "restore.sh is ignored (already restored)" >&2
+    WARN "restore.sh is ignored (already restored)"
     exit 1
 fi
 
@@ -31,7 +32,7 @@ trap finalize EXIT
 
 cd ${TMPDIR}
 
-echo "Restore is starting...."
+INFO "Restore is starting...."
 ${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}" > ${SYSTEM_ARCH}
 ${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${DB_ARCH}" > ${DB_ARCH}
 
@@ -45,4 +46,4 @@ mysql -h ${MYSQL_HOST} \
       -p"$(cat ${MYSQL_PASSWORD_FILE})" < ${DB_FILE_NAME}
 
 touch "${RESTORE_FLAG_PATH}"
-echo "Restore is complete."
+INFO "Restore is complete."

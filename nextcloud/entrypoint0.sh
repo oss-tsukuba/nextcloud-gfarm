@@ -70,12 +70,15 @@ if [ -s "/gfarm2rc" ]; then
 fi
 
 ### check gfarm_shared_key
+USE_GFARM_SHARED_KEY=0
+
 if [ -s "${GFARM_SHARED_KEY_ORIG}" ]; then
     "${COPY_GFARM_SHARED_KEY_SH}"
     while ! is_valid_gfarm_shared_key; do
-        echo "INFO: To start Nextcloud, you need to run ${COPY_GFARM_SHARED_KEY_SH}, waiting for ..."
+        INFO "To start Nextcloud, you need to run ${COPY_GFARM_SHARED_KEY_SH}, waiting for ..."
         sleep 5
     done
+    USE_GFARM_SHARED_KEY=1
 fi
 
 ### check X.509 proxy certificate
@@ -91,13 +94,13 @@ if [ -s "${GLOBUS_USER_PROXY_ORIG}" ]; then
     USE_GSI=1
 fi
 
-if [ -f "${GRID_PROXY_PASSWORD_FILE}" ] && ! is_valid_proxy; then
+if [ -f "${GRID_PROXY_PASSWORD_FILE}" ] && ! is_valid_proxy_cert; then
     cat "${GRID_PROXY_PASSWORD_FILE}" | \
         ${SUDO_USER} grid-proxy-init -pwstdin -hours "${GRID_PROXY_HOURS}"
     USE_GSI=1
 fi
 
-if [ -n "${MYPROXY_SERVER}" ] && ! is_valid_proxy; then
+if [ -n "${MYPROXY_SERVER}" ] && ! is_valid_proxy_cert; then
     USE_GSI=1
     if [ -f "${MYPROXY_PASSWORD_FILE}" ]; then
         cat "${MYPROXY_PASSWORD_FILE}" | \
@@ -108,17 +111,19 @@ if [ -n "${MYPROXY_SERVER}" ] && ! is_valid_proxy; then
 fi
 
 if [ ${USE_GSI} -eq 1 ]; then
-    while ! is_valid_proxy; do
-        echo "INFO: To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH} or ${COPY_GLOBUS_USER_PROXY_SH}, waiting for ..."
+    while ! is_valid_proxy_cert; do
+        INFO "To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH} or ${COPY_GLOBUS_USER_PROXY_SH}, waiting for ..."
         sleep 5
     done
 fi
 
+# for gfarm_check_online.sh
+gfarm_cred_status_set "${USE_GFARM_SHARED_KEY}" "${USE_GSI}"
+
 if [ ! -f ${INIT_FLAG_PATH} ]; then
     sed -i -e 's/^NAME_COMPATIBILITY=STRICT_RFC2818$/NAME_COMPATIBILITY=HYBRID/' /etc/grid-security/gsi.conf
 
-    mkdir -p /var/spool/cron/crontabs
-    echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> /var/spool/cron/crontabs/${NEXTCLOUD_USER}
+    mkdir -p "${CRONTAB_DIR_PATH}"
 
     FLAG_DIR=$(dirname ${INIT_FLAG_PATH})
     mkdir -p "${FLAG_DIR}"
@@ -126,10 +131,15 @@ if [ ! -f ${INIT_FLAG_PATH} ]; then
     touch "${INIT_FLAG_PATH}"
 fi
 
-echo "checking availability to Gfarm (wait for a while ...)"
+### reset crontab
+cp -f "${CRONTAB_TEMPLATE}" "${CRONTAB_FILE_PATH}"
+echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> "${CRONTAB_FILE_PATH}"
+echo "${GFARM_CHECK_ONLINE_TIME} ${GFARM_CHECK_ONLINE_SH}" >> "${CRONTAB_FILE_PATH}"
+
+INFO "checking availability to Gfarm (wait for a while ...)"
 num_gfsd=$(${SUDO_USER} gfsched -n 1 | wc -l)
 if [ $num_gfsd -le 0 ]; then
-    echo "Not available to Gfarm" >&2
+    ERR "Not available to Gfarm"
     exit 1
 fi
 
@@ -138,7 +148,7 @@ ${SUDO_USER} gfchmod 750 "${GFARM_DATA_PATH}"
 
 MYSQL_PASSWORD="$(cat ${MYSQL_PASSWORD_FILE})"
 until mysqladmin ping -h ${MYSQL_HOST} -u ${MYSQL_USER} -p"${MYSQL_PASSWORD}"; do
-    echo 'waiting for starting mysql server (${MYSQL_HOST}) ...'
+    INFO 'waiting for starting mysql server (${MYSQL_HOST}) ...'
     sleep 1
 done
 

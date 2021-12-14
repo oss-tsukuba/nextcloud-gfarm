@@ -1,3 +1,18 @@
+ERR()
+{
+    echo "ERR: $@" >&2
+}
+
+WARN()
+{
+    echo "WARN: $@" >&2
+}
+
+INFO()
+{
+    echo "INFO: $@" >&2
+}
+
 chown0()
 {
     chown -R ${NEXTCLOUD_USER}:root "$@"
@@ -22,7 +37,7 @@ mount_gfarm2fs()
 
 gfarm2fs_is_mounted()
 {
-    df "${DATA_DIR}" | egrep -q '^gfarm2fs\s'
+    ${SUDO_USER} df "${DATA_DIR}" | egrep -q '^gfarm2fs\s'
 }
 
 retry_command()
@@ -31,23 +46,46 @@ retry_command()
     COUNT=1
     until "$@"; do
         [ ${COUNT} -ge ${MAX_RETRY} ] && return 1  # FAIL
-        echo "Retry [$(( COUNT++ ))/${MAX_RETRY}]: $@"
+        INFO "Retry [$(( COUNT++ ))/${MAX_RETRY}]: $@"
     done
     return 0
 }
 
+timeleft_gfarm_shared_key()
+{
+    et=$(${SUDO_USER} gfkey -e) || return 1
+    [ -n "${et}" ] || return 2
+    et_sec=$(date --date="${et#expiration time is }" +%s) || return 3
+    now=$(date +%s) || return 4
+    echo $((et_sec - now)) || return 5
+}
+
 is_valid_gfarm_shared_key()
 {
-    et=$(${SUDO_USER} gfkey -e)
-    [ -n "${et}" ] || return 1
-    et_sec=$(date --date="${et#expiration time is }" +%s) || return 2
-    now=$(date +%s) || return 3
-    timeleft=$((et_sec - now)) || return 4
+    timeleft=$(timeleft_gfarm_shared_key) || return $?
     [ "${timeleft}" -gt ${GFARM_CREDENTIAL_EXPIRATION_THRESHOLD} ]
 }
 
-is_valid_proxy()
+timeleft_proxy_cert()
 {
     timeleft=$(${SUDO_USER} grid-proxy-info -timeleft) || return 1
+    [ -n "${timeleft}" ] || return 2
+    echo "${timeleft}"
+}
+
+is_valid_proxy_cert()
+{
+    timeleft=$(timeleft_proxy_cert) || return $?
     [ "${timeleft}" -gt ${GFARM_CREDENTIAL_EXPIRATION_THRESHOLD} ]
+}
+
+gfarm_cred_status_set()
+{
+    echo "USE_GFARM_SHARED_KEY=${1}" > "${GFARM_CRED_STATUS_FILE}"
+    echo "USE_GSI=${2}" >> "${GFARM_CRED_STATUS_FILE}"
+}
+
+gfarm_cred_status_get()
+{
+    source "${GFARM_CRED_STATUS_FILE}"
 }

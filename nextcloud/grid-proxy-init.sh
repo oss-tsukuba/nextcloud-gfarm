@@ -14,7 +14,7 @@ if [ ! -s "${GLOBUS_USER_KEY}" ]; then
     exit 0
 fi
 
-if [ "$FORCE" != '--force' ] && is_valid_proxy; then
+if [ "$FORCE" != '--force' ] && is_valid_proxy_cert; then
     exit 0
 fi
 

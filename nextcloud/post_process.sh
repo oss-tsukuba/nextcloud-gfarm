@@ -67,7 +67,7 @@ fi
 # backup.sh requires ${NEXTCLOUD_LOG_PATH}
 touch "${NEXTCLOUD_LOG_PATH}"
 
-# fail before initializing Nextcloud
+# force online
 ${OCC_USER} maintenance:mode --off || true
 
 exec "$@"

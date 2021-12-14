@@ -6,6 +6,7 @@ set -eu
 set -o pipefail
 
 source /nc-gfarm/config.sh
+source ${CONFIG_LIB}
 
 BACKUP_FLAG="${NEXTCLOUD_SPOOL_PATH}/backup"
 
@@ -37,12 +38,13 @@ trap remove_tmpdir EXIT
 
 
 if [ -f "${BACKUP_FLAG}" ]; then
-    echo "another backup.sh is running" >&2
+    WARN "another backup.sh is running"
     exit 1
 fi
 touch "${BACKUP_FLAG}"
 
 cd "${TMPDIR}"
+INFO "Backup is starting...."
 
 ${OCC} maintenance:mode --on
 rsync -rlpt --exclude="/data/" "${HTML_DIR}/" ./${SYSTEM_DIR_NAME}/
@@ -58,7 +60,7 @@ gzip -c ${DB_FILE_NAME} > ${DB_ARCH}
 
 gfmkdir -p "${GFARM_BACKUP_PATH}"
 
-if which gfcp; then
+if type gfcp > /dev/null; then
     GFCP=gfcp
     GF_SCHEME="gfarm:"
 else
@@ -75,4 +77,4 @@ gfmv "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${SYSTEM_AR
 gfmv "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${DB_ARCH}"
 
 gfls -l "${GFARM_BACKUP_PATH}"
-echo "Backup is complete."
+INFO "Backup is complete."

@@ -29,7 +29,7 @@ down-REMOVE_VOLUMES:
 reborn:
 	$(COMPOSE) build
 	$(MAKE) down
-	$(COMPOSE) up -d
+	$(COMPOSE) up -d || $(MAKE) logs
 	$(MAKE) auth-init
 
 reborn-withlog:
@@ -43,7 +43,7 @@ stop:
 	$(COMPOSE) stop
 
 restart:
-	$(COMPOSE) restart
+	$(COMPOSE) restart || $(MAKE) logs
 	$(MAKE) auth-init
 
 restart-withlog:
@@ -85,9 +85,6 @@ grid-proxy-init-withlog:
 	$(MAKE) grid-proxy-init
 	$(MAKE) logs-follow
 
-grid-proxy-info:
-	$(EXEC) grid-proxy-info
-
 grid-proxy-init:
 	$(EXEC) /nc-gfarm/grid-proxy-init.sh
 
@@ -103,6 +100,21 @@ myproxy-logon:
 
 myproxy-logon-force:
 	$(EXEC) /nc-gfarm/myproxy-logon.sh --force
+
+grid-proxy-info:
+	$(EXEC) grid-proxy-info
+
+timeleft-proxy_cert:
+	$(EXEC) /nc-gfarm/timeleft-proxy_cert.sh
+
+timeleft-gfarm_shared_key:
+	$(EXEC) /nc-gfarm/timeleft-gfarm_shared_key.sh
+
+gfarm_check_online:
+	$(EXEC) bash /nc-gfarm/gfarm_check_online.sh
+
+gfarm_check_online-verbose:
+	$(EXEC) bash -x /nc-gfarm/gfarm_check_online.sh
 
 copy-gfarm_shared_key:
 	$(EXEC_ROOT) /nc-gfarm/copy_gfarm_shared_key.sh

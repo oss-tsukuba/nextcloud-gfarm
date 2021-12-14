@@ -24,6 +24,7 @@ VIRTUAL_HOST=${VIRTUAL_HOST}
 
 ### optional
 TZ=${TZ:-"Asia/Tokyo"}
+GFARM_CHECK_ONLINE_TIME=${GFARM_CHECK_ONLINE_TIME:-'*/5 * * * *'}
 GFARM_CREDENTIAL_EXPIRATION_THRESHOLD=${GFARM_CREDENTIAL_EXPIRATION_THRESHOLD:-600}
 GFARM_ATTR_CACHE_TIMEOUT=${GFARM_ATTR_CACHE_TIMEOUT:-"180"}
 FUSE_ENTRY_TIMEOUT=${FUSE_ENTRY_TIMEOUT:-"180"}
@@ -55,7 +56,7 @@ NEXTCLOUD_USER="www-data"
 if [ $(whoami) = "${NEXTCLOUD_USER}" ]; then
     SUDO_USER=""
 else
-    SUDO_USER="sudo -s -u ${NEXTCLOUD_USER}"
+    SUDO_USER="sudo -s -u ${NEXTCLOUD_USER} -E"
 fi
 
 HOMEDIR="/var/www"
@@ -65,9 +66,16 @@ TMP_DATA_DIR="${DATA_DIR}.bak"
 NEXTCLOUD_LOG_PATH="${HTML_DIR}/nextcloud.log"
 
 OCC="php ${HTML_DIR}/occ"
-OCC_USER="${SUDO_USER} -E ${OCC}"
+OCC_USER="${SUDO_USER} ${OCC}"
 
 MNT_OPT="-o nonempty,modules=subdir,subdir=${GFARM_DATA_PATH},entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
+
+CRONTAB_TEMPLATE="${NCGFARM_DIR}/crontab.tmpl"
+CRONTAB_DIR_PATH="/var/spool/cron/crontabs"
+CRONTAB_FILE_PATH="${CRONTAB_DIR_PATH}/${NEXTCLOUD_USER}"
+
+GFARM_CRED_STATUS_FILE="/tmp/nextcloud-gfarm-cred_status"
+GFARM_CHECK_ACCESS_FILE="${DATA_DIR}/.nextcloud-gfarm-accesstime"
 
 SYSTEM_DIR_NAME="html"
 SYSTEM_ARCH="${SYSTEM_DIR_NAME}.tar.gz"
@@ -97,3 +105,4 @@ GRID_PROXY_INIT_SH="${NCGFARM_DIR}/grid-proxy-init.sh"
 MYPROXY_LOGON_SH="${NCGFARM_DIR}/myproxy-logon.sh"
 COPY_GFARM_SHARED_KEY_SH="${NCGFARM_DIR}/copy_gfarm_shared_key.sh"
 COPY_GLOBUS_USER_PROXY_SH="${NCGFARM_DIR}/copy_globus_user_proxy.sh"
+GFARM_CHECK_ONLINE_SH="${NCGFARM_DIR}/gfarm_check_online.sh"

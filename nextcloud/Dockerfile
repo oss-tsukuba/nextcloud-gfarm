@@ -65,7 +65,6 @@ RUN cd /root \
   && ldconfig \
   && mkdir -p /var/spool/cron/crontabs
 
-COPY crontab.tmpl /var/spool/cron/crontabs/www-data
 COPY . /nc-gfarm
 
 # Run in the following order:

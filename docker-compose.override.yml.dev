@@ -14,7 +14,8 @@ services:
       - GFARM_DATA_PATH=/home/user1/nextcloud-data
       - GFARM_BACKUP_PATH=/home/user1/nextcloud-backup
       - GRID_PROXY_HOURS=8760
-      - NEXTCLOUD_GFARM_DEBUG=1
+      - GFARM_CHECK_ONLINE_TIME=*/1 * * * *
+      #- NEXTCLOUD_GFARM_DEBUG=1
     volumes:
       - /work/gfarm/docker/dev/mnt/COPY_DIR/gfarm2.conf:/gfarm2.conf:ro
       - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.gfarm2rc:/gfarm2rc:ro
@@ -22,12 +23,12 @@ services:
       - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/.globus:/dot_globus:ro
       - /work/gfarm/docker/dev/mnt/COPY_DIR/HOMES/user1/x509up_u1000:/globus_user_proxy:ro
       - /work/gfarm/docker/dev/mnt/COPY_DIR/CERTS:/etc/grid-security/certificates:ro
-    #secrets:
-    #  - grid_proxy_password
     networks:
       gfarm_dev:
     ports:
       - ${HTTP_PORT}:80
+    #secrets:
+    #  - grid_proxy_password
 
   mariadb:
     networks:
