@@ -14,7 +14,7 @@ if [ -z "${MYPROXY_SERVER}" ]; then
     exit 0
 fi
 
-if [ "$FORCE" != '--force' ] && globus_cred_ok; then
+if [ "$FORCE" != '--force' ] && is_valid_proxy; then
     exit 0
 fi
 

@@ -70,9 +70,15 @@ if [ -s "/gfarm2rc" ]; then
 fi
 
 ### check gfarm_shared_key
-"${COPY_GFARM_SHARED_KEY_SH}"
+if [ -s "${GFARM_SHARED_KEY_ORIG}" ]; then
+    "${COPY_GFARM_SHARED_KEY_SH}"
+    while ! is_valid_gfarm_shared_key; do
+        echo "INFO: To start Nextcloud, you need to run ${COPY_GFARM_SHARED_KEY_SH}, waiting for ..."
+        sleep 5
+    done
+fi
 
-### check globus credential
+### check X.509 proxy certificate
 USE_GSI=0
 
 if [ -d "${GLOBUS_USER_DIR_ORIG}" ]; then
@@ -85,13 +91,13 @@ if [ -s "${GLOBUS_USER_PROXY_ORIG}" ]; then
     USE_GSI=1
 fi
 
-if [ -f "${GRID_PROXY_PASSWORD_FILE}" ] && ! globus_cred_ok; then
+if [ -f "${GRID_PROXY_PASSWORD_FILE}" ] && ! is_valid_proxy; then
     cat "${GRID_PROXY_PASSWORD_FILE}" | \
         ${SUDO_USER} grid-proxy-init -pwstdin -hours "${GRID_PROXY_HOURS}"
     USE_GSI=1
 fi
 
-if [ -n "${MYPROXY_SERVER}" ] && ! globus_cred_ok; then
+if [ -n "${MYPROXY_SERVER}" ] && ! is_valid_proxy; then
     USE_GSI=1
     if [ -f "${MYPROXY_PASSWORD_FILE}" ]; then
         cat "${MYPROXY_PASSWORD_FILE}" | \
@@ -102,8 +108,8 @@ if [ -n "${MYPROXY_SERVER}" ] && ! globus_cred_ok; then
 fi
 
 if [ ${USE_GSI} -eq 1 ]; then
-    while ! globus_cred_ok; do
-        echo "INFO: To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH}, waiting for ..."
+    while ! is_valid_proxy; do
+        echo "INFO: To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH} or ${COPY_GLOBUS_USER_PROXY_SH}, waiting for ..."
         sleep 5
     done
 fi

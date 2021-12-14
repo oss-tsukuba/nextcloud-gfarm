@@ -36,8 +36,18 @@ retry_command()
     return 0
 }
 
-globus_cred_ok()
+is_valid_gfarm_shared_key()
 {
-    timeleft=$(${SUDO_USER} grid-proxy-info -timeleft)
-    [ "${timeleft}" -gt 0 ]
+    et=$(${SUDO_USER} gfkey -e)
+    [ -n "${et}" ] || return 1
+    et_sec=$(date --date="${et#expiration time is }" +%s) || return 2
+    now=$(date +%s) || return 3
+    timeleft=$((et_sec - now)) || return 4
+    [ "${timeleft}" -gt ${GFARM_CREDENTIAL_EXPIRATION_THRESHOLD} ]
+}
+
+is_valid_proxy()
+{
+    timeleft=$(${SUDO_USER} grid-proxy-info -timeleft) || return 1
+    [ "${timeleft}" -gt ${GFARM_CREDENTIAL_EXPIRATION_THRESHOLD} ]
 }
