@@ -97,6 +97,8 @@ services:
 
   redis:
     image: redis:alpine
+    command:
+      - --loglevel warning
 
 secrets:
   nextcloud_admin_password:
