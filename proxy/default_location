@@ -1,0 +1,7 @@
+location /.well-known/carddav {
+    proxy_pass http://$server_name/remote.php/dav;
+}
+
+location /.well-known/caldav {
+    proxy_pass http://$server_name/remote.php/dav;
+}

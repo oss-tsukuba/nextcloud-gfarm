@@ -16,9 +16,7 @@ services:
       - HTTP_PORT=${HTTP_PORT}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - vhost.d:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
 
 volumes:
-  vhost.d:
   html:

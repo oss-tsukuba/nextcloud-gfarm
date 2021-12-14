@@ -22,7 +22,6 @@ services:
       #- HTTPS_METHOD=noredirect
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - vhost.d:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
       - certs:/etc/nginx/certs:ro
     networks:
@@ -42,7 +41,6 @@ services:
       - certs:/certs
 
 volumes:
-  vhost.d:
   html:
   certs:
 
