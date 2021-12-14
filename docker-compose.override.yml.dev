@@ -6,7 +6,6 @@ services:
   nextcloud:
     build:
       args:
-        - NEXTCLOUD_VERSION=21
         - http_proxy=${http_proxy}
         - https_proxy=${https_proxy}
     environment:

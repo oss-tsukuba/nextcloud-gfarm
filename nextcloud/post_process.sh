@@ -38,27 +38,27 @@ fi
 
 # initialization after creating new (or renew) container
 if [ ! -f "${POST_FLAG_PATH}" ]; then
-    ${OCC_USER} maintenance:mode --on || true
+    ${OCC} maintenance:mode --on || true
 
     # may fail
     #set +e +o pipefail
-    CURRENT_LOG_PATH=`${OCC_USER} log:file | grep 'Log file:' | awk '{ print $3 }'`
+    CURRENT_LOG_PATH=`${OCC} log:file | grep 'Log file:' | awk '{ print $3 }'`
     #set -e -o pipefail
     if [ "${CURRENT_LOG_PATH}" != "${NEXTCLOUD_LOG_PATH}" ]; then
-        ${OCC_USER} log:file --file "${NEXTCLOUD_LOG_PATH}"
+        ${OCC} log:file --file "${NEXTCLOUD_LOG_PATH}"
         if [ -f "${CURRENT_LOG_PATH}" ]; then
             ${SUDO_USER} mv "${CURRENT_LOG_PATH}" "${NEXTCLOUD_LOG_PATH}"
         fi
     fi
 
-    ${OCC_USER} config:system:set skeletondirectory --value=''
-    ${OCC_USER} config:system:set default_phone_region --value="${NEXTCLOUD_DEFAULT_PHONE_REGION}"
+    ${OCC} config:system:set skeletondirectory --value=''
+    ${OCC} config:system:set default_phone_region --value="${NEXTCLOUD_DEFAULT_PHONE_REGION}"
 
     # update NEXTCLOUD_TRUSTED_DOMAINS
-    ${OCC_USER} config:system:delete trusted_domains
+    ${OCC} config:system:delete trusted_domains
     index=0
     for domain in ${NEXTCLOUD_TRUSTED_DOMAINS}; do
-        ${OCC_USER} config:system:set trusted_domains $((index++)) --value=${domain}
+        ${OCC} config:system:set trusted_domains $((index++)) --value=${domain}
     done
 
     touch "${POST_FLAG_PATH}"
@@ -68,6 +68,6 @@ fi
 touch "${NEXTCLOUD_LOG_PATH}"
 
 # force online
-${OCC_USER} maintenance:mode --off || true
+${OCC} maintenance:mode --off || true
 
 exec "$@"

@@ -89,3 +89,8 @@ gfarm_cred_status_get()
 {
     source "${GFARM_CRED_STATUS_FILE}"
 }
+
+maintenance_enabled()
+{
+    ${OCC} maintenance:mode | grep -q "enabled"
+}

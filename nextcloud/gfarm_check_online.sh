@@ -8,13 +8,8 @@ set -o pipefail
 source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
 
-maintenance_enabled()
-{
-    ${OCC_USER} maintenance:mode | grep enabled
-}
-
 if maintenance_enabled; then
-    WARN "maintenance:mode ... enabled"
+    WARN "gfarm_check_online.sh: maintenance:mode is enabled ... skipped"
     exit 1
 fi
 
@@ -22,7 +17,7 @@ maintenance_on()
 {
     ERR "expired Gfarm credential, or no accesibility to Gfarm"
     WARN "maintenance:mode --on"
-    ${OCC_USER} maintenance:mode --on
+    ${OCC} maintenance:mode --on
 }
 
 gfarm_cred_status_get

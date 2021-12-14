@@ -74,6 +74,9 @@ occ-maintenancemode-on:
 occ-maintenancemode-off:
 	$(OCC) maintenance:mode --off
 
+files-scan:
+	$(EXEC) /nc-gfarm/files_scan.sh
+
 backup:
 	$(EXEC) /nc-gfarm/backup.sh
 

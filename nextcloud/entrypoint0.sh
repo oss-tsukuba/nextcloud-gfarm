@@ -135,6 +135,7 @@ fi
 cp -f "${CRONTAB_TEMPLATE}" "${CRONTAB_FILE_PATH}"
 echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> "${CRONTAB_FILE_PATH}"
 echo "${GFARM_CHECK_ONLINE_TIME} ${GFARM_CHECK_ONLINE_SH}" >> "${CRONTAB_FILE_PATH}"
+echo "${NEXTCLOUD_FILES_SCAN_TIME} ${FILES_SCAN_SH}" >> "${CRONTAB_FILE_PATH}"
 
 INFO "checking availability to Gfarm (wait for a while ...)"
 num_gfsd=$(${SUDO_USER} gfsched -n 1 | wc -l)
