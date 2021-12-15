@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
   vim \
   less \
   libmagickcore-6.q16-6-extra \
+  iproute2 \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -49,6 +50,7 @@ RUN cd /root \
   && ./configure --with-globus --without-openldap --without-postgresql \
   && make -j \
   && make -j install \
+  && cd .. \
   && if [ -n "${GFARM2FS_SRC_URL}" ]; then \
        curl -sLJO ${GFARM2FS_SRC_URL} \
        && ARCH=`ls -1 gfarm2fs-*.tar.gz` \
