@@ -65,6 +65,9 @@ logs:
 logs-follow:
 	$(COMPOSE) logs --follow
 
+logs-less:
+	$(COMPOSE) logs | less -R
+
 occ-add-missing-indices:
 	$(OCC) db:add-missing-indices
 
