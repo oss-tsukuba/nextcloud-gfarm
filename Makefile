@@ -110,6 +110,9 @@ myproxy-logon-force:
 grid-proxy-info:
 	$(EXEC) grid-proxy-info
 
+gfkey-e:
+	$(EXEC) gfkey -e
+
 timeleft-proxy_cert:
 	$(EXEC) /nc-gfarm/timeleft-proxy_cert.sh
 
