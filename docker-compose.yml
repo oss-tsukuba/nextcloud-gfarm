@@ -62,7 +62,7 @@ services:
       - ${GFARM2_CONF}:/gfarm2.conf:ro
 
       ### optional
-      - ${GFARM2RC:-/dev/null}:/gfarm2rc:ro
+      - ${GFARM2_CONF_USER:-/dev/null}:/gfarm2rc:ro
       - ${GFARM_SHARED_KEY:-/dev/null}:/gfarm_shared_key:ro
       - ${GRID_CERTIFICATES:-/dev/null}:/etc/grid-security/certificates:ro
       - ${GRID_DOT_GLOBUS_DIR:-/dev/null}:/dot_globus:ro
