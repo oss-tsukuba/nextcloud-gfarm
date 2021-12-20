@@ -5,14 +5,14 @@ version: '3.4'
 services:
   nextcloud:
     environment:
-      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - VIRTUAL_HOST=${SERVER_NAME}
 
   proxy:
     build: ./proxy
     ports:
       - ${HTTP_PORT}:${HTTP_PORT}
     environment:
-      - DEFAULT_HOST=${VIRTUAL_HOST}
+      - DEFAULT_HOST=${SERVER_NAME}
       - HTTP_PORT=${HTTP_PORT}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro

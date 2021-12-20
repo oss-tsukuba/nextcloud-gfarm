@@ -133,9 +133,18 @@ fi
 
 ### reset crontab
 cp -f "${CRONTAB_TEMPLATE}" "${CRONTAB_FILE_PATH}"
-echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> "${CRONTAB_FILE_PATH}"
-echo "${GFARM_CHECK_ONLINE_TIME} ${GFARM_CHECK_ONLINE_SH}" >> "${CRONTAB_FILE_PATH}"
-echo "${NEXTCLOUD_FILES_SCAN_TIME} ${FILES_SCAN_SH}" >> "${CRONTAB_FILE_PATH}"
+chown0 "${CRONTAB_FILE_PATH}"
+${SUDO_USER} ln -s "${CRONTAB_FILE_PATH}" "${HOMEDIR}/crontab"
+
+if [ -n "${NEXTCLOUD_BACKUP_TIME}" ]; then
+    echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> "${CRONTAB_FILE_PATH}"
+fi
+if [ -n "${GFARM_CHECK_ONLINE_TIME}" ]; then
+    echo "${GFARM_CHECK_ONLINE_TIME} ${GFARM_CHECK_ONLINE_SH}" >> "${CRONTAB_FILE_PATH}"
+fi
+if [ -n "${NEXTCLOUD_FILES_SCAN_TIME}" ]; then
+    echo "${NEXTCLOUD_FILES_SCAN_TIME} ${FILES_SCAN_SH}" >> "${CRONTAB_FILE_PATH}"
+fi
 
 INFO "checking availability to Gfarm (wait for a while ...)"
 num_gfsd=$(${SUDO_USER} gfsched -n 1 | wc -l)

@@ -5,7 +5,7 @@ version: '3.4'
 services:
   nextcloud:
     environment:
-      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - VIRTUAL_HOST=${SERVER_NAME}
     networks:
       - proxy-tier
       - default
@@ -13,10 +13,10 @@ services:
   proxy:
     build: ./proxy
     ports:
-      - ${HTTP_PORT}:80
-      - ${HTTPS_PORT}:443
+      - ${HTTP_PORT:-80}:80
+      - ${HTTPS_PORT:-443}:443
     environment:
-      - DEFAULT_HOST=${VIRTUAL_HOST}
+      - DEFAULT_HOST=${SERVER_NAME}
       - HTTP_PORT=80
       - HTTPS_PORT=443
       #- HTTPS_METHOD=noredirect
@@ -31,12 +31,12 @@ services:
     image: paulczar/omgwtfssl
     restart: "no"
     environment:
-      - SSL_SUBJECT=${VIRTUAL_HOST}
+      - SSL_SUBJECT=${SERVER_NAME}
       - CA_SUBJECT=ca@nextcloud-gfarm.example.com
-      - SSL_KEY=/certs/${VIRTUAL_HOST}.key
-      - SSL_CSR=/certs/${VIRTUAL_HOST}.csr
-      - SSL_CERT=/certs/${VIRTUAL_HOST}.crt
-      - SSL_DNS=${VIRTUAL_HOST}
+      - SSL_KEY=/certs/${SERVER_NAME}.key
+      - SSL_CSR=/certs/${SERVER_NAME}.csr
+      - SSL_CERT=/certs/${SERVER_NAME}.crt
+      - SSL_DNS=${SERVER_NAME}
     volumes:
       - certs:/certs
 
