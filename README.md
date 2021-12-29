@@ -13,8 +13,8 @@ For other details, please refer to
 
 ## Requirements
 
-- docker
-- docker compose
+- [Docker](https://docs.docker.com/engine/install/)
+- [Docker Compose](https://docs.docker.com/compose/)
 - GNU make
 - gfarm2.conf
 
@@ -23,13 +23,13 @@ Optional:
 - Gfarm user configuration (~/.gfarm2rc)
 - Gfarm shared key (~/.gfarm_shared_key)
 - GSI user key (~/.globus/usercert.pem + ~/.globus/userkey.pem + pass-phrase)
-- GSI user proxy certificate (/tmp/x509up_u<UID>)
+- GSI user proxy certificate (`/tmp/x509up_u<UID>`)
 - GSI myproxy server (hostname + password)
 
 ## Quick start
 
-- install docker
-- install docker compose
+- install Docker
+- install Docker Compose
 - create and edit db_password file
 - create and edit nextcloud_admin_password file
 - create and edit .env file (see below)
@@ -43,7 +43,7 @@ Optional:
 - open the URL in a browser
 - login
     - username: admin
-    - password: <value of nextcloud_admin_password>
+    - password: `<value of nextcloud_admin_password>`
 
 ## Configuration (.env)
 
