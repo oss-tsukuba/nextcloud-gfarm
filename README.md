@@ -5,7 +5,7 @@
 - Nextcloud container with Gfarm as backend storage.
 - Use one Gfarm user and the data directory for multiple Nextcloud users.
 - Back up to Gfarm automatically.
-- Restore from Gfarm when empty local storage (docker volume).
+- Restore from Gfarm automatically when local data (docker volume) is empty.
 - Reverse proxy is required in front of this Nextcloud if you want to use https.
 
 For other details, please refer to
