@@ -190,12 +190,15 @@ make down-REMOVE_VOLUMES
 make reborn-withlog
 ```
 
-## Log
+## Logging
 
-- Nextcloud log: Nextcloud UI -> Logging (for backup)
+- Nextcloud log: Nextcloud UI -> Logging
     - or /var/www/html/nextcloud.log in container.
-- "make logs" for containers (not for backup)
-- /var/log/ in Nextcloud container (not for backup)
+    - This is included in the backup.
+- "make logs" for containers
+    - NOTE: This is not included in the backup.
+- /var/log/* in Nextcloud container (not for backup)
+    - NOTE: This is not included in the backup.
 
 ## Update to a newer Nextcloud
 
