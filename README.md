@@ -34,15 +34,15 @@ Optional:
 - create and edit nextcloud_admin_password file
 - create and edit .env file (see below)
 - specifiy Gfarm configuration
-- run "ln -s docker-compose.override.yml.https.selfsigned docker-compose.override.yml"
+- run `ln -s docker-compose.override.yml.https.selfsigned docker-compose.override.yml`
     - docker-compose.override.yml.https.selfsigned is one of the setting examples
     - or use an other docker-compose.override.yml.*
     - or create docker-compose.override.yml
-- run "make reborn-withlog"
+- run `make reborn-withlog`
 - input password (if necessary)
 - open the URL in a browser
 - login
-    - username: admin
+    - username: `admin`
     - password: `<value of nextcloud_admin_password>`
 
 ## Configuration (.env)
@@ -195,16 +195,16 @@ make reborn-withlog
 - Nextcloud log: Nextcloud UI -> Logging
     - or /var/www/html/nextcloud.log in container.
     - This is included in the backup.
-- "make logs" for containers
+- `make logs` for containers
     - NOTE: This is not included in the backup.
 - /var/log/* in Nextcloud container
     - NOTE: This is not included in the backup.
 
 ## Update to a newer Nextcloud
 
-- run "make backup"
+- run `make backup`
 - change NEXTCLOUD_VERSION
-- run "make reborn-withlog"
+- run `make reborn-withlog`
 
 NOTE:
 
