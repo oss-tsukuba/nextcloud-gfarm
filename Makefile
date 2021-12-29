@@ -1,8 +1,7 @@
 COMPOSE_PROJECT_NAME = nextcloud-gfarm
-SUDO = sudo
 
+SUDO = $(shell docker version > /dev/null 2>&1 || echo sudo)
 DOCKER = $(SUDO) docker
-
 COMPOSE_V1 = docker-compose
 COMPOSE_V2 = docker compose
 COMPOSE_SW = $(shell which ${COMPOSE_V1} || echo ${COMPOSE_V2})
