@@ -30,16 +30,20 @@ Optional:
 
 - install docker
 - install docker compose
-- create db_password
-- create nextcloud_admin_password
-- create and edit .env (see below)
+- create and edit db_password file
+- create and edit nextcloud_admin_password file
+- create and edit .env file (see below)
 - specifiy Gfarm configuration
 - run "ln -s docker-compose.override.yml.https.selfsigned docker-compose.override.yml"
-    - or use other docker-compose.override.yml.*
+    - docker-compose.override.yml.https.selfsigned is one of the setting examples
+    - or use an other docker-compose.override.yml.*
     - or create docker-compose.override.yml
 - run "make reborn-withlog"
 - input password (if necessary)
 - open the URL in a browser
+- login
+    - username: admin
+    - password: <value of nextcloud_admin_password>
 
 ## Configuration (.env)
 
@@ -116,7 +120,7 @@ optional parameters (default values are listed in docker-compose.yml):
 
 ```
 make stop
-make start
+make restart-withlog
 ```
 
 ## Update credential
@@ -124,7 +128,7 @@ make start
 To copy Gfarm shared key:
 
 ```
-# after updating .gfarm_shared_key
+### after updating .gfarm_shared_key on host OS
 make copy-gfarm_shared_key
 make occ-maintenancemode-off
 ```
@@ -132,6 +136,7 @@ make occ-maintenancemode-off
 To copy GSI user proxy certificate:
 
 ```
+### after running grid-proxy-init or myproxy-logon on host OS
 make copy-globus_user_proxy
 make occ-maintenancemode-off
 ```
@@ -150,10 +155,18 @@ make myproxy-logon-force
 make occ-maintenancemode-off
 ```
 
-## Shell
+## Use shell of Nextcloud container
+
+Nextcloud user (www-data):
 
 ```
 make shell
+```
+
+root user:
+
+```
+make shell-root
 ```
 
 ## Backup
