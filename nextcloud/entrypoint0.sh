@@ -134,7 +134,7 @@ fi
 ### reset crontab
 cp -f "${CRONTAB_TEMPLATE}" "${CRONTAB_FILE_PATH}"
 chown0 "${CRONTAB_FILE_PATH}"
-${SUDO_USER} ln -s "${CRONTAB_FILE_PATH}" "${HOMEDIR}/crontab"
+${SUDO_USER} ln -f -s "${CRONTAB_FILE_PATH}" "${HOMEDIR}/crontab"
 
 if [ -n "${NEXTCLOUD_BACKUP_TIME}" ]; then
     echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> "${CRONTAB_FILE_PATH}"
