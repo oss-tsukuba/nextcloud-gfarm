@@ -197,7 +197,7 @@ make reborn-withlog
     - This is included in the backup.
 - "make logs" for containers
     - NOTE: This is not included in the backup.
-- /var/log/* in Nextcloud container (not for backup)
+- /var/log/* in Nextcloud container
     - NOTE: This is not included in the backup.
 
 ## Update to a newer Nextcloud
