@@ -1,0 +1,4 @@
+services:
+  nextcloud:
+    ports:
+      - ${HTTP_PORT:?HTTP_PORT}:80
