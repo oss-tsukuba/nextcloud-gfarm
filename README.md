@@ -2,7 +2,7 @@
 
 ## Overview
 
-- Nextcloud container with Gfarm as backend storage.
+- Nextcloud container with Gfarm as back-end storage.
 - Use one Gfarm user and the data directory for multiple Nextcloud users.
 - Back up to Gfarm automatically.
 - Restore from Gfarm automatically when local data (docker volume) is empty.
@@ -33,7 +33,7 @@ Optional:
 - create and edit db_password file
 - create and edit nextcloud_admin_password file
 - create and edit .env file (see below)
-- specifiy Gfarm configuration
+- specify Gfarm configuration
 - run `ln -s docker-compose.override.yml.https.selfsigned docker-compose.override.yml`
     - docker-compose.override.yml.https.selfsigned is one of the setting examples
     - or use an other docker-compose.override.yml.*
