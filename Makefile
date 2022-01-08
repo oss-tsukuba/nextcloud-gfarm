@@ -11,6 +11,7 @@ EXEC = $(COMPOSE) exec -u www-data nextcloud
 EXEC_ROOT = $(COMPOSE) exec -u root nextcloud
 
 OCC = $(COMPOSE) exec -u www-data nextcloud php /var/www/html/occ
+SHELL=/bin/bash
 
 ps:
 	$(COMPOSE) ps
@@ -23,7 +24,9 @@ down:
 	$(MAKE) prune
 
 down-REMOVE_VOLUMES:
-	$(COMPOSE) down --volumes --remove-orphans
+	read -n1 -p "ERASE ALL LOCAL DATA. Do you have a backup? (y/N): " YN; \
+	case "$$YN" in [yY]*) $(COMPOSE) down --volumes --remove-orphans;; \
+	*) echo ; echo "ABORT ($${YN})"; false;; esac
 
 reborn:
 	$(COMPOSE) build

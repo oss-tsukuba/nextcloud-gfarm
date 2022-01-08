@@ -60,7 +60,7 @@ gzip -c ${DB_FILE_NAME} > ${DB_ARCH}
 
 gfmkdir -p "${GFARM_BACKUP_PATH}"
 
-if type gfcp > /dev/null; then
+if [ ${NEXTCLOUD_BACKUP_USE_GFCP} -eq 1 ] && type gfcp > /dev/null; then
     GFCP=gfcp
     GF_SCHEME="gfarm:"
 else
@@ -68,13 +68,46 @@ else
     GF_SCHEME=""
 fi
 
-${GFCP} ${SYSTEM_ARCH} "${GF_SCHEME}${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp"
-${GFCP} ${DB_ARCH} "${GF_SCHEME}${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp"
+enc()
+{
+    ENC="$1"
+    IN="$2"
+    OUT="$3"
+    PASS="${NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER}"
 
-gfchmod 600 "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp"
+    openssl enc -${ENC} -e \
+    -pbkdf2 -iter "${NEXTCLOUD_BACKUP_ENCRYPT_PBKDF2_ITER}" \
+    -in "${IN}" -out "${OUT}" -pass file:"$PASS"
+}
 
-gfmv "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}"
-gfmv "${GFARM_BACKUP_PATH}/${DB_ARCH}.tmp" "${GFARM_BACKUP_PATH}/${DB_ARCH}"
+upload()
+{
+    ENC="$1"
+    NAME="$2"
+
+    ENC_SUFFIX=".enc"
+    SUFFIX=""
+    SRC="${NAME}"
+    if [ -n "${ENC}" ]; then
+        SUFFIX="${ENC_SUFFIX}"
+        SRC_ENC="${SRC}${SUFFIX}"
+        enc "${ENC}" "${SRC}" "${SRC_ENC}"
+        SRC="${SRC_ENC}"
+    fi
+    DST="${GFARM_BACKUP_PATH}/${NAME}${SUFFIX}"
+    DST_TMP="${DST}.tmp"
+    ${GFCP} "${SRC}" "${GF_SCHEME}${DST_TMP}"
+    gfchmod 600 "${DST_TMP}"
+    gfmv "${DST_TMP}" "${DST}"
+}
+
+upload "" "${SYSTEM_ARCH}" &
+p1=$!
+# encrypt DB only
+upload "${NEXTCLOUD_BACKUP_ENCRYPT}" "${DB_ARCH}" &
+p2=$!
+wait $p1
+wait $p2
 
 gfls -l "${GFARM_BACKUP_PATH}"
 INFO "Backup is complete."

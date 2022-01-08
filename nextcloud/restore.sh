@@ -33,8 +33,55 @@ trap finalize EXIT
 cd ${TMPDIR}
 
 INFO "Restore is starting...."
-${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${SYSTEM_ARCH}" > ${SYSTEM_ARCH}
-${SUDO_USER} gfexport "${GFARM_BACKUP_PATH}/${DB_ARCH}" > ${DB_ARCH}
+
+HAVE_GFCP=0
+if [ ${NEXTCLOUD_BACKUP_USE_GFCP} -eq 1 ] && type gfcp > /dev/null; then
+    HAVE_GFCP=1
+fi
+
+dec()
+{
+    ENC="$1"
+    IN="$2"
+    OUT="$3"
+    PASS="${NEXTCLOUD_ADMIN_PASSWORD_FILE}"
+
+    openssl enc -${ENC} -d \
+    -pbkdf2 -iter "${NEXTCLOUD_BACKUP_ENCRYPT_PBKDF2_ITER}" \
+    -in "${IN}" -out "${OUT}" -pass file:"${PASS}"
+}
+
+download()
+{
+    ENC="$1"
+    NAME="$2"
+
+    ENC_SUFFIX=".enc"
+    SUFFIX=""
+    SRC="${GFARM_BACKUP_PATH}/${NAME}"
+    if [ -n "${ENC}" ]; then
+        SUFFIX="${ENC_SUFFIX}"
+        SRC="${SRC}${SUFFIX}"
+    fi
+    DST="${NAME}"
+    DST_ENC="${DST}${SUFFIX}"
+    if [ $HAVE_GFCP -eq 1 ]; then
+        ${SUDO_USER} gfcp "${GF_SCHEME}${SRC}" "${DST_ENC}"
+    else
+        ${SUDO_USER} gfexport "${SRC}" > "${DST_ENC}"
+    fi
+    if [ -n "${ENC}" ]; then
+        dec "${ENC}" "${DST_ENC}" "${DST}"
+    fi
+}
+
+download "" "${SYSTEM_ARCH}" &
+p1=$!
+# encrypt DB only
+download "${NEXTCLOUD_BACKUP_ENCRYPT}" "${DB_ARCH}" &
+p2=$!
+wait $p1
+wait $p2
 
 tar xzpf ${SYSTEM_ARCH}
 rsync -a ${SYSTEM_DIR_NAME}/ "${HTML_DIR}/"
