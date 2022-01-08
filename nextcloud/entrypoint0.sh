@@ -48,7 +48,16 @@ EOF
 ### reload and export environment variables
 source /nc-gfarm/config.sh
 
-copy0 "${MYSQL_PASSWORD_FILE}" "${MYSQL_PASSWORD_FILE_FOR_USER}"
+# unnecessary
+#copy0 "${MYSQL_PASSWORD_FILE}" "${MYSQL_PASSWORD_FILE_FOR_USER}"
+tmp1=$(mktemp)
+cat <<EOF > $tmp1
+[client]
+password="$(cat ${MYSQL_PASSWORD_FILE})"
+EOF
+copy0 $tmp1 "${MYSQL_CONF}"
+rm -f $tmp1
+
 copy0 "${NEXTCLOUD_ADMIN_PASSWORD_FILE}" "${NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER}"
 
 GFARM_USERMAP="${HOMEDIR}/.gfarm_usermap"
@@ -155,9 +164,8 @@ fi
 ${SUDO_USER} gfmkdir -p "${GFARM_DATA_PATH}"
 ${SUDO_USER} gfchmod 750 "${GFARM_DATA_PATH}"
 
-MYSQL_PASSWORD="$(cat ${MYSQL_PASSWORD_FILE})"
-until mysqladmin ping -h ${MYSQL_HOST} -u ${MYSQL_USER} -p"${MYSQL_PASSWORD}"; do
-    INFO 'waiting for starting mysql server (${MYSQL_HOST}) ...'
+until mysqladmin --defaults-file="${MYSQL_CONF}" -h ${MYSQL_HOST} -u ${MYSQL_USER} ping; do
+    INFO "waiting for starting mysql server (${MYSQL_HOST}) ..."
     sleep 1
 done
 

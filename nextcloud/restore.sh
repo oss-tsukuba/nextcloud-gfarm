@@ -88,9 +88,9 @@ rsync -a ${SYSTEM_DIR_NAME}/ "${HTML_DIR}/"
 chown -R ${NEXTCLOUD_USER}:${NEXTCLOUD_USER} "${HTML_DIR}"
 
 gunzip ${DB_ARCH}
-mysql -h ${MYSQL_HOST} \
-      -u root \
-      -p"$(cat ${MYSQL_PASSWORD_FILE})" < ${DB_FILE_NAME}
+mysql --defaults-file="${MYSQL_CONF}" \
+      -h ${MYSQL_HOST} \
+      -u root < ${DB_FILE_NAME}
 
 touch "${RESTORE_FLAG_PATH}"
 INFO "Restore is complete."

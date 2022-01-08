@@ -99,6 +99,7 @@ RESTORE_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/restore"
 POST_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/post"
 
 MYSQL_PASSWORD_FILE_FOR_USER="${HOMEDIR}/nextcloud_db_password"
+MYSQL_CONF="${HOMEDIR}/nextcloud.my.cnf"
 NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER="${HOMEDIR}/nextcloud_admin_password"
 
 GFARM_SHARED_KEY_ORIG="/gfarm_shared_key"

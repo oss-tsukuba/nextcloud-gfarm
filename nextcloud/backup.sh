@@ -13,12 +13,6 @@ BACKUP_FLAG="${NEXTCLOUD_SPOOL_PATH}/backup"
 # ${NEXTCLOUD_USER} only
 [ $(whoami) = "${NEXTCLOUD_USER}" ] || exit 1
 
-if [ -f "${MYSQL_PASSWORD_FILE_FOR_USER:-/}" ]; then
-    PASSWORD="$(cat ${MYSQL_PASSWORD_FILE_FOR_USER})"
-else
-    PASSWORD="${MYSQL_PASSWORD}"
-fi
-
 TMPDIR="$(mktemp --directory)"
 
 remove_tmpdir()
@@ -49,9 +43,9 @@ INFO "Backup is starting...."
 ${OCC} maintenance:mode --on
 rsync -rlpt --exclude="/data/" "${HTML_DIR}/" ./${SYSTEM_DIR_NAME}/
 mysqldump \
+    --defaults-file="${MYSQL_CONF}" \
     -h ${MYSQL_HOST} \
     -u root \
-    -p"${PASSWORD}" \
     -x --all-databases > ${DB_FILE_NAME}
 ${OCC} maintenance:mode --off
 
