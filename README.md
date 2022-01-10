@@ -17,7 +17,7 @@ For other details, please refer to
 - [Docker](https://docs.docker.com/engine/install/)
 - [Docker Compose](https://docs.docker.com/compose/)
 - GNU make
-- gfarm2.conf
+- Gfarm configuration file (gfarm2.conf)
 
 Optional:
 
@@ -44,7 +44,7 @@ Optional:
 - input password of myproxy-logon or grid-proxy-init for Gfarm
   authentication method (when not using .gfarm_shared_key)
 - open the URL in a browser
-    - example: https://<hostname>/
+    - example: `https://<hostname>/`
 - login
     - username: `admin`
     - password: `<value of nextcloud_admin_password>`
@@ -105,12 +105,12 @@ Gfarm configuration parameters (specify only required items)
     - gfarm2rc (optional) (copy from `~/.gfarm2rc`)
     - gfarm_shared_key (optional) (copy from `~/.gfarm_shared_key`)
     - user_proxy_cert (optional) (copy from `/tmp/x509up_u<UID>`)
-- GSI_CERTIFICATES_DIR: /etc/grid-security/certificates/ on host OS
-- GSI_USER_DIR: path to ~/.globus on host OS
+- GSI_CERTIFICATES_DIR: `/etc/grid-security/certificates/` on host OS
+- GSI_USER_DIR: path to `~/.globus` on host OS
 - MYPROXY_SERVER: myproxy server (hostname:port)
 - MYPROXY_USER: username for myproxy server
 - GSI_PROXY_HOUR: hours for grid-proxy-init or myproxy-logon
--
+
 optional parameters (default values are listed in docker-compose.yml):
 
 - HTTP_PORT: http port number (redirect to https)
