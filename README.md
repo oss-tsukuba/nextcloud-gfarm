@@ -154,7 +154,7 @@ To copy Gfarm shared key into container:
 
 ```
 ### (update .gfarm_shared_key)
-cp ~.gfarm_shared_key GFARM_CONF_USER_DIR/gfarm_shared_key
+cp ~/.gfarm_shared_key GFARM_CONF_USER_DIR/gfarm_shared_key
 make copy-gfarm_shared_key
 make occ-maintenancemode-off
 ```
