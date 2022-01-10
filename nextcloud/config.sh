@@ -39,7 +39,7 @@ fi
 : "${GFARM_CHECK_ONLINE_TIME='*/5 * * * *'}"
 : ${GFARM_CREDENTIAL_EXPIRATION_THRESHOLD:="600"}
 
-: ${GRID_PROXY_HOURS:="168"}
+: ${GSI_PROXY_HOURS:="168"}
 : ${MYPROXY_SERVER:=""}
 : ${MYPROXY_USER:=${GFARM_USER}}
 
@@ -102,16 +102,6 @@ MYSQL_PASSWORD_FILE_FOR_USER="${HOMEDIR}/nextcloud_db_password"
 MYSQL_CONF="${HOMEDIR}/nextcloud.my.cnf"
 NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER="${HOMEDIR}/nextcloud_admin_password"
 
-GFARM_SHARED_KEY_ORIG="/gfarm_shared_key"
-GFARM_SHARED_KEY="${HOMEDIR}/.gfarm_shared_key"
-
-GLOBUS_USER_DIR_ORIG="/dot_globus"
-GLOBUS_USER_DIR="${HOMEDIR}/.globus"
-GLOBUS_USER_KEY="${GLOBUS_USER_DIR}/userkey.pem"
-
-GLOBUS_USER_PROXY_ORIG="/globus_user_proxy"
-GLOBUS_USER_PROXY_PREFIX="/tmp/x509up_u"
-
 BACKUP_SH="${NCGFARM_DIR}/backup.sh"
 RESTORE_SH="${NCGFARM_DIR}/restore.sh"
 FILES_SCAN_SH="${NCGFARM_DIR}/files_scan.sh"
@@ -119,5 +109,28 @@ FILES_SCAN_SH="${NCGFARM_DIR}/files_scan.sh"
 GRID_PROXY_INIT_SH="${NCGFARM_DIR}/grid-proxy-init.sh"
 MYPROXY_LOGON_SH="${NCGFARM_DIR}/myproxy-logon.sh"
 COPY_GFARM_SHARED_KEY_SH="${NCGFARM_DIR}/copy_gfarm_shared_key.sh"
-COPY_GLOBUS_USER_PROXY_SH="${NCGFARM_DIR}/copy_globus_user_proxy.sh"
+COPY_GSI_USER_PROXY_SH="${NCGFARM_DIR}/copy_gsi_user_proxy.sh"
 GFARM_CHECK_ONLINE_SH="${NCGFARM_DIR}/gfarm_check_online.sh"
+
+##########################################################
+
+GFARM_CONF_DIR="/gfarm_conf"
+GFARM_CONF_USER_DIR="/gfarm_conf_user"
+
+GFARM2_CONF_ORIG="${GFARM_CONF_DIR}/gfarm2.conf"
+GFARM_CONF="/usr/local/etc/gfarm2.conf"
+
+GFARM2RC_ORIG="${GFARM_CONF_USER_DIR}/gfarm2rc"
+GFARM2RC="${HOMEDIR}/.gfarm2rc"
+
+GFARM_SHARED_KEY_ORIG="${GFARM_CONF_USER_DIR}/gfarm_shared_key"
+GFARM_SHARED_KEY="${HOMEDIR}/.gfarm_shared_key"
+
+GSI_CERTIFICATES_DIR="/etc/grid-security/certificates"
+
+GSI_USER_DIR_ORIG="/gsi_user"
+GSI_USER_DIR="${HOMEDIR}/.globus"
+GSI_USER_KEY="${GSI_USER_DIR}/userkey.pem"
+
+GSI_USER_PROXY_ORIG="/${GFARM_CONF_USER_DIR}/user_proxy_cert"
+GSI_USER_PROXY_PREFIX="/tmp/x509up_u"

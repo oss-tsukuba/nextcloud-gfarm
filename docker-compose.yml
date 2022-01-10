@@ -46,7 +46,7 @@ services:
       #### empty means disabled
       - GFARM_CHECK_ONLINE_TIME=${GFARM_CHECK_ONLINE_TIME-*/5 * * * *}
       - GFARM_CREDENTIAL_EXPIRATION_THRESHOLD=${GFARM_CREDENTIAL_EXPIRATION_THRESHOLD:-600}
-      - GRID_PROXY_HOURS=${GRID_PROXY_HOURS:-168}
+      - GSI_PROXY_HOURS=${GSI_PROXY_HOURS:-168}
       - MYPROXY_SERVER=${MYPROXY_SERVER:-}
       - MYPROXY_USER=${MYPROXY_USER:-}
       - GFARM_ATTR_CACHE_TIMEOUT=${GFARM_ATTR_CACHE_TIMEOUT:-180}
@@ -62,14 +62,12 @@ services:
       - nextcloud:/var/www/html
       - log:/var/log
       ### mandatory
-      - ${GFARM2_CONF}:/gfarm2.conf:ro
+      - ${GFARM_CONF_DIR}:/gfarm_conf:ro
 
       ### optional
-      - ${GFARM2_CONF_USER:-/dev/null}:/gfarm2rc:ro
-      - ${GFARM_SHARED_KEY:-/dev/null}:/gfarm_shared_key:ro
-      - ${GRID_CERTIFICATES:-/dev/null}:/etc/grid-security/certificates:ro
-      - ${GRID_DOT_GLOBUS_DIR:-/dev/null}:/dot_globus:ro
-      - ${GRID_USER_PROXY_CERT:-/dev/null}:/grid_user_proxy:ro
+      - ${GFARM_CONF_USER_DIR:-/dev/null}:/gfarm_conf_user:ro
+      - ${GSI_CERTIFICATES_DIR:-/dev/null}:/etc/grid-security/certificates:ro
+      - ${GSI_USER_DIR:-/dev/null}:/gsi_user:ro
     depends_on:
       - mariadb
       - redis

@@ -18,4 +18,4 @@ if [ "$FORCE" != '--force' ] && is_valid_proxy_cert; then
     exit 0
 fi
 
-retry_command myproxy-logon -s "${MYPROXY_SERVER}" -l "${MYPROXY_USER}" -t "${GRID_PROXY_HOURS}"
+retry_command myproxy-logon -s "${MYPROXY_SERVER}" -l "${MYPROXY_USER}" -t "${GSI_PROXY_HOURS}"

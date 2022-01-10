@@ -71,11 +71,11 @@ OVERWRITEPROTOCOL=https
 GFARM_USER=hpciXXXXXX
 GFARM_DATA_PATH=/home/hpXXXXXX/hpciXXXXXX/nextcloud/data
 GFARM_BACKUP_PATH=/home/hpXXXXXX/hpciXXXXXX/nextcloud/backup
-GRID_PROXY_HOURS=168
-GFARM2_CONF=/work/gfarm-conf/gfarm2.conf
-GRID_CERTIFICATES=/work/gfarm-conf/certificates
+GFARM_CONF_DIR=/work/gfarm-conf/
+GSI_CERTIFICATES_DIR=/work/gfarm-conf/certificates
 MYPROXY_SERVER=portal.hpci.nii.ac.jp:7512
 MYPROXY_USER=hpciXXXXXX
+GSI_PROXY_HOURS=168
 ```
 
 configuration format:
@@ -96,20 +96,21 @@ mandatory parameters:
     - NOTE: Do not share GFARM_DATA_PATH with other nextcloud-gfarm.
 - GFARM_BACKUP_PATH: Gfarm backup directory
     - NOTE: Do not share GFARM_BACKUP_PATH with other nextcloud-gfarm.
-- GFARM2_CONF: path to gfarm2.conf on host OS
+- GFARM_CONF_DIR: path to parent directory on host OS for gfarm2.conf
 
-Gfarm authentication parameters (specify only required items)
+Gfarm configuration parameters (specify only required items)
 (default values are listed in docker-compose.yml):
 
-- GFARM_SHARED_KEY: path to .gfarm_shared_key on host OS
-- GRID_CERTIFICATES: path to /etc/grid-security/certificates on host OS
-- GRID_DOT_GLOBUS_DIR: path to .globus on host OS
-- GRID_USER_PROXY_CERT: path to /tmp/x509up_u???? created on host OS
+- GFARM_CONF_USER_DIR: path to parent directory on host OS for the following files (NOTE: Please make a special directory and copy the files)
+    - gfarm2rc (optional) (copy from `~/.gfarm2rc`)
+    - gfarm_shared_key (optional) (copy from `~/.gfarm_shared_key`)
+    - user_proxy_cert (optional) (copy from `/tmp/x509up_u<UID>`)
+- GSI_CERTIFICATES_DIR: /etc/grid-security/certificates/ on host OS
+- GSI_USER_DIR: path to ~/.globus on host OS
 - MYPROXY_SERVER: myproxy server (hostname:port)
 - MYPROXY_USER: username for myproxy server
-- GRID_PROXY_HOUR: hours for grid-proxy-init or myproxy-logon
-- GFARM2_CONF_USER: path to .gfarm2rc on host OS
-
+- GSI_PROXY_HOUR: hours for grid-proxy-init or myproxy-logon
+-
 optional parameters (default values are listed in docker-compose.yml):
 
 - HTTP_PORT: http port number (redirect to https)
@@ -149,18 +150,20 @@ make restart-withlog
 
 ## Update credential
 
-To copy Gfarm shared key:
+To copy Gfarm shared key into container:
 
 ```
-### after updating .gfarm_shared_key on host OS
+### (update .gfarm_shared_key)
+cp ~.gfarm_shared_key GFARM_CONF_USER_DIR/gfarm_shared_key
 make copy-gfarm_shared_key
 make occ-maintenancemode-off
 ```
 
-To copy GSI user proxy certificate:
+To copy GSI user proxy certificate into container:
 
 ```
-### after running grid-proxy-init or myproxy-logon on host OS
+### (grid-proxy-init or myproxy-logon)
+cp /tmp/x509up_u${UID} GFARM_CONF_USER_DIR/user_proxy_cert
 make copy-globus_user_proxy
 make occ-maintenancemode-off
 ```

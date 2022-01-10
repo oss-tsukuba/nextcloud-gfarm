@@ -130,5 +130,5 @@ gfarm_check_online-verbose:
 copy-gfarm_shared_key:
 	$(EXEC_ROOT) /nc-gfarm/copy_gfarm_shared_key.sh
 
-copy-globus_user_proxy:
-	$(EXEC_ROOT) /nc-gfarm/copy_globus_user_proxy.sh
+copy-gsi_user_proxy:
+	$(EXEC_ROOT) /nc-gfarm/copy_gsi_user_proxy.sh

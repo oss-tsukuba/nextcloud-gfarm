@@ -31,7 +31,7 @@ export GFARM_ATTR_CACHE_TIMEOUT=${GFARM_ATTR_CACHE_TIMEOUT}
 
 export MYPROXY_SERVER=${MYPROXY_SERVER}
 export MYPROXY_USER=${MYPROXY_USER}
-export GRID_PROXY_HOURS=${GRID_PROXY_HOURS}
+export GSI_PROXY_HOURS=${GSI_PROXY_HOURS}
 
 export TZ=${TZ}
 
@@ -64,17 +64,15 @@ GFARM_USERMAP="${HOMEDIR}/.gfarm_usermap"
 echo "${GFARM_USER} ${NEXTCLOUD_USER}" > "${GFARM_USERMAP}"
 chown0 "${GFARM_USERMAP}"
 
-GFARM_CONF="/usr/local/etc/gfarm2.conf"
-[ -s "/gfarm2.conf" ]
-cp "/gfarm2.conf" "${GFARM_CONF}"
+[ -s "${GFARM2_CONF_ORIG}" ]
+cp "${GFARM2_CONF_ORIG}" "${GFARM_CONF}"
 echo >> "${GFARM_CONF}"
 echo "local_user_map ${GFARM_USERMAP}" >> "${GFARM_CONF}"
-echo "attr_cache_timeout ${GFARM_ATTR_CACHE_TIMEOUT:-180}" >> "${GFARM_CONF}"
+echo "attr_cache_timeout ${GFARM_ATTR_CACHE_TIMEOUT}" >> "${GFARM_CONF}"
 chown0 "${GFARM_CONF}"
 
-if [ -s "/gfarm2rc" ]; then
-    GFARM2RC="${HOMEDIR}/.gfarm2rc"
-    copy0 "/gfarm2rc" "${GFARM2RC}"
+if [ -s "${GFARM2RC_ORIG}" ]; then
+    copy0 "${GFARM2RC_ORIG}" "${GFARM2RC}"
 fi
 
 ### check gfarm_shared_key
@@ -92,19 +90,19 @@ fi
 ### check X.509 proxy certificate
 USE_GSI=0
 
-if [ -d "${GLOBUS_USER_DIR_ORIG}" ]; then
-    copy0 "${GLOBUS_USER_DIR_ORIG}" "${GLOBUS_USER_DIR}"
+if [ -d "${GSI_USER_DIR_ORIG}" ]; then
+    copy0 "${GSI_USER_DIR_ORIG}" "${GSI_USER_DIR}"
     USE_GSI=1
 fi
 
-if [ -s "${GLOBUS_USER_PROXY_ORIG}" ]; then
-    "${COPY_GLOBUS_USER_PROXY_SH}"
+if [ -s "${GSI_USER_PROXY_ORIG}" ]; then
+    "${COPY_GSI_USER_PROXY_SH}"
     USE_GSI=1
 fi
 
 if [ -f "${GRID_PROXY_PASSWORD_FILE}" ] && ! is_valid_proxy_cert; then
     cat "${GRID_PROXY_PASSWORD_FILE}" | \
-        ${SUDO_USER} grid-proxy-init -pwstdin -hours "${GRID_PROXY_HOURS}"
+        ${SUDO_USER} grid-proxy-init -pwstdin -hours "${GSI_PROXY_HOURS}"
     USE_GSI=1
 fi
 
@@ -114,13 +112,13 @@ if [ -n "${MYPROXY_SERVER}" ] && ! is_valid_proxy_cert; then
         cat "${MYPROXY_PASSWORD_FILE}" | \
             ${SUDO_USER} myproxy-logon --stdin_pass \
             -s "${MYPROXY_SERVER}" -l "${MYPROXY_USER}" \
-            -t "${GRID_PROXY_HOURS}"
+            -t "${GSI_PROXY_HOURS}"
     fi
 fi
 
 if [ ${USE_GSI} -eq 1 ]; then
     while ! is_valid_proxy_cert; do
-        INFO "To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH} or ${COPY_GLOBUS_USER_PROXY_SH}, waiting for ..."
+        INFO "To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH} or ${COPY_GSI_USER_PROXY_SH}, waiting for ..."
         sleep 5
     done
 fi

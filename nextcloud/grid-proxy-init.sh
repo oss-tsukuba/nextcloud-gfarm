@@ -10,7 +10,7 @@ source ${CONFIG_LIB}
 
 FORCE=${1:-}
 
-if [ ! -s "${GLOBUS_USER_KEY}" ]; then
+if [ ! -s "${GSI_USER_KEY}" ]; then
     exit 0
 fi
 
@@ -18,4 +18,4 @@ if [ "$FORCE" != '--force' ] && is_valid_proxy_cert; then
     exit 0
 fi
 
-retry_command grid-proxy-init -hours "${GRID_PROXY_HOURS}"
+retry_command grid-proxy-init -hours "${GSI_PROXY_HOURS}"
