@@ -5,6 +5,7 @@
 - Nextcloud container with Gfarm as back-end storage.
 - Use one Gfarm user and the data directory for multiple Nextcloud users.
 - Back up to Gfarm automatically.
+    - Backup-file of database is encrypted.
 - Restore from Gfarm automatically when local data (docker volume) is empty.
 - Reverse proxy is required in front of this Nextcloud if you want to use https.
 
@@ -33,19 +34,30 @@ Optional:
 - create and edit db_password file
 - create and edit nextcloud_admin_password file
 - create and edit .env file (see below)
-- specify Gfarm configuration
-- run `ln -s docker-compose.override.yml.https.selfsigned docker-compose.override.yml`
-    - docker-compose.override.yml.https.selfsigned is one of the setting examples
-    - or use an other docker-compose.override.yml.*
-    - or create docker-compose.override.yml
+    - specify Gfarm configuration
+    - select Gfarm authentication method
+- create docker-compose.override.yml
+    - example: `ln -s docker-compose.override.yml.https.selfsigned docker-compose.override.yml`
+    - or use one of other docker-compose.override.yml.*
+    - or write docker-compose.override.yml for your environment
 - run `make reborn-withlog`
-- input password (if necessary)
+- input password of myproxy-logon or grid-proxy-init for Gfarm
+  authentication method (when not using .gfarm_shared_key)
 - open the URL in a browser
+    - example: https://<hostname>/
 - login
     - username: `admin`
     - password: `<value of nextcloud_admin_password>`
 
-## Configuration (.env)
+## HTTPS and Certificates and Reverse proxy
+
+Please refer to
+[Make your Nextcloud available from the internet](https://github.com/nextcloud/docker/blob/master/README.md#make-your-nextcloud-available-from-the-internet)
+
+docker-compose.override.yml.https.selfsigned is an example to setup
+using a reverse proxy and using self signed certificates.
+
+## Configuration file (.env)
 
 example:
 
@@ -56,7 +68,6 @@ HTTP_PORT=58080
 HTTPS_PORT=58443
 OVERWRITEHOST=client1.local:58443
 OVERWRITEPROTOCOL=https
-OVERWRITEWEBROOT=
 GFARM_USER=hpciXXXXXX
 GFARM_DATA_PATH=/home/hpXXXXXX/hpciXXXXXX/nextcloud/data
 GFARM_BACKUP_PATH=/home/hpXXXXXX/hpciXXXXXX/nextcloud/backup
@@ -79,22 +90,31 @@ For details of Nextcloud parameters, please refer to
 mandatory parameters:
 
 - NEXTCLOUD_VERSION: Nextcloud version
+- SERVER_NAME: server name for this Nextcloud
 - GFARM_USER: Gfarm user name
 - GFARM_DATA_PATH: Gfarm data directory
+    - NOTE: Do not share GFARM_DATA_PATH with other nextcloud-gfarm.
 - GFARM_BACKUP_PATH: Gfarm backup directory
-- SERVER_NAME: server name for this Nextcloud
+    - NOTE: Do not share GFARM_BACKUP_PATH with other nextcloud-gfarm.
 - GFARM2_CONF: path to gfarm2.conf on host OS
+
+Gfarm authentication parameters (specify only required items)
+(default values are listed in docker-compose.yml):
+
+- GFARM_SHARED_KEY: path to .gfarm_shared_key on host OS
+- GRID_CERTIFICATES: path to /etc/grid-security/certificates on host OS
+- GRID_DOT_GLOBUS_DIR: path to .globus on host OS
+- GRID_USER_PROXY_CERT: path to /tmp/x509up_u???? created on host OS
+- MYPROXY_SERVER: myproxy server (hostname:port)
+- MYPROXY_USER: username for myproxy server
+- GRID_PROXY_HOUR: hours for grid-proxy-init or myproxy-logon
+- GFARM2_CONF_USER: path to .gfarm2rc on host OS
 
 optional parameters (default values are listed in docker-compose.yml):
 
 - HTTP_PORT: http port number (redirect to https)
 - HTTPS_PORT: https port number
-- GFARM2_CONF_USER: path to .gfarm2rc on host OS
-- GFARM_SHARED_KEY: path to .gfarm_shared_key on host OS
-- GRID_CERTIFICATES: path to /etc/grid-security/certificates on host OS
-- GRID_DOT_GLOBUS_DIR: path to .globus on host OS
-- GRID_USER_PROXY_CERT: path to /tmp/x509up_u???? on host OS
-- NEXTCLOUD_GFARM_DEBUG: 1 means debug mode.
+- NEXTCLOUD_GFARM_DEBUG: debug mode
 - http_proxy: http_proxy environment variable
 - https_proxy: http_proxy environment variable
 - TZ: TZ environment variable
@@ -104,9 +124,6 @@ optional parameters (default values are listed in docker-compose.yml):
 - NEXTCLOUD_DEFAULT_PHONE_REGION: Nextcloud parameter
 - GFARM_CHECK_ONLINE_TIME: time to check online (crontab format)
 - GFARM_CREDENTIAL_EXPIRATION_THRESHOLD: minimum expiration time for Gfarm (sec.)
-- GRID_PROXY_HOUR: hours for grid-proxy-init or myproxy-logon
-- MYPROXY_SERVER: myproxy server (hostname:port)
-- MYPROXY_USER: username for myproxy server
 - GFARM_ATTR_CACHE_TIMEOUT: gfs_stat_timeout for gfarm2fs
 - FUSE_ENTRY_TIMEOUT: entry_timeout for gfarm2fs
 - FUSE_NEGATIVE_TIMEOUT: negative_timeout for gfarm2fs
@@ -118,8 +135,15 @@ optional parameters (default values are listed in docker-compose.yml):
 
 ## Stop and Start
 
+stop:
+
 ```
 make stop
+```
+
+start:
+
+```
 make restart-withlog
 ```
 
