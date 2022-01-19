@@ -62,7 +62,7 @@ services:
       - nextcloud:/var/www/html
       - log:/var/log
       ### mandatory
-      - ${GFARM_CONF_DIR}:/gfarm_conf:ro
+      - ${GFARM_CONF_DIR:?GFARM_CONF_DIR}:/gfarm_conf:ro
 
       ### optional
       - ${GFARM_CONF_USER_DIR:-/dev/null}:/gfarm_conf_user:ro
