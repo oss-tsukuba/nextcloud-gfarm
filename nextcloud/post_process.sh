@@ -70,4 +70,24 @@ touch "${NEXTCLOUD_LOG_PATH}"
 # force online
 ${OCC} maintenance:mode --off || true
 
-exec "$@"
+ARGS="$@"
+pid=0
+stop()
+{
+    if [ $pid -ne 0 ]; then
+        echo "STOP: $ARGS" 1>&2
+        kill $pid
+    fi
+    umount_gfarm2fs || true
+}
+
+trap stop 1 2 15
+
+# Do not use "exec" to use trap
+"$@" &
+pid=$!
+set +e
+wait $pid
+status=$?
+echo "EXIT(status=$status): $@" 1>&2
+exit $status

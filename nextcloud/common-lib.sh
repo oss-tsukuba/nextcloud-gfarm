@@ -35,6 +35,12 @@ mount_gfarm2fs()
     ${SUDO_USER} gfarm2fs ${MNT_OPT} "${DATA_DIR}"
 }
 
+umount_gfarm2fs()
+{
+    echo "umount ${DATA_DIR}"
+    ${SUDO_USER} fusermount -u "${DATA_DIR}"
+}
+
 gfarm2fs_is_mounted()
 {
     ${SUDO_USER} df "${DATA_DIR}" | egrep -q '^gfarm2fs\s'

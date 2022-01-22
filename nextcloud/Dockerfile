@@ -1,10 +1,17 @@
-#ARG NEXTCLOUD_VERSION=latest
 ARG NEXTCLOUD_VERSION
 FROM nextcloud:${NEXTCLOUD_VERSION}
-RUN echo ${NEXTCLOUD_VERSION}
 
-RUN apt-get update && apt-get install -y \
+ARG GFARM_SRC_URL
+ARG GFARM_SRC_GIT_URL
+ARG GFARM_SRC_GIT_BRANCH
+ARG GFARM2FS_SRC_URL
+ARG GFARM2FS_SRC_GIT_URL
+ARG GFARM2FS_SRC_GIT_BRANCH
+
+RUN echo ${NEXTCLOUD_VERSION} \
+  && apt-get update && apt-get install -y \
   sudo \
+  dumb-init \
   netbase \
   libssl-dev \
   libldap2-dev \
@@ -26,16 +33,10 @@ RUN apt-get update && apt-get install -y \
   libmagickcore-6.q16-6-extra \
   iproute2 \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
-
-ARG GFARM_SRC_URL
-ARG GFARM_SRC_GIT_URL
-ARG GFARM_SRC_GIT_BRANCH
-ARG GFARM2FS_SRC_URL
-ARG GFARM2FS_SRC_GIT_URL
-ARG GFARM2FS_SRC_GIT_BRANCH
-
-RUN cd /root \
+  && rm -rf /var/lib/apt/lists/* \
+  \
+  && WORKDIR=/root \
+  && cd ${WORKDIR} \
   && if [ -n "${GFARM_SRC_URL}" ]; then \
        curl -sLJO ${GFARM_SRC_URL} \
        && ARCH=`ls -1 gfarm-*.tar.gz` \
@@ -50,7 +51,7 @@ RUN cd /root \
   && ./configure --with-globus --without-openldap --without-postgresql \
   && make -j \
   && make -j install \
-  && cd .. \
+  && cd ${WORKDIR} \
   && if [ -n "${GFARM2FS_SRC_URL}" ]; then \
        curl -sLJO ${GFARM2FS_SRC_URL} \
        && ARCH=`ls -1 gfarm2fs-*.tar.gz` \
@@ -75,6 +76,7 @@ COPY . /nc-gfarm
 #   3. /post_process.sh
 #   4. supervisord: apache and cron
 
+STOPSIGNAL 15
 WORKDIR /var/www
-ENTRYPOINT ["/nc-gfarm/entrypoint0.sh"]
-CMD ["/entrypoint.sh", "/nc-gfarm/post_process.sh", "supervisord", "-c", "/nc-gfarm/supervisord.conf"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/nc-gfarm/entrypoint0.sh", "/entrypoint.sh", "/nc-gfarm/post_process.sh", "supervisord", "-c", "/nc-gfarm/supervisord.conf"]
