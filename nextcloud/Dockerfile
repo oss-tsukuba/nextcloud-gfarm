@@ -11,8 +11,8 @@ ARG GFARM2FS_SRC_GIT_BRANCH
 RUN echo ${NEXTCLOUD_VERSION} \
   && apt-get update && apt-get install -y \
   sudo \
-  dumb-init \
   netbase \
+  rsyslog \
   libssl-dev \
   libldap2-dev \
   libpq-dev \
@@ -78,5 +78,5 @@ COPY . /nc-gfarm
 
 STOPSIGNAL 15
 WORKDIR /var/www
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["/nc-gfarm/entrypoint0.sh", "/entrypoint.sh", "/nc-gfarm/post_process.sh", "supervisord", "-c", "/nc-gfarm/supervisord.conf"]
+ENTRYPOINT ["/nc-gfarm/entrypoint0.sh"]
+CMD ["/entrypoint.sh", "/nc-gfarm/post_process.sh", "supervisord", "-c", "/nc-gfarm/supervisord.conf"]

@@ -43,10 +43,12 @@ fi
 : ${MYPROXY_SERVER:=""}
 : ${MYPROXY_USER:=${GFARM_USER}}
 
-: ${GFARM_ATTR_CACHE_TIMEOUT:="180"}
-: ${FUSE_ENTRY_TIMEOUT:="180"}
+: ${GFARM_ATTR_CACHE_TIMEOUT:="60"}
+: ${FUSE_ENTRY_TIMEOUT:="60"}
 : ${FUSE_NEGATIVE_TIMEOUT:="5"}
-: ${FUSE_ATTR_TIMEOUT:="180"}
+: ${FUSE_ATTR_TIMEOUT:="60"}
+
+: ${GFARM2FS_LOGLEVEL:="info"}
 
 ##########################################################
 
@@ -69,7 +71,7 @@ DATA_DIR="${HTML_DIR}/data"
 TMP_DATA_DIR="${DATA_DIR}.bak"
 NEXTCLOUD_LOG_PATH="${HTML_DIR}/nextcloud.log"
 
-MNT_OPT="-o nonempty,modules=subdir,subdir=${GFARM_DATA_PATH},entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
+MNT_OPT="-o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,subdir=${GFARM_DATA_PATH},entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
 
 NEXTCLOUD_USER="www-data"
 
