@@ -116,9 +116,14 @@ if [ -n "${MYPROXY_SERVER}" ] && ! is_valid_proxy_cert; then
 fi
 
 if [ ${USE_GSI} -eq 1 ]; then
+    sleep_time=1
+    sleep_max=5
     while ! is_valid_proxy_cert; do
         INFO "To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH} or ${COPY_GSI_USER_PROXY_SH}, waiting for ..."
-        sleep 5
+        sleep $sleep_time
+        if [ $sleep_time -lt $sleep_max ]; then
+            sleep_time=$((sleep_time + 1))
+        fi
     done
 fi
 
