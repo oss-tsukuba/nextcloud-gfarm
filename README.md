@@ -101,7 +101,7 @@ mandatory parameters:
 Gfarm configuration parameters (specify only required items)
 (default values are listed in docker-compose.yml):
 
-- GFARM_CONF_USER_DIR: path to parent directory on host OS for the following files (NOTE: Please make a special directory and copy the files)
+- GFARM_CONF_USER_DIR: path to parent directory on host OS for the following files (Please make a special directory and copy the files)
     - gfarm2rc (optional) (copy from `~/.gfarm2rc`)
     - gfarm_shared_key (optional) (copy from `~/.gfarm_shared_key`)
     - user_proxy_cert (optional) (copy from `/tmp/x509up_u<UID>`)
@@ -153,7 +153,7 @@ make restart-withlog
 To copy Gfarm shared key into container:
 
 ```
-### (update .gfarm_shared_key)
+### (after updating .gfarm_shared_key)
 cp ~/.gfarm_shared_key GFARM_CONF_USER_DIR/gfarm_shared_key
 make copy-gfarm_shared_key
 make occ-maintenancemode-off
@@ -162,7 +162,7 @@ make occ-maintenancemode-off
 To copy GSI user proxy certificate into container:
 
 ```
-### (grid-proxy-init or myproxy-logon)
+### (after executing grid-proxy-init or myproxy-logon on host OS)
 cp /tmp/x509up_u${UID} GFARM_CONF_USER_DIR/user_proxy_cert
 make copy-globus_user_proxy
 make occ-maintenancemode-off
@@ -240,3 +240,10 @@ https://github.com/nextcloud/docker/blob/master/README.md#update-to-a-newer-vers
 It is only possible to upgrade one major version at a time.
 For example, if you want to upgrade from version 14 to 16, you will
 have to upgrade from version 14 to 15, then from 15 to 16.
+
+## for developers
+
+see .env-docker_dev,
+and merge the file into .env,
+and execute ./copy_home_files.sh
+and create directories.
