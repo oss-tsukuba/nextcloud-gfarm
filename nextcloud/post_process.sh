@@ -67,7 +67,7 @@ fi
 if [ -z "${TRUSTED_PROXIES:-}" ]; then
     # use dig (from bind9-dnsutils)
     # revproxy container name
-    TRUSTED_PROXIES=$(dig revproxyy +short) || TRUSTED_PROXIES=""
+    TRUSTED_PROXIES=$(dig revproxy +short) || TRUSTED_PROXIES=""
 fi
 export TRUSTED_PROXIES
 
