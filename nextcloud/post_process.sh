@@ -64,6 +64,13 @@ if [ ! -f "${POST_FLAG_PATH}" ]; then
     touch "${POST_FLAG_PATH}"
 fi
 
+if [ -z "${TRUSTED_PROXIES:-}" ]; then
+    # use dig (from bind9-dnsutils)
+    # revproxy container name
+    TRUSTED_PROXIES=$(dig revproxyy +short) || TRUSTED_PROXIES=""
+fi
+export TRUSTED_PROXIES
+
 # backup.sh requires ${NEXTCLOUD_LOG_PATH}
 touch "${NEXTCLOUD_LOG_PATH}"
 

@@ -40,13 +40,14 @@ Optional:
     - example: `ln -s docker-compose.override.yml.https docker-compose.override.yml`
     - or use one of other docker-compose.override.yml.*
     - or write docker-compose.override.yml for your environment
-- copy certificate files for https to `nextcloud-gfarm_certs` volume when using docker-compose.override.yml.https
+- copy certificate files for HTTPS to `nextcloud-gfarm_certs` volume when using docker-compose.override.yml.https
     - prepare the following files and use `docker cp`
-        - ${SERVER_NAME}.key
-        - ${SERVER_NAME}.csr
-        - ${SERVER_NAME}.crt
+        - ${SERVER_NAME}.key (SSL_KEY)
+        - ${SERVER_NAME}.csr (SSL_CSR)
+        - ${SERVER_NAME}.crt (SSL_CERT)
     - or `make selfsigned-cert-generate` to generate and copy self-signed certificate
     - or (unsurveyed:) use https://github.com/nginx-proxy/acme-companion and create new docker-compose.override.yml
+        - Example: https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/with-nginx-proxy/mariadb/fpm/docker-compose.yml
     - or etc.
 - check `make config`
 - run `make reborn-withlog`
@@ -140,6 +141,8 @@ optional parameters (default values are listed in docker-compose.yml):
 - FUSE_ENTRY_TIMEOUT: entry_timeout for gfarm2fs
 - FUSE_NEGATIVE_TIMEOUT: negative_timeout for gfarm2fs
 - FUSE_ATTR_TIMEOUT: attr_timeout for gfarm2fs
+- TRUSTED_PROXIES: reverse proxy parameter for Nextcloud
+    - default: revproxy container IP address
 - OVERWRITEHOST: reverse proxy parameter for Nextcloud
 - OVERWRITEPROTOCOL: reverse proxy parameter for Nextcloud
 - OVERWRITEWEBROOT: reverse proxy parameter for Nextcloud
@@ -157,6 +160,13 @@ start:
 
 ```
 make restart-withlog
+```
+
+## After updating configurations (.env)
+
+
+```
+make rebone-withlog
 ```
 
 ## Update credential

@@ -55,6 +55,8 @@ services:
       - FUSE_ATTR_TIMEOUT=${FUSE_ATTR_TIMEOUT:-60}
       - GFARM2FS_LOGLEVEL=${GFARM2FS_LOGLEVEL:-info}
 
+      ### https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/reverse_proxy_configuration.html
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
       - OVERWRITEHOST=${OVERWRITEHOST:-}
       - OVERWRITEPROTOCOL=${OVERWRITEPROTOCOL:-https}
       - OVERWRITEWEBROOT=${OVERWRITEWEBROOT:-}

@@ -13,6 +13,7 @@ RUN echo ${NEXTCLOUD_VERSION} \
   sudo \
   netbase \
   rsyslog \
+  bind9-dnsutils \
   libssl-dev \
   libldap2-dev \
   libpq-dev \
