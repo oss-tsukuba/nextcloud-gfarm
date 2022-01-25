@@ -37,9 +37,18 @@ Optional:
     - specify Gfarm configuration
     - select Gfarm authentication method
 - create docker-compose.override.yml
-    - example: `ln -s docker-compose.override.yml.https.selfsigned docker-compose.override.yml`
+    - example: `ln -s docker-compose.override.yml.https docker-compose.override.yml`
     - or use one of other docker-compose.override.yml.*
     - or write docker-compose.override.yml for your environment
+- copy certificate files for https to `nextcloud-gfarm_certs` volume when using docker-compose.override.yml.https
+    - prepare the following files and use `docker cp`
+        - ${SERVER_NAME}.key
+        - ${SERVER_NAME}.csr
+        - ${SERVER_NAME}.crt
+    - or `make selfsigned-cert-generate` to generate and copy self-signed certificate
+    - or (unsurveyed:) use https://github.com/nginx-proxy/acme-companion and create new docker-compose.override.yml
+    - or etc.
+- check `make config`
 - run `make reborn-withlog`
 - input password of myproxy-logon or grid-proxy-init for Gfarm
   authentication method (when not using .gfarm_shared_key)
@@ -126,6 +135,8 @@ optional parameters (default values are listed in docker-compose.yml):
 - GFARM_CHECK_ONLINE_TIME: time to check online (crontab format)
 - GFARM_CREDENTIAL_EXPIRATION_THRESHOLD: minimum expiration time for Gfarm (sec.)
 - GFARM_ATTR_CACHE_TIMEOUT: gfs_stat_timeout for gfarm2fs
+- GFARM2FS_LOGLEVEL: loglevel for gfarmfs
+
 - FUSE_ENTRY_TIMEOUT: entry_timeout for gfarm2fs
 - FUSE_NEGATIVE_TIMEOUT: negative_timeout for gfarm2fs
 - FUSE_ATTR_TIMEOUT: attr_timeout for gfarm2fs

@@ -13,11 +13,26 @@ EXEC_ROOT = $(COMPOSE) exec -u root nextcloud
 OCC = $(COMPOSE) exec -u www-data nextcloud php /var/www/html/occ
 SHELL=/bin/bash
 
+# use selfsigned certificate
+SSC_COMPOSE = $(COMPOSE) -f docker-compose.selfsigned.yml
+
 ps:
 	$(COMPOSE) ps
 
 prune:
 	$(DOCKER) system prune -f
+
+selfsigned-cert-generate:
+	$(SSC_COMPOSE) up
+
+selfsigned-cert-ps:
+	$(SSC_COMPOSE) ps
+
+selfsigned-cert-config:
+	$(SSC_COMPOSE) config
+
+config:
+	$(COMPOSE) config
 
 down:
 	$(COMPOSE) down --remove-orphans
@@ -58,8 +73,8 @@ shell:
 shell-root:
 	$(EXEC_ROOT) bash
 
-shell-proxy:
-	$(COMPOSE) exec proxy /bin/bash
+shell-revproxy:
+	$(COMPOSE) exec revproxy /bin/bash
 
 logs:
 	$(COMPOSE) logs

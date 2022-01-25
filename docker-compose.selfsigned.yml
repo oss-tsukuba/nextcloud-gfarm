@@ -1,0 +1,21 @@
+version: '3'
+
+# variables from .env
+
+services:
+  # generate selfsigned certificate
+  omgwtfssl:
+    image: paulczar/omgwtfssl
+    restart: "no"
+    environment:
+      - SSL_SUBJECT=${SERVER_NAME}
+      - CA_SUBJECT=ca@nextcloud-gfarm.example.com
+      - SSL_KEY=/certs/${SERVER_NAME}.key
+      - SSL_CSR=/certs/${SERVER_NAME}.csr
+      - SSL_CERT=/certs/${SERVER_NAME}.crt
+      - SSL_DNS=${SERVER_NAME}
+    volumes:
+      - certs:/certs
+
+volumes:
+  certs:
