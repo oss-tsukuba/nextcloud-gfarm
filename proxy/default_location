@@ -1,4 +1,6 @@
-access_log /dev/stdout proxylog;
+#access_log /dev/stdout proxylog;
+access_log off;
+error_log /dev/stderr error;
 
 location /.well-known/carddav {
     proxy_pass http://$server_name/remote.php/dav;
