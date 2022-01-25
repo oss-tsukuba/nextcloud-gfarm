@@ -7,8 +7,8 @@ services:
     environment:
       - VIRTUAL_HOST=${SERVER_NAME}
 
-  proxy:
-    build: ./proxy
+  revproxy:
+    build: ./revproxy
     ports:
       - ${HTTP_PORT:-80}:${HTTP_PORT:-80}
       - ${HTTPS_PORT:-443}:${HTTPS_PORT:-443}
