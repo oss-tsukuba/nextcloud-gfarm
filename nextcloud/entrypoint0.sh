@@ -144,6 +144,8 @@ fi
 ### reset crontab
 rm -f "${CRONTAB_FILE_PATH}"
 cp -f "${CRONTAB_TEMPLATE}" "${CRONTAB_FILE_PATH}"
+# NOTE: owner of crontab-file is root only
+chown root "${CRONTAB_FILE_PATH}"
 
 if [ -n "${NEXTCLOUD_BACKUP_TIME}" ]; then
     echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> "${CRONTAB_FILE_PATH}"
@@ -154,8 +156,6 @@ fi
 if [ -n "${NEXTCLOUD_FILES_SCAN_TIME}" ]; then
     echo "${NEXTCLOUD_FILES_SCAN_TIME} ${FILES_SCAN_SH}" >> "${CRONTAB_FILE_PATH}"
 fi
-chown0 "${CRONTAB_FILE_PATH}"
-${SUDO_USER} ln -f -s "${CRONTAB_FILE_PATH}" "${HOMEDIR}/crontab"
 
 INFO "checking availability to Gfarm (wait for a while ...)"
 num_gfsd=$(${SUDO_USER} gfsched -n 1 | wc -l)
