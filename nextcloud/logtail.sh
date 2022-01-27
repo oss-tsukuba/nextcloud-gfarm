@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec tail -F /var/log/syslog 2> /dev/null
+exec tail -n 0 -F /var/log/syslog 2> /dev/null

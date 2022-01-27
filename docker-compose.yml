@@ -36,6 +36,7 @@ services:
       - http_proxy=${http_proxy:-}
       - https_proxy=${https_proxy:-}
 
+      - HTTP_ACCESS_LOG=${HTTP_ACCESS_LOG:-0}
       - TZ=${TZ:-Asia/Tokyo}
       #### empty means disabled
       - NEXTCLOUD_FILES_SCAN_TIME=${NEXTCLOUD_FILES_SCAN_TIME-0 5 * * *}

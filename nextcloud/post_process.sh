@@ -71,6 +71,14 @@ if [ -z "${TRUSTED_PROXIES:-}" ]; then
 fi
 export TRUSTED_PROXIES
 
+ACCESS_LOG_FILE=/var/log/apache2/access.log
+rm -f "${ACCESS_LOG_FILE}"
+if [ "${HTTP_ACCESS_LOG}" -eq 1 ]; then
+    ln -s /dev/stdout "${ACCESS_LOG_FILE}"
+else
+    ln -s /dev/null "${ACCESS_LOG_FILE}"
+fi
+
 # backup.sh requires ${NEXTCLOUD_LOG_PATH}
 touch "${NEXTCLOUD_LOG_PATH}"
 

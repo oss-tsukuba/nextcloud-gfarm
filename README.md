@@ -128,6 +128,7 @@ optional parameters (default values are listed in docker-compose.yml):
 - NEXTCLOUD_GFARM_DEBUG: debug mode
 - http_proxy: http_proxy environment variable
 - https_proxy: http_proxy environment variable
+- HTTP_ACCESS_LOG: access log (1=enable)
 - TZ: TZ environment variable
 - NEXTCLOUD_FILES_SCAN_TIME: file scan time (crontab format)
 - NEXTCLOUD_BACKUP_TIME: backup time (crontab format)

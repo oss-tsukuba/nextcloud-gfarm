@@ -50,6 +50,8 @@ fi
 
 : ${GFARM2FS_LOGLEVEL:="info"}
 
+: ${HTTP_ACCESS_LOG:=1}
+
 ##########################################################
 
 MYSQL_DATABASE="nextcloud"

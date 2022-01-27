@@ -62,5 +62,5 @@ if [ "${from_file}" != "${now}" ]; then
     exit 5
 fi
 
-INFO "gfarm_check_online.sh: OK"
+#INFO "gfarm_check_online.sh: OK"
 exit 0
