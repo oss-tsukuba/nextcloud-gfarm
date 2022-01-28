@@ -37,13 +37,15 @@ if [ ${FILE_NUM} -gt 0 ]; then  # not empty
 fi
 
 # initialization after creating new (or renew) container
+# (The following parameters are not changed when restarting container)
 if [ ! -f "${POST_FLAG_PATH}" ]; then
     ${OCC} maintenance:mode --on || true
 
+    # NOTE: Cannot change the NEXTCLOUD_DATA_DIR
+    #${OCC} config:system:set datadirectory --value="${DATA_DIR}"
+
     # may fail
-    #set +e +o pipefail
-    CURRENT_LOG_PATH=`${OCC} log:file | grep 'Log file:' | awk '{ print $3 }'`
-    #set -e -o pipefail
+    CURRENT_LOG_PATH=`${OCC} log:file | grep 'Log file:' | awk '{ print $3 }'` || true
     if [ "${CURRENT_LOG_PATH}" != "${NEXTCLOUD_LOG_PATH}" ]; then
         ${OCC} log:file --file "${NEXTCLOUD_LOG_PATH}"
         if [ -f "${CURRENT_LOG_PATH}" ]; then
@@ -81,6 +83,10 @@ fi
 
 # backup.sh requires ${NEXTCLOUD_LOG_PATH}
 touch "${NEXTCLOUD_LOG_PATH}"
+
+LINK_DATA="${HOMEDIR}/data"
+[ -d "${LINK_DATA}" ] && rmdir "${LINK_DATA}"
+${SUDO_USER} ln -s "${DATA_DIR}" "${LINK_DATA}"
 
 # force online
 ${OCC} maintenance:mode --off || true

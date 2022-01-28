@@ -70,6 +70,7 @@ GRID_PROXY_PASSWORD_FILE="/run/secrets/grid_proxy_password"
 HOMEDIR="/var/www"
 HTML_DIR="${HOMEDIR}/html"
 DATA_DIR="${HTML_DIR}/data"
+
 TMP_DATA_DIR="${DATA_DIR}.bak"
 NEXTCLOUD_LOG_PATH="${HTML_DIR}/nextcloud.log"
 

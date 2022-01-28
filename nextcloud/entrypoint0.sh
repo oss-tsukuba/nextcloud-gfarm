@@ -188,6 +188,5 @@ fi
 # NEXTCLOUD_UPDATE (default: 0)
 export NEXTCLOUD_UPDATE=1
 
-# for debug
-#exec bash -x "$@"
+export NEXTCLOUD_DATA_DIR="${DATA_DIR}"
 exec "$@"
