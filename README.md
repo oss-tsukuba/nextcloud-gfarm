@@ -41,6 +41,7 @@ Optional:
     - or use one of other docker-compose.override.yml.*
     - or write docker-compose.override.yml for your environment
 - copy certificate files for HTTPS to `nextcloud-gfarm_certs` volume when using docker-compose.override.yml.https
+    - NOTE: HTTPS port is diabled when certificate files do not exist.
     - prepare the following files and use `docker cp`
         - ${SERVER_NAME}.key (SSL_KEY)
         - ${SERVER_NAME}.csr (SSL_CSR)
@@ -124,7 +125,7 @@ Gfarm configuration parameters (specify only required items)
 optional parameters (default values are listed in docker-compose.yml):
 
 - HTTP_PORT: http port number (redirect to https)
-- HTTPS_PORT: https port number
+- HTTPS_PORT: https port number (certificate files for HTTPS are required)
 - NEXTCLOUD_GFARM_DEBUG: debug mode
 - http_proxy: http_proxy environment variable
 - https_proxy: http_proxy environment variable
