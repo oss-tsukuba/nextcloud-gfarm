@@ -133,12 +133,14 @@ volumes:
 
 networks:
   mynet1:
-    # (nextcloud tier)
+    # (internal tier)
+    # external (outside of Docker Compose) network name
     # overridable
-    name: ${NETWORK1_NAME:-network1}
+    name: ${NETWORK1_NAME:-nextcloud-gfarm_internal}
     external: ${NETWORK1_EXTERNAL:-false}
   mynet2:
     # (reverse proxy tier)
+    # external (outside of Docker Compose) network name
     # overridable
-    name: ${NETWORK2_NAME:-network2}
+    name: ${NETWORK2_NAME:-nextcloud-gfarm_revproxy}
     external: ${NETWORK2_EXTERNAL:-false}
