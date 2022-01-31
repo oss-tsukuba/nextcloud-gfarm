@@ -4,7 +4,7 @@ version: '3'
 
 services:
   # generate selfsigned certificate
-  omgwtfssl:
+  selfsigned:
     image: paulczar/omgwtfssl
     restart: "no"
     environment:
