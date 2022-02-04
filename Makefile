@@ -4,7 +4,7 @@ SUDO = $(shell docker version > /dev/null 2>&1 || echo sudo)
 DOCKER = $(SUDO) docker
 COMPOSE_V1 = docker-compose
 COMPOSE_V2 = docker compose
-COMPOSE_SW = $(shell which ${COMPOSE_V1} || echo ${COMPOSE_V2})
+COMPOSE_SW = $(shell ${COMPOSE_V2} version > /dev/null 2>&1 && echo ${COMPOSE_V2} || echo ${COMPOSE_V1})
 COMPOSE = $(SUDO) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) $(COMPOSE_SW)
 
 EXEC = $(COMPOSE) exec -u www-data nextcloud
