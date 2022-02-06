@@ -16,6 +16,23 @@ SHELL=/bin/bash
 # use selfsigned certificate
 SSC_COMPOSE = $(COMPOSE) -f docker-compose.selfsigned.yml
 
+CONTAINERS = nextcloud mariadb redis revproxy
+
+.PONY =
+
+define gentarget
+»       $(foreach name,$(CONTAINERS),$(1)-$(name))
+endef
+
+TARGET_LOGS = $(call gentarget,logs)
+.PONY += $(TARGET_LOGS)
+
+TARGET_LOGS_FOLLOW = $(call gentarget,logs-follow)
+.PONY += $(TARGET_LOGS_FOLLOW)
+
+TARGET_LOGS_TIME = $(call gentarget,logs-time)
+.PONY += $(TARGET_LOGS_TIME)
+
 ps:
 	$(COMPOSE) ps
 
@@ -51,7 +68,7 @@ reborn:
 
 reborn-withlog:
 	$(MAKE) reborn
-	$(COMPOSE) logs --follow
+	$(MAKE) logs-follow
 
 build-nocache:
 	$(COMPOSE) build --no-cache
@@ -65,7 +82,7 @@ restart:
 
 restart-withlog:
 	$(MAKE) restart
-	$(COMPOSE) logs --follow
+	$(MAKE) logs-follow
 
 shell:
 	$(EXEC) /bin/bash
@@ -77,13 +94,19 @@ shell-revproxy:
 	$(COMPOSE) exec revproxy /bin/bash
 
 logs:
-	$(COMPOSE) logs
+	$(COMPOSE) logs nextcloud
 
 logs-follow:
-	$(COMPOSE) logs --follow
+	$(COMPOSE) logs --follow nextcloud
 
-logs-less:
-	$(COMPOSE) logs | less -R
+$(TARGET_LOGS): logs-%:
+	$(COMPOSE) logs $*
+
+$(TARGET_LOGS_FOLLOW): logs-follow-%:
+	$(COMPOSE) logs --follow $*
+
+$(TARGET_LOGS_TIME): logs-time-%:
+	$(COMPOSE) logs --timestamps $*
 
 occ-add-missing-indices:
 	$(OCC) db:add-missing-indices
