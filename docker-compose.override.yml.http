@@ -7,16 +7,19 @@ services:
     environment:
       - VIRTUAL_HOST=${SERVER_NAME}
 
-  proxy:
-    build: ./proxy
+  revproxy:
+    build: ./revproxy
     ports:
       - ${HTTP_PORT}:${HTTP_PORT}
     environment:
       - DEFAULT_HOST=${SERVER_NAME}
       - HTTP_PORT=${HTTP_PORT}
+      - HTTPS_METHOD=noredirect
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - html:/usr/share/nginx/html
+    networks:
+      - mynet2
 
 volumes:
   html:
