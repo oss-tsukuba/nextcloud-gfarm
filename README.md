@@ -16,6 +16,8 @@ For other details, please refer to
 
 - [Docker](https://docs.docker.com/engine/install/)
 - [Docker Compose](https://docs.docker.com/compose/)
+    - v1 : https://docs.docker.com/compose/install/
+    - v2 (Recommended): https://docs.docker.com/compose/cli-command/#install-on-linux
 - GNU make
 - Gfarm configuration file (gfarm2.conf)
 
