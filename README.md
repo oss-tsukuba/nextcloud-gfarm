@@ -50,6 +50,7 @@ Optional:
 - run `make reborn-withlog`
 - input password of myproxy-logon or grid-proxy-init for Gfarm
   authentication method (when not using .gfarm_shared_key)
+- `ctrl-c` to stop output of `make reborn-withlog`
 - copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume when using docker-compose.override.yml.https
     - NOTE: HTTPS port is diabled when certificate files do not exist.
     - prepare the following files
