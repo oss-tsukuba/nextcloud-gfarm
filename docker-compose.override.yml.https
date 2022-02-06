@@ -20,7 +20,7 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - html:/usr/share/nginx/html
-      - certs:/etc/nginx/certs:ro
+      - certs:/etc/nginx/certs:rw
     networks:
       - mynet2
 

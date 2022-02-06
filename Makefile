@@ -84,6 +84,9 @@ restart-withlog:
 	$(MAKE) restart
 	$(MAKE) logs-follow
 
+restart-revproxy:
+	$(COMPOSE) restart revproxy
+
 shell:
 	$(EXEC) /bin/bash
 

@@ -44,20 +44,22 @@ Optional:
     - example: `ln -s docker-compose.override.yml.https docker-compose.override.yml`
     - or use one of other docker-compose.override.yml.*
     - or write docker-compose.override.yml for your environment
-- copy certificate files for HTTPS to `nextcloud-gfarm_certs` volume when using docker-compose.override.yml.https
-    - NOTE: HTTPS port is diabled when certificate files do not exist.
-    - prepare the following files and use `docker cp`
-        - ${SERVER_NAME}.key (SSL_KEY)
-        - ${SERVER_NAME}.csr (SSL_CSR)
-        - ${SERVER_NAME}.crt (SSL_CERT)
-    - or `make selfsigned-cert-generate` to generate and copy self-signed certificate
-    - or (unsurveyed:) use https://github.com/nginx-proxy/acme-companion and create new docker-compose.override.yml
-        - Example: https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/with-nginx-proxy/mariadb/fpm/docker-compose.yml
-    - or etc.
 - check `make config`
 - run `make reborn-withlog`
 - input password of myproxy-logon or grid-proxy-init for Gfarm
   authentication method (when not using .gfarm_shared_key)
+- copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume when using docker-compose.override.yml.https
+    - NOTE: HTTPS port is diabled when certificate files do not exist.
+    - prepare the following files
+        - ${SERVER_NAME}.key (SSL_KEY)
+        - ${SERVER_NAME}.csr (SSL_CSR)
+        - ${SERVER_NAME}.crt (SSL_CERT)
+        - and use `sudo docker cp <filename> nextcloud-gfarm-revproxy-1:/etc/nginx/certs/<filename>` to copy a file
+    - or `make selfsigned-cert-generate` to generate and copy self-signed certificate
+    - or (unsurveyed:) use https://github.com/nginx-proxy/acme-companion to use Let's Encrypt and create new docker-compose.override.yml
+        - Example: https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/with-nginx-proxy/mariadb/fpm/docker-compose.yml
+    - or etc.
+- run `make restart-revproxy` after certificate files for HTTPS are updated.
 - open the URL in a browser
     - example: `https://<hostname>/`
 - login
