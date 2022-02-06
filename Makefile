@@ -21,7 +21,7 @@ CONTAINERS = nextcloud mariadb redis revproxy
 .PONY =
 
 define gentarget
-»       $(foreach name,$(CONTAINERS),$(1)-$(name))
+       $(foreach name,$(CONTAINERS),$(1)-$(name))
 endef
 
 TARGET_LOGS = $(call gentarget,logs)

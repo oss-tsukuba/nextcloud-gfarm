@@ -31,8 +31,12 @@ Optional:
 
 - install Docker
 - install Docker Compose
-- create and edit db_password file
-- create and edit nextcloud_admin_password file
+- create a password file for MariaDB: ./secrets/db_password
+  - and run: `chmod 600 ./secrets/db_password`
+  - (used by Nextcloud to connect MariaDB)
+- create a password file for Nextcloud admin: ./secrets/nextcloud_admin_password
+  - and run: `chmod 600 ./secrets/nextcloud_admin_password`
+  - (to be entered at the Nextcloud login screen) (username: admin)
 - create and edit .env file (see below)
     - specify Gfarm configuration
     - select Gfarm authentication method

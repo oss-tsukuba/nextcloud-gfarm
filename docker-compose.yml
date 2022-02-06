@@ -118,13 +118,13 @@ services:
 
 secrets:
   nextcloud_admin_password:
-    file: ./nextcloud_admin_password
+    file: ./secrets/nextcloud_admin_password
   db_password:
-    file: ./db_password
+    file: ./secrets/db_password
   # myproxy_password:
-  #   file: ./myproxy_password
+  #   file: ./secrets/myproxy_password
   # grid_proxy_password:
-  #   file: ./grid_proxy_password
+  #   file: ./secrets/grid_proxy_password
 
 volumes:
   nextcloud:

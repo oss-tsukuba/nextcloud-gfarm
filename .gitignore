@@ -1,12 +1,10 @@
 *~
 /.env
 /docker-compose.override.yml
-/nextcloud_admin_password
-/db_password
-/grid_proxy_password
-/myproxy_password
 /gfarm2.conf
 /gfarm2rc
 /gfarm_shared_key
-/nextcloud.env
-/mariadb.env
+/secrets/nextcloud_admin_password
+/secrets/db_password
+/secrets/grid_proxy_password
+/secrets/myproxy_password
