@@ -39,14 +39,15 @@ Optional:
 - create a password file for Nextcloud admin: ./secrets/nextcloud_admin_password
   - and run: `chmod 600 ./secrets/nextcloud_admin_password`
   - (to be entered at the Nextcloud login screen) (username: admin)
-- create and edit .env file (see below)
+- create and edit .env file (see details below)
     - specify Gfarm configuration
     - select Gfarm authentication method
+    - server name
 - create docker-compose.override.yml
     - example: `ln -s docker-compose.override.yml.https docker-compose.override.yml`
     - or use one of other docker-compose.override.yml.*
     - or write docker-compose.override.yml for your environment
-- check `make config`
+- run `make config` to check configurations.
 - run `make reborn-withlog`
 - input password of myproxy-logon or grid-proxy-init for Gfarm
   authentication method (when not using .gfarm_shared_key)
@@ -59,8 +60,10 @@ Optional:
         - ${SERVER_NAME}.crt (SSL_CERT)
         - and use `sudo docker cp <filename> nextcloud-gfarm-revproxy-1:/etc/nginx/certs/<filename>` to copy a file
     - or `make selfsigned-cert-generate` to generate and copy self-signed certificate
-    - or (unsurveyed:) use https://github.com/nginx-proxy/acme-companion to use Let's Encrypt and create new docker-compose.override.yml
-        - Example: https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/with-nginx-proxy/mariadb/fpm/docker-compose.yml
+    - or (unsurveyed:) use acme-companion for nginx-proxy to use Let's Encrypt certificate and create new docker-compose.override.yml
+        - https://github.com/nginx-proxy/acme-companion
+        - https://github.com/nginx-proxy/acme-companion/blob/main/docs/Docker-Compose.md
+        - https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/with-nginx-proxy/mariadb/fpm/docker-compose.yml
     - or etc.
 - run `make restart-revproxy` after certificate files for HTTPS are updated.
 - open the URL in a browser
@@ -74,12 +77,12 @@ Optional:
 Please refer to
 [Make your Nextcloud available from the internet](https://github.com/nextcloud/docker/blob/master/README.md#make-your-nextcloud-available-from-the-internet)
 
-docker-compose.override.yml.https.selfsigned is an example to setup
+docker-compose.override.yml.https is an example to setup
 using a reverse proxy and using self signed certificates.
 
 ## Configuration file (.env)
 
-example:
+example (connect to HPCI shared storage):
 
 ```
 NEXTCLOUD_VERSION=23
@@ -117,9 +120,10 @@ mandatory parameters:
     - NOTE: Do not share GFARM_DATA_PATH with other nextcloud-gfarm.
 - GFARM_BACKUP_PATH: Gfarm backup directory
     - NOTE: Do not share GFARM_BACKUP_PATH with other nextcloud-gfarm.
-- GFARM_CONF_DIR: path to parent directory on host OS for gfarm2.conf
+- GFARM_CONF_DIR: path to parent directory on host OS for the followin files
+     - gfarm2.conf: Gfarm configuration file
 
-Gfarm configuration parameters (specify only required items)
+Gfarm parameters (if necessary)
 (default values are listed in docker-compose.yml):
 
 - GFARM_CONF_USER_DIR: path to parent directory on host OS for the following files (Please make a special directory and copy the files)
@@ -136,7 +140,7 @@ optional parameters (default values are listed in docker-compose.yml):
 
 - HTTP_PORT: http port number (redirect to https)
 - HTTPS_PORT: https port number (certificate files for HTTPS are required)
-- NEXTCLOUD_GFARM_DEBUG: debug mode
+- NEXTCLOUD_GFARM_DEBUG: debug mode (0: disable)
 - http_proxy: http_proxy environment variable
 - https_proxy: http_proxy environment variable
 - HTTP_ACCESS_LOG: access log (1=enable)
@@ -149,7 +153,6 @@ optional parameters (default values are listed in docker-compose.yml):
 - GFARM_CREDENTIAL_EXPIRATION_THRESHOLD: minimum expiration time for Gfarm (sec.)
 - GFARM_ATTR_CACHE_TIMEOUT: gfs_stat_timeout for gfarm2fs
 - GFARM2FS_LOGLEVEL: loglevel for gfarmfs
-
 - FUSE_ENTRY_TIMEOUT: entry_timeout for gfarm2fs
 - FUSE_NEGATIVE_TIMEOUT: negative_timeout for gfarm2fs
 - FUSE_ATTR_TIMEOUT: attr_timeout for gfarm2fs
@@ -181,7 +184,7 @@ make restart-withlog
 make rebone-withlog
 ```
 
-## Update credential
+## Update Gfarm credential
 
 To copy Gfarm shared key into container:
 
@@ -255,8 +258,9 @@ make reborn-withlog
 - Nextcloud log: Nextcloud UI -> Logging
     - or /var/www/html/nextcloud.log in container.
     - This is included in the backup.
-- `make logs` for containers
-    - NOTE: This is not included in the backup.
+- `make logs-<container name>` for containers
+    - NOTE: These are not included in the backup.
+    - NOTE: These logs are removed when running `make reborn` or `make down`
 - /var/log/* in Nextcloud container
     - NOTE: This is not included in the backup.
 
@@ -276,7 +280,8 @@ have to upgrade from version 14 to 15, then from 15 to 16.
 
 ## for developers
 
-see .env-docker_dev,
+create Gfarm docker/dev environment,
+and see .env-docker_dev,
 and merge the file into .env,
-and execute ./copy_home_files.sh
-and create directories.
+and execute ./copy_home_files.sh to copy files into containers,
+and create symlink from gfarm/docker/dev/mnt/COPY_DIR to /work/gfarm-dev
