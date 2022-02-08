@@ -8,12 +8,14 @@ services:
     build:
       context: ./nextcloud
       args:
-        #- GFARM_SRC_URL=https://github.com/oss-tsukuba/gfarm/archive/refs/tags/2.7.19.tar.gz
-        - GFARM_SRC_GIT_URL=https://github.com/oss-tsukuba/gfarm.git
-        - GFARM_SRC_GIT_BRANCH=2.7
-        #- GFARM2FS_SRC_URL=https://github.com/oss-tsukuba/gfarm2fs/archive/refs/tags/1.2.15.tar.gz
-        - GFARM2FS_SRC_GIT_URL=https://github.com/oss-tsukuba/gfarm2fs.git
-        - GFARM2FS_SRC_GIT_BRANCH=master
+        # use GFARM_SRC_GIT_URL if empty
+        - GFARM_SRC_URL=${GFARM_SRC_URL:-https://github.com/oss-tsukuba/gfarm/archive/refs/tags/2.7.19.tar.gz}
+        - GFARM_SRC_GIT_URL=${GFARM_SRC_GIT_URL:-https://github.com/oss-tsukuba/gfarm.git}
+        - GFARM_SRC_GIT_BRANCH=${GFARM_SRC_GIT_BRANCH:-2.7}
+        # use GFARM2FS_SRC_GIT_URL if empty
+        - GFARM2FS_SRC_URL=${GFARM2FS_SRC_URL:-https://github.com/oss-tsukuba/gfarm2fs/archive/refs/tags/1.2.15.tar.gz}
+        - GFARM2FS_SRC_GIT_URL=${GFARM2FS_SRC_GIT_URL:-https://github.com/oss-tsukuba/gfarm2fs.git}
+        - GFARM2FS_SRC_GIT_BRANCH=${GFARM2FS_SRC_GIT_BRANCH:-master}
         ### mandatory
         - NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION:-21}
         ### optional
