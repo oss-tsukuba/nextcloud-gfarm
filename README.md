@@ -271,6 +271,14 @@ You can describe docker-compose.override.yml to change logging driver.
 - https://docs.docker.com/compose/compose-file/compose-file-v3/#logging
 - https://docs.docker.com/config/containers/logging/configure/
 
+## Update containers
+
+- update nextcloud-gfarm source
+- or, update .env
+- or, update docker-compose.yml
+- or, run `make build-nocache` to update packages forcibly
+- and run `make reborn-withlog`
+
 ## Update to a newer Nextcloud
 
 - run `make backup`
