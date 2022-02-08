@@ -37,6 +37,10 @@ services:
       - GSI_PROXY_HOURS=${GSI_PROXY_HOURS:-168}
 
       ### optional
+      - PROTOCOL=${PROTOCOL:-https}
+      - HTTP_PORT=${HTTP_PORT:-80}
+      - HTTPS_PORT=${HTTPS_PORT:-443}
+
       - NEXTCLOUD_GFARM_DEBUG=${NEXTCLOUD_GFARM_DEBUG:-0}
       - http_proxy=${http_proxy:-}
       - https_proxy=${https_proxy:-}
@@ -59,8 +63,12 @@ services:
 
       ### https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/reverse_proxy_configuration.html
       - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
+      # empty means SERVER_NAME:HTTPS_PORT or SERVER_NAME:HTTP_PORT
+      # (specified automatically in nextcloud/entrypoint0.sh)
       - OVERWRITEHOST=${OVERWRITEHOST:-}
-      - OVERWRITEPROTOCOL=${OVERWRITEPROTOCOL:-https}
+      # empty means PROTOCOL
+      # (specified automatically in nextcloud/entrypoint0.sh)
+      - OVERWRITEPROTOCOL=${OVERWRITEPROTOCOL:-}
       - OVERWRITEWEBROOT=${OVERWRITEWEBROOT:-}
       - OVERWRITECONDADDR=${OVERWRITECONDADDR:-}
     volumes:

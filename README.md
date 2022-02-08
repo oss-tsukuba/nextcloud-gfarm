@@ -72,13 +72,16 @@ Optional:
     - username: `admin`
     - password: `<value of nextcloud_admin_password>`
 
-## HTTPS and Certificates and Reverse proxy
+## HTTPS (SSL/TLS) and Certificates and Reverse proxy
 
 Please refer to
 [Make your Nextcloud available from the internet](https://github.com/nextcloud/docker/blob/master/README.md#make-your-nextcloud-available-from-the-internet)
 
 docker-compose.override.yml.https is an example to setup
 using a reverse proxy and using self signed certificates.
+
+You can use other reverse proxy and describe
+docker-compose.override.yml for the environment.
 
 ## Configuration file (.env)
 
@@ -87,10 +90,8 @@ example (connect to HPCI shared storage):
 ```
 NEXTCLOUD_VERSION=23
 SERVER_NAME=client1.local
-HTTP_PORT=58080
+PROTOCOL=https
 HTTPS_PORT=58443
-OVERWRITEHOST=client1.local:58443
-OVERWRITEPROTOCOL=https
 GFARM_USER=hpciXXXXXX
 GFARM_DATA_PATH=/home/hpXXXXXX/hpciXXXXXX/nextcloud/data
 GFARM_BACKUP_PATH=/home/hpXXXXXX/hpciXXXXXX/nextcloud/backup
@@ -138,8 +139,9 @@ Gfarm parameters (if necessary)
 
 optional parameters (default values are listed in docker-compose.yml):
 
-- HTTP_PORT: http port number (redirect to https)
-- HTTPS_PORT: https port number (certificate files for HTTPS are required)
+- PROTOCOL: https or http
+- HTTP_PORT: http port number
+- HTTPS_PORT: https port number
 - NEXTCLOUD_GFARM_DEBUG: debug mode (0: disable)
 - http_proxy: http_proxy environment variable
 - https_proxy: http_proxy environment variable
@@ -263,6 +265,11 @@ make reborn-withlog
     - NOTE: These logs are removed when running `make reborn` or `make down`
 - /var/log/* in Nextcloud container
     - NOTE: This is not included in the backup.
+
+You can describe docker-compose.override.yml to change logging driver.
+
+- https://docs.docker.com/compose/compose-file/compose-file-v3/#logging
+- https://docs.docker.com/config/containers/logging/configure/
 
 ## Update to a newer Nextcloud
 
