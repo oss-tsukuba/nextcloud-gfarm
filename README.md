@@ -4,6 +4,7 @@
 
 - Nextcloud container with Gfarm as back-end storage.
 - Use one Gfarm user and the data directory for multiple Nextcloud users.
+    - Mapping of Gfarm user and Nextcloud user is not supported.
 - Back up to Gfarm automatically.
     - Backup-file of database is encrypted.
 - Restore from Gfarm automatically when local data (docker volume) is empty.
