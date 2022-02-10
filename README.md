@@ -34,7 +34,7 @@ Optional:
 
 - install Docker
 - install Docker Compose
-- run `make init` to configure parameters and create `config.env`,
+- run `make init` to configure parameters and create `config.env`.
   (or run `make init-hpci` for HPCI shared storage.)
     - `KEY [DEFAULT]: <your input to set VALUE>`
         - for KEY and VALUE, see details below
@@ -45,11 +45,12 @@ Optional:
         - check `./secrets/nextcloud_admin_password`
         - (to be entered at the Nextcloud login screen for admin user)
     - create symlink of `docker-compose.override.yml` automatically.
-        - PROTOCOL=https : use `docker-compose.override.yml.https`
-        - PROTOCOL=http  : use `docker-compose.override.yml.http`
+        - PROTOCOL=https : for `docker-compose.override.yml.https`
+        - PROTOCOL=http  : for `docker-compose.override.yml.http`
 - edit `config.env` for further changes. (see details below)
     - correct and add parameters.
 - check and edit `docker-compose.override.yml`
+    - If you do not need symlink of `docker-compose.override.yml`, remove it.
     - use one of other `docker-compose.override.yml.*`
     - or write new `docker-compose.override.yml` for your environment
 - run `make config` to check configurations.
@@ -57,15 +58,15 @@ Optional:
 - input password of myproxy-logon or grid-proxy-init for Gfarm
   authentication method (when not using .gfarm_shared_key)
 - `ctrl-c` to stop output of `make reborn-withlog`
-- copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume when using docker-compose.override.yml.https
+- copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume when using `docker-compose.override.yml.https`
     - NOTE: HTTPS port is disabled when certificate files do not exist.
     - prepare the following files
         - ${SERVER_NAME}.key (SSL_KEY)
         - ${SERVER_NAME}.csr (SSL_CSR)
         - ${SERVER_NAME}.crt (SSL_CERT)
-        - and use `sudo docker cp <filename> nextcloud-gfarm-revproxy-1:/etc/nginx/certs/<filename>` to copy a file
-    - or `make selfsigned-cert-generate` to generate and copy self-signed certificate
-    - or (unsurveyed:) use acme-companion for nginx-proxy to use Let's Encrypt certificate and create new docker-compose.override.yml
+        - and run `sudo docker cp <filename> nextcloud-gfarm-revproxy-1:/etc/nginx/certs/<filename>` to copy a file
+    - or run `make selfsigned-cert-generate` to generate and copy self-signed certificate
+    - or (unsurveyed:) write new docker-compose.override.yml and use acme-companion for nginx-proxy to use Let's Encrypt certificate
         - https://github.com/nginx-proxy/acme-companion
         - https://github.com/nginx-proxy/acme-companion/blob/main/docs/Docker-Compose.md
         - https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/with-nginx-proxy/mariadb/fpm/docker-compose.yml
@@ -271,7 +272,7 @@ You can describe docker-compose.override.yml to change logging driver.
 ## Update containers
 
 - update nextcloud-gfarm source
-- or update config.env
+- or update `config.env`
 - or update docker-compose.yml
 - or run `make build-nocache` to update packages forcibly
 - and run `make reborn-withlog`
