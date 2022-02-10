@@ -88,9 +88,18 @@ rsync -a ${SYSTEM_DIR_NAME}/ "${HTML_DIR}/"
 chown -R ${NEXTCLOUD_USER}:${NEXTCLOUD_USER} "${HTML_DIR}"
 
 gunzip ${DB_ARCH}
-mysql --defaults-file="${MYSQL_CONF}" \
+# https://docs.nextcloud.com/server/latest/admin_manual/maintenance/restore.html
+if mysql --defaults-file="${MYSQL_CONF}" \
+      -h ${MYSQL_HOST} \
+      -u root \
+      ${MYSQL_DATABASE} < ${DB_FILE_NAME} \
+   ; then
+    :
+else
+    mysql --defaults-file="${MYSQL_CONF}" \
       -h ${MYSQL_HOST} \
       -u root < ${DB_FILE_NAME}
+fi
 
 touch "${RESTORE_FLAG_PATH}"
 INFO "Restore is complete."

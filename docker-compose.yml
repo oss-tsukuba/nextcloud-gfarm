@@ -1,10 +1,9 @@
 version: '3.5'
 
-# use variables from .env
-
 services:
   nextcloud:
     hostname: nextcloud
+    init: true
     build:
       context: ./nextcloud
       args:
@@ -17,7 +16,7 @@ services:
         - GFARM2FS_SRC_GIT_URL=${GFARM2FS_SRC_GIT_URL:-https://github.com/oss-tsukuba/gfarm2fs.git}
         - GFARM2FS_SRC_GIT_BRANCH=${GFARM2FS_SRC_GIT_BRANCH:-master}
         ### mandatory
-        - NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION:-21}
+        - NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION:-22}
         ### optional
         - http_proxy=${http_proxy:-}
         - https_proxy=${https_proxy:-}
@@ -44,6 +43,7 @@ services:
       - HTTPS_PORT=${HTTPS_PORT:-443}
 
       - NEXTCLOUD_GFARM_DEBUG=${NEXTCLOUD_GFARM_DEBUG:-0}
+      - NEXTCLOUD_GFARM_DEBUG_SLEEP=${NEXTCLOUD_GFARM_DEBUG_SLEEP:-0}
       - http_proxy=${http_proxy:-}
       - https_proxy=${https_proxy:-}
       - HTTP_ACCESS_LOG=${HTTP_ACCESS_LOG:-0}
@@ -75,6 +75,7 @@ services:
       - OVERWRITECONDADDR=${OVERWRITECONDADDR:-}
     volumes:
       - nextcloud:/var/www/html
+      - gsi_proxy:/gsi_proxy
       - log:/var/log
       ### mandatory
       - ${GFARM_CONF_DIR:?GFARM_CONF_DIR}:/gfarm_conf:ro
@@ -139,6 +140,7 @@ secrets:
 
 volumes:
   nextcloud:
+  gsi_proxy:
   log:
   db:
 

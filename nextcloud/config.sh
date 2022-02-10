@@ -70,6 +70,9 @@ GRID_PROXY_PASSWORD_FILE="/run/secrets/grid_proxy_password"
 HOMEDIR="/var/www"
 HTML_DIR="${HOMEDIR}/html"
 DATA_DIR="${HTML_DIR}/data"
+CONFIG_DIR="${HTML_DIR}/config"
+
+DBPASSWORD_CONFIG="${CONFIG_DIR}/nc-gfarm-dbpassword.config.php"
 
 TMP_DATA_DIR="${DATA_DIR}.bak"
 NEXTCLOUD_LOG_PATH="${HTML_DIR}/nextcloud.log"
@@ -79,13 +82,15 @@ GFARM2FS_DISABLE_MT=""
 MNT_OPT="${GFARM2FS_DISABLE_MT} -o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,subdir=${GFARM_DATA_PATH},entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
 
 NEXTCLOUD_USER="www-data"
+NEXTCLOUD_USER_ID=$(id -u ${NEXTCLOUD_USER})
 
 if [ $(whoami) = "${NEXTCLOUD_USER}" ]; then
     SUDO_USER=""
 else
     SUDO_USER="sudo -s -E -u ${NEXTCLOUD_USER}"
 fi
-OCC="${SUDO_USER} php ${HTML_DIR}/occ"
+OCC_PATH=${HTML_DIR}/occ
+OCC="${SUDO_USER} php ${OCC_PATH}"
 
 CRONTAB_TEMPLATE="${NCGFARM_DIR}/crontab.tmpl"
 CRONTAB_DIR_PATH="/var/spool/cron/crontabs"
@@ -107,6 +112,7 @@ POST_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/post"
 
 MYSQL_PASSWORD_FILE_FOR_USER="${HOMEDIR}/nextcloud_db_password"
 MYSQL_CONF="${HOMEDIR}/nextcloud.my.cnf"
+MYSQL_ROOT_SH="${HOMEDIR}/mysql_root.sh"
 NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER="${HOMEDIR}/nextcloud_admin_password"
 
 BACKUP_SH="${NCGFARM_DIR}/backup.sh"
@@ -139,5 +145,7 @@ GSI_USER_DIR_ORIG="/gsi_user"
 GSI_USER_DIR="${HOMEDIR}/.globus"
 GSI_USER_KEY="${GSI_USER_DIR}/userkey.pem"
 
+GSI_USER_PROXY_BACKUP="/gsi_proxy/user_proxy_cert"
 GSI_USER_PROXY_ORIG="/${GFARM_CONF_USER_DIR}/user_proxy_cert"
 GSI_USER_PROXY_PREFIX="/tmp/x509up_u"
+GSI_USER_PROXY_FILE="${GSI_USER_PROXY_PREFIX}${NEXTCLOUD_USER_ID}"

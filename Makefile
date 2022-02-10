@@ -1,11 +1,13 @@
 COMPOSE_PROJECT_NAME = nextcloud-gfarm
 
+ENV_FILE = --env-file config.env
+
 SUDO = $(shell docker version > /dev/null 2>&1 || echo sudo)
 DOCKER = $(SUDO) docker
 COMPOSE_V1 = docker-compose
 COMPOSE_V2 = docker compose
 COMPOSE_SW = $(shell ${COMPOSE_V2} version > /dev/null 2>&1 && echo ${COMPOSE_V2} || echo ${COMPOSE_V1})
-COMPOSE = $(SUDO) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) $(COMPOSE_SW)
+COMPOSE = $(SUDO) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) $(COMPOSE_SW) $(ENV_FILE)
 
 EXEC = $(COMPOSE) exec -u www-data nextcloud
 EXEC_ROOT = $(COMPOSE) exec -u root nextcloud
@@ -36,6 +38,15 @@ TARGET_LOGS_TIME = $(call gentarget,logs-time)
 ps:
 	$(COMPOSE) ps
 
+init:
+	./init.sh template.env
+
+init-hpci:
+	./init.sh template-hpci.env
+
+init-dev:
+	./init.sh template-docker_dev.env
+
 prune:
 	$(DOCKER) system prune -f
 
@@ -55,16 +66,28 @@ down:
 	$(COMPOSE) down --remove-orphans
 	$(MAKE) prune
 
+_REMOVE_ALL_FOR_DEVELOP:
+	$(MAKE) down-REMOVE_VOLUMES || true
+	BACKUP_CONF=config.env.`date +%Y%m%d`; [ -f $$BACKUP_CONF ] || cp config.env || true
+	rm -f ./secrets/db_password ./secrets/nextcloud_admin_password
+	rm -f ./docker-compose.override.yml ./config.env
+
+_REINSTAL_FOR_DEVELOP:
+	$(MAKE) _REMOVE_ALL_FOR_DEVELOP
+	$(MAKE) init-dev
+	$(MAKE) selfsigned-cert-generate
+	$(MAKE) reborn-withlog
+
 down-REMOVE_VOLUMES:
-	read -n1 -p "ERASE ALL LOCAL DATA. Do you have a backup? (y/N): " YN; \
+	read -p "ERASE ALL LOCAL DATA. Do you have a backup? (y/N): " YN; \
 	case "$$YN" in [yY]*) $(COMPOSE) down --volumes --remove-orphans;; \
 	*) echo ; echo "ABORT ($${YN})"; false;; esac
 
 reborn:
 	$(COMPOSE) build
 	$(MAKE) down
-	$(COMPOSE) up -d || $(MAKE) logs
-	$(MAKE) auth-init
+	$(COMPOSE) up -d || { $(MAKE) logs; false; }
+	$(MAKE) auth-init || { $(MAKE) logs; false; }
 
 reborn-withlog:
 	$(MAKE) reborn
@@ -173,3 +196,8 @@ copy-gfarm_shared_key:
 
 copy-gsi_user_proxy:
 	$(EXEC_ROOT) /nc-gfarm/copy_gsi_user_proxy.sh
+
+resetpassword-admin:
+	echo "reset admin password on database"
+	echo "NOTE: ./secrets/nextcloud_admin_password is not changed"
+	$(OCC) user:resetpassword admin

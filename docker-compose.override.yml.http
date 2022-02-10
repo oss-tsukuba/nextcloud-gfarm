@@ -1,7 +1,5 @@
 version: '3.4'
 
-# variables from .env
-
 services:
   nextcloud:
     environment:

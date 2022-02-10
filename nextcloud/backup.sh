@@ -42,11 +42,13 @@ INFO "Backup is starting...."
 
 ${OCC} maintenance:mode --on
 rsync -rlpt --exclude="/data/" "${HTML_DIR}/" ./${SYSTEM_DIR_NAME}/
-mysqldump \
-    --defaults-file="${MYSQL_CONF}" \
+
+# https://docs.nextcloud.com/server/latest/admin_manual/maintenance/backup.html
+mysqldump --defaults-file="${MYSQL_CONF}" \
+    --single-transaction \
     -h ${MYSQL_HOST} \
-    -u root \
-    -x --all-databases > ${DB_FILE_NAME}
+    -u ${MYSQL_USER} \
+    ${MYSQL_DATABASE} > ${DB_FILE_NAME}
 ${OCC} maintenance:mode --off
 
 tar czpf ${SYSTEM_ARCH} ${SYSTEM_DIR_NAME}

@@ -10,11 +10,16 @@ source ${CONFIG_LIB}
 
 create_mount_point()
 {
-    ${SUDO_USER} mv "${DATA_DIR}" "${TMP_DATA_DIR}"
+    if [ -d "${TMP_DATA_DIR}" ]; then
+        ${SUDO_USER} rm -rf "${DATA_DIR}"
+    else
+        ${SUDO_USER} mv "${DATA_DIR}" "${TMP_DATA_DIR}"
+    fi
     ${SUDO_USER} mkdir -p "${DATA_DIR}"
     ${SUDO_USER} chmod 750 "${DATA_DIR}"
 }
 
+gfarm2fs_is_mounted && umount_gfarm2fs
 # before mount_gfarm2fs
 if [ ! -d "${DATA_DIR}" ]; then
    ${SUDO_USER} mkdir -p "${DATA_DIR}"
@@ -31,9 +36,8 @@ if [ ${FILE_NUM} -gt 0 ]; then  # not empty
     GFARM_DIR_FILE_NUM=$(${SUDO_USER} ls -1a --ignore=. --ignore=.. "${DATA_DIR}" | wc -l)
     if [ ${GFARM_DIR_FILE_NUM} -eq 0 ]; then
         # empty GFARM_DATA_PATH ==> copy files
-        ${SUDO_USER} rsync -rlpt "${TMP_DATA_DIR}/" "${DATA_DIR}/"
+        ${SUDO_USER} rsync -vrlpt "${TMP_DATA_DIR}/" "${DATA_DIR}/"
     fi
-    ${SUDO_USER} rm -rf "${TMP_DATA_DIR}"
 fi
 
 # initialization after creating new (or renew) container

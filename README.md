@@ -34,27 +34,31 @@ Optional:
 
 - install Docker
 - install Docker Compose
-- create a password file for MariaDB: ./secrets/db_password
-  - and run: `chmod 600 ./secrets/db_password`
-  - (used by Nextcloud to connect MariaDB)
-- create a password file for Nextcloud admin: ./secrets/nextcloud_admin_password
-  - and run: `chmod 600 ./secrets/nextcloud_admin_password`
-  - (to be entered at the Nextcloud login screen) (username: admin)
-- create and edit .env file (see details below)
-    - specify Gfarm configuration
-    - select Gfarm authentication method
-    - server name
-- create docker-compose.override.yml
-    - example: `ln -s docker-compose.override.yml.https docker-compose.override.yml`
-    - or use one of other docker-compose.override.yml.*
-    - or write docker-compose.override.yml for your environment
+- run `make init` to configure parameters and create `config.env`,
+  (or run `make init-hpci` for HPCI shared storage.)
+    - `KEY [DEFAULT]: <your input to set VALUE>`
+        - for KEY and VALUE, see details below
+    - create a password file for MariaDB automatically.
+        - check `./secrets/db_password`
+        - (used by Nextcloud to connect MariaDB)
+    - create a password file for Nextcloud admin automatically.
+        - check `./secrets/nextcloud_admin_password`
+        - (to be entered at the Nextcloud login screen for admin user)
+    - create symlink of `docker-compose.override.yml` automatically.
+        - PROTOCOL=https : use `docker-compose.override.yml.https`
+        - PROTOCOL=http  : use `docker-compose.override.yml.http`
+- edit `config.env` for further changes. (see details below)
+    - correct and add parameters.
+- check and edit `docker-compose.override.yml`
+    - use one of other `docker-compose.override.yml.*`
+    - or write new `docker-compose.override.yml` for your environment
 - run `make config` to check configurations.
 - run `make reborn-withlog`
 - input password of myproxy-logon or grid-proxy-init for Gfarm
   authentication method (when not using .gfarm_shared_key)
 - `ctrl-c` to stop output of `make reborn-withlog`
 - copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume when using docker-compose.override.yml.https
-    - NOTE: HTTPS port is diabled when certificate files do not exist.
+    - NOTE: HTTPS port is disabled when certificate files do not exist.
     - prepare the following files
         - ${SERVER_NAME}.key (SSL_KEY)
         - ${SERVER_NAME}.csr (SSL_CSR)
@@ -71,7 +75,7 @@ Optional:
     - example: `https://<hostname>/`
 - login
     - username: `admin`
-    - password: `<value of nextcloud_admin_password>`
+    - password: `<value of ./secrets/nextcloud_admin_password>`
 
 ## HTTPS (SSL/TLS) and Certificates and Reverse proxy
 
@@ -84,25 +88,7 @@ using a reverse proxy and using self signed certificates.
 You can use other reverse proxy and describe
 docker-compose.override.yml for the environment.
 
-## Configuration file (.env)
-
-example (connect to HPCI shared storage):
-
-```
-NEXTCLOUD_VERSION=23
-SERVER_NAME=client1.local
-PROTOCOL=https
-HTTPS_PORT=58443
-GFARM_USER=hpciXXXXXX
-GFARM_DATA_PATH=/home/hpXXXXXX/hpciXXXXXX/nextcloud/data
-GFARM_BACKUP_PATH=/home/hpXXXXXX/hpciXXXXXX/nextcloud/backup
-GFARM_CONF_DIR=/work/gfarm-conf/
-GSI_CERTIFICATES_DIR=/etc/grid-security/certificates
-#GSI_CERTIFICATES_DIR=/work/gfarm-conf/certificates
-MYPROXY_SERVER=portal.hpci.nii.ac.jp:7512
-MYPROXY_USER=hpciXXXXXX
-GSI_PROXY_HOURS=168
-```
+## Configuration file (config.env)
 
 configuration format:
 
@@ -122,16 +108,16 @@ mandatory parameters:
     - NOTE: Do not share GFARM_DATA_PATH with other nextcloud-gfarm.
 - GFARM_BACKUP_PATH: Gfarm backup directory
     - NOTE: Do not share GFARM_BACKUP_PATH with other nextcloud-gfarm.
-- GFARM_CONF_DIR: path to parent directory on host OS for the followin files
+- GFARM_CONF_DIR: path to parent directory on host OS for the following files
      - gfarm2.conf: Gfarm configuration file
 
 Gfarm parameters (if necessary)
 (default values are listed in docker-compose.yml):
 
 - GFARM_CONF_USER_DIR: path to parent directory on host OS for the following files (Please make a special directory and copy the files)
-    - gfarm2rc (optional) (copy from `~/.gfarm2rc`)
-    - gfarm_shared_key (optional) (copy from `~/.gfarm_shared_key`)
-    - user_proxy_cert (optional) (copy from `/tmp/x509up_u<UID>`)
+    - `gfarm2rc` (optional) (copy from `~/.gfarm2rc`)
+    - `gfarm_shared_key` (optional) (copy from `~/.gfarm_shared_key`)
+    - `user_proxy_cert` (optional) (copy from `/tmp/x509up_u<UID>`)
 - GSI_CERTIFICATES_DIR: `/etc/grid-security/certificates/` on host OS
 - GSI_USER_DIR: path to `~/.globus` on host OS
 - MYPROXY_SERVER: myproxy server (hostname:port)
@@ -155,7 +141,7 @@ optional parameters (default values are listed in docker-compose.yml):
 - GFARM_CHECK_ONLINE_TIME: time to check online (crontab format)
 - GFARM_CREDENTIAL_EXPIRATION_THRESHOLD: minimum expiration time for Gfarm (sec.)
 - GFARM_ATTR_CACHE_TIMEOUT: gfs_stat_timeout for gfarm2fs
-- GFARM2FS_LOGLEVEL: loglevel for gfarmfs
+- GFARM2FS_LOGLEVEL: loglevel for gfarm2fs
 - FUSE_ENTRY_TIMEOUT: entry_timeout for gfarm2fs
 - FUSE_NEGATIVE_TIMEOUT: negative_timeout for gfarm2fs
 - FUSE_ATTR_TIMEOUT: attr_timeout for gfarm2fs
@@ -180,12 +166,20 @@ start:
 make restart-withlog
 ```
 
-## After updating configurations (.env)
+## After updating configurations (config.env)
 
 
 ```
 make rebone-withlog
 ```
+
+## Synchronize files from Gfarm
+
+```
+make files-scan
+```
+
+NOTE: This is ran automatically by NEXTCLOUD_FILES_SCAN_TIME.
 
 ## Update Gfarm credential
 
@@ -246,6 +240,8 @@ To back up manually:
 make backup
 ```
 
+NOTE: `./secrets/nextcloud_admin_password` is also used to encrypt the backup data.  So the same password is required when restoring.
+
 ## Restore
 
 When Nextcloud database is broken, you can restore from backup data:
@@ -275,9 +271,9 @@ You can describe docker-compose.override.yml to change logging driver.
 ## Update containers
 
 - update nextcloud-gfarm source
-- or, update .env
-- or, update docker-compose.yml
-- or, run `make build-nocache` to update packages forcibly
+- or update config.env
+- or update docker-compose.yml
+- or run `make build-nocache` to update packages forcibly
 - and run `make reborn-withlog`
 
 ## Update to a newer Nextcloud
@@ -286,7 +282,7 @@ You can describe docker-compose.override.yml to change logging driver.
 - change NEXTCLOUD_VERSION
 - run `make reborn-withlog`
 
-NOTE:
+SEE ALSO:
 
 https://github.com/nextcloud/docker/blob/master/README.md#update-to-a-newer-version
 
@@ -294,10 +290,36 @@ It is only possible to upgrade one major version at a time.
 For example, if you want to upgrade from version 14 to 16, you will
 have to upgrade from version 14 to 15, then from 15 to 16.
 
-## for developers
+## Change DB password
 
-create Gfarm docker/dev environment,
-and see .env-docker_dev,
-and merge the file into .env,
-and execute ./copy_home_files.sh to copy files into containers,
-and create symlink from gfarm/docker/dev/mnt/COPY_DIR to /work/gfarm-dev
+- run `make backup`
+- run `make down-REMOVE_VOLUMES`
+    - clear password for root user of mariadb
+- edit `./secrets/db_password`
+- run `make reborn-withlog`
+    - set new password for root user of mariadb in mariadb container
+    - set new password for nextcloud user of mariadb in nextcloud container
+
+NOTE: Password for root user and nextcloud user of mariadb is the same.
+
+NOTE: Nextcloud may not have official instructions on how to change the password.  Therefore, nextcloud-gfarm has implemented the change process for the password in `./nextcloud/entrypoint0.sh`.
+
+## Reset Nextcloud admin password
+
+- run `make resetpassword-admin`
+- edit `./secrets/nextcloud_admin_password` and set the same password.
+- run `make backup` to change the password for backup data.
+
+SEE ALSO:
+
+https://docs.nextcloud.com/server/latest/admin_manual/configuration_user/reset_admin_password.html
+
+
+## For developers
+
+- create Gfarm docker/dev environment
+- and run `ln -s <path to gfarm/docker/dev/mnt/COPY_DIR> /work/gfarm-dev`
+- and run `make init-dev`
+- and run `./copy_home_files.sh` to copy files into containers
+
+- or create `template-orverride.env` for your environment

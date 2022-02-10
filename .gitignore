@@ -1,5 +1,6 @@
 *~
-/.env
+/config.env
+/template-override.env
 /docker-compose.override.yml
 /gfarm2.conf
 /gfarm2rc

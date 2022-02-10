@@ -77,15 +77,31 @@ EOF
 ### reload and export environment variables
 source /nc-gfarm/config.sh
 
+print_dbpassword() {
+    cat ${MYSQL_PASSWORD_FILE} | head -1
+}
+
+MYSQL_PASSWORD=$(print_dbpassword)
+
 # unnecessary
 #copy0 "${MYSQL_PASSWORD_FILE}" "${MYSQL_PASSWORD_FILE_FOR_USER}"
+
 tmp1=$(mktemp)
 cat <<EOF > $tmp1
 [client]
-password="$(cat ${MYSQL_PASSWORD_FILE})"
+password="${MYSQL_PASSWORD}"
 EOF
 copy0 $tmp1 "${MYSQL_CONF}"
 rm -f $tmp1
+
+if [ ! -s "${MYSQL_ROOT_SH}" ]; then
+    cat <<EOF > "${MYSQL_ROOT_SH}"
+mysql --defaults-file="${MYSQL_CONF}" \
+    -h ${MYSQL_HOST} \
+    -u root
+EOF
+    chmod +x "${MYSQL_ROOT_SH}"
+fi
 
 copy0 "${NEXTCLOUD_ADMIN_PASSWORD_FILE}" "${NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER}"
 
@@ -93,7 +109,6 @@ GFARM_USERMAP="${HOMEDIR}/.gfarm_usermap"
 echo "${GFARM_USER} ${NEXTCLOUD_USER}" > "${GFARM_USERMAP}"
 chown0 "${GFARM_USERMAP}"
 
-[ -s "${GFARM2_CONF_ORIG}" ]
 cp "${GFARM2_CONF_ORIG}" "${GFARM_CONF}"
 echo >> "${GFARM_CONF}"
 echo "local_user_map ${GFARM_USERMAP}" >> "${GFARM_CONF}"
@@ -124,7 +139,13 @@ if [ -d "${GSI_USER_DIR_ORIG}" ]; then
     USE_GSI=1
 fi
 
-if [ -s "${GSI_USER_PROXY_ORIG}" ]; then
+# copy from backup
+if [ -s "${GSI_USER_PROXY_BACKUP}" ]; then
+    copy0 "${GSI_USER_PROXY_BACKUP}" "${GSI_USER_PROXY_FILE}"
+    USE_GSI=1
+fi
+
+if [ -s "${GSI_USER_PROXY_ORIG}" ] && ! is_valid_proxy_cert; then
     "${COPY_GSI_USER_PROXY_SH}"
     USE_GSI=1
 fi
@@ -194,6 +215,9 @@ if [ $num_gfsd -le 0 ]; then
     exit 1
 fi
 
+# backup GSI user proxy
+copy0 "${GSI_USER_PROXY_FILE}" "${GSI_USER_PROXY_BACKUP}"
+
 ${SUDO_USER} gfmkdir -p "${GFARM_DATA_PATH}"
 ${SUDO_USER} gfchmod 750 "${GFARM_DATA_PATH}"
 
@@ -209,6 +233,23 @@ if [ ${FILE_NUM} -eq 0 ]; then  # empty
     fi
 else
     touch "${VOLUME_REUSE_FLAG_PATH}"
+fi
+
+#exec sleep infinity
+
+# always override dbpassword
+cat <<EOF > "${DBPASSWORD_CONFIG}"
+<?php
+\$CONFIG['dbpassword'] = "${MYSQL_PASSWORD}";
+EOF
+
+# after restore and config:system:set dbpassword
+cat <<EOF | sed -e "s;@PASSWORD@;${MYSQL_PASSWORD};" | "${MYSQL_ROOT_SH}"
+SET PASSWORD FOR ${MYSQL_USER}@"%"=password('@PASSWORD@');
+EOF
+
+if [ ${NEXTCLOUD_GFARM_DEBUG_SLEEP} -eq 1 ]; then
+    exec sleep infinity
 fi
 
 # from: https://hub.docker.com/_/nextcloud/

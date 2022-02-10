@@ -81,7 +81,7 @@ timeleft_proxy_cert()
 
 is_valid_proxy_cert()
 {
-    timeleft=$(timeleft_proxy_cert) || return $?
+    timeleft=$(timeleft_proxy_cert 2> /dev/null) || return $?
     [ "${timeleft}" -gt ${GFARM_CREDENTIAL_EXPIRATION_THRESHOLD} ]
 }
 

@@ -9,7 +9,5 @@ source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
 
 if [ -s "${GSI_USER_PROXY_ORIG}" ]; then
-    NEXTCLOUD_USER_ID=$(id -u ${NEXTCLOUD_USER})
-    PROXY_FILE="${GSI_USER_PROXY_PREFIX}${NEXTCLOUD_USER_ID}"
-    copy0 "${GSI_USER_PROXY_ORIG}" "${PROXY_FILE}"
+    copy0 "${GSI_USER_PROXY_ORIG}" "${GSI_USER_PROXY_FILE}"
 fi
