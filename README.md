@@ -66,6 +66,7 @@ Optional:
         - ${SERVER_NAME}.crt (SSL_CERT)
         - and run `sudo docker cp <filename> nextcloud-gfarm-revproxy-1:/etc/nginx/certs/<filename>` to copy a file
     - or run `make selfsigned-cert-generate` to generate and copy self-signed certificate
+        - and run `make selfsigned-cert-fingerprint` to show fingerprint
     - or (unsurveyed:) write new docker-compose.override.yml and use acme-companion for nginx-proxy to use Let's Encrypt certificate
         - https://github.com/nginx-proxy/acme-companion
         - https://github.com/nginx-proxy/acme-companion/blob/main/docs/Docker-Compose.md
