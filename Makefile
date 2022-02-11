@@ -9,8 +9,12 @@ COMPOSE_V2 = docker compose
 COMPOSE_SW = $(shell ${COMPOSE_V2} version > /dev/null 2>&1 && echo ${COMPOSE_V2} || echo ${COMPOSE_V1})
 COMPOSE = $(SUDO) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) $(COMPOSE_SW) $(ENV_FILE)
 
-EXEC = $(COMPOSE) exec -u www-data nextcloud
-EXEC_ROOT = $(COMPOSE) exec -u root nextcloud
+EXEC_COMMON_USER = $(COMPOSE) exec -u www-data
+EXEC_COMMON_ROOT = $(COMPOSE) exec -u root
+
+
+EXEC = $(EXEC_COMMON_USER) nextcloud
+EXEC_ROOT = $(EXEC_COMMON_USER) nextcloud
 
 OCC = $(COMPOSE) exec -u www-data nextcloud php /var/www/html/occ
 SHELL=/bin/bash
@@ -58,6 +62,9 @@ selfsigned-cert-ps:
 
 selfsigned-cert-config:
 	$(SSC_COMPOSE) config
+
+selfsigned-cert-fingerprint:
+	$(EXEC_COMMON_ROOT) revproxy /cert-fingerprint.sh
 
 config:
 	$(COMPOSE) config
