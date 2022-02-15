@@ -235,18 +235,18 @@ else
     touch "${VOLUME_REUSE_FLAG_PATH}"
 fi
 
-#exec sleep infinity
-
-# always override dbpassword
-cat <<EOF > "${DBPASSWORD_CONFIG}"
+if [ -f "${MAIN_CONFIG}" ]; then
+    # always override dbpassword
+    cat <<EOF > "${DBPASSWORD_CONFIG}"
 <?php
 \$CONFIG['dbpassword'] = "${MYSQL_PASSWORD}";
 EOF
 
-# after restore and config:system:set dbpassword
-cat <<EOF | sed -e "s;@PASSWORD@;${MYSQL_PASSWORD};" | "${MYSQL_ROOT_SH}"
+    # after restore and config:system:set dbpassword
+    cat <<EOF | sed -e "s;@PASSWORD@;${MYSQL_PASSWORD};" | "${MYSQL_ROOT_SH}"
 SET PASSWORD FOR ${MYSQL_USER}@"%"=password('@PASSWORD@');
 EOF
+fi
 
 if [ ${NEXTCLOUD_GFARM_DEBUG_SLEEP} -eq 1 ]; then
     exec sleep infinity

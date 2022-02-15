@@ -76,7 +76,7 @@ down:
 _REMOVE_ALL_FOR_DEVELOP:
 	$(MAKE) down-REMOVE_VOLUMES || true
 	BACKUP_CONF=config.env.`date +%Y%m%d`; [ -f $$BACKUP_CONF ] || cp config.env || true
-	rm -f ./secrets/db_password ./secrets/nextcloud_admin_password
+	rm -f ./secrets/db_password
 	rm -f ./docker-compose.override.yml ./config.env
 
 _REINSTAL_FOR_DEVELOP:

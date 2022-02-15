@@ -72,6 +72,7 @@ HTML_DIR="${HOMEDIR}/html"
 DATA_DIR="${HTML_DIR}/data"
 CONFIG_DIR="${HTML_DIR}/config"
 
+MAIN_CONFIG="${CONFIG_DIR}/config.php"
 DBPASSWORD_CONFIG="${CONFIG_DIR}/nc-gfarm-dbpassword.config.php"
 
 TMP_DATA_DIR="${DATA_DIR}.bak"
