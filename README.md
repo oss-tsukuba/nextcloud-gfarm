@@ -59,7 +59,7 @@ Optional:
 - run `make config` to check configurations.
 - run `make reborn-withlog` to create and start containers.
     - If containers exist, these will be recreated.
-    - Persistent data (DB, html, etc.) is not removed.
+    - Persistent data (DB, coniguration files, and etc.) is not removed.
 - input password of myproxy-logon or grid-proxy-init for Gfarm
   authentication method (when not using .gfarm_shared_key)
 - `ctrl-c` to stop output of `make reborn-withlog`
@@ -343,5 +343,4 @@ https://docs.nextcloud.com/server/latest/admin_manual/configuration_user/reset_a
 - and run `ln -s <path to gfarm/docker/dev/mnt/COPY_DIR> /work/gfarm-dev`
 - and run `make init-dev`
 - and run `./copy_home_files.sh` to copy files into containers
-
 - or create `template-orverride.env` for your environment
