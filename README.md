@@ -18,9 +18,11 @@ For other details, please refer to
 - [Docker](https://docs.docker.com/engine/install/)
 - [Docker Compose](https://docs.docker.com/compose/)
     - v1 : https://docs.docker.com/compose/install/
-    - v2 (Recommended): https://docs.docker.com/compose/cli-command/#install-on-linux
+    - v2 : https://docs.docker.com/compose/cli-command/#install-on-linux
 - GNU make
+    - All applications will be build in container.
 - Gfarm configuration file (gfarm2.conf)
+    - There is no need to install Gfarm on the host OS.
 
 Optional:
 
@@ -38,12 +40,13 @@ Optional:
   (or run `make init-hpci` for HPCI shared storage.)
     - `KEY [DEFAULT]: <your input to set VALUE>`
         - for KEY and VALUE, see details below
+    - input a password file for Nextcloud admin.
+        - Don't forget `./secrets/nextcloud_admin_password`
+        - The password is for restoring from backup,
+          and for Nextcloud login as admin user.
     - create a password file for MariaDB automatically.
         - check `./secrets/db_password`
         - (used by Nextcloud to connect MariaDB)
-    - create a password file for Nextcloud admin automatically.
-        - check `./secrets/nextcloud_admin_password`
-        - (to be entered at the Nextcloud login screen for admin user)
     - create symlink of `docker-compose.override.yml` automatically.
         - PROTOCOL=https : for `docker-compose.override.yml.https`
         - PROTOCOL=http  : for `docker-compose.override.yml.http`
@@ -54,7 +57,9 @@ Optional:
     - use one of other `docker-compose.override.yml.*`
     - or write new `docker-compose.override.yml` for your environment
 - run `make config` to check configurations.
-- run `make reborn-withlog`
+- run `make reborn-withlog` to create and start containers.
+    - If containers exist, these will be recreated.
+    - Persistent data (DB, html, etc.) is not removed.
 - input password of myproxy-logon or grid-proxy-init for Gfarm
   authentication method (when not using .gfarm_shared_key)
 - `ctrl-c` to stop output of `make reborn-withlog`
@@ -154,7 +159,7 @@ optional parameters (default values are listed in docker-compose.yml):
 - OVERWRITEWEBROOT: reverse proxy parameter for Nextcloud
 - OVERWRITECONDADDR: reverse proxy parameter for Nextcloud
 
-## Stop and Start
+## Stop and Start services (all containers)
 
 stop:
 
@@ -170,9 +175,8 @@ make restart-withlog
 
 ## After updating configurations (config.env)
 
-
 ```
-make rebone-withlog
+make reborn-withlog
 ```
 
 ## Synchronize files from Gfarm
@@ -233,14 +237,16 @@ make shell-root
 
 ## Backup
 
-Nextcloud database will be automatically backed up according to
-NEXTCLOUD_BACKUP_TIME.
+Nextcloud database will be automatically backed up to Gfarm filesystem
+according to NEXTCLOUD_BACKUP_TIME.
 
-To back up manually:
+To back up Nextcloud database manually:
 
-```
-make backup
-```
+- run `make backup`
+
+To back up configuration files.
+
+- copy `./secrets/*` files and `config.env` to a safe place.
 
 NOTE: `./secrets/nextcloud_admin_password` is also used to encrypt the backup data.  So the same password is required when restoring.  However, `./secrets/nextcloud_admin_password` is not backed up by this function.
 
@@ -248,11 +254,10 @@ NOTE: `./secrets/nextcloud_admin_password` is also used to encrypt the backup da
 
 When Nextcloud database is broken, you can restore from backup data:
 
-```
-### WARNING: local database is removed.
-make down-REMOVE_VOLUMES
-make reborn-withlog
-```
+- deploy `./secrets/*` files and `config.env`
+- run `make down-REMOVE_VOLUMES`
+    - WARNING: Local database will be removed.
+- run `make reborn-withlog`
 
 ## Logging
 
@@ -278,10 +283,10 @@ You can describe docker-compose.override.yml to change logging driver.
 - or run `make build-nocache` to update packages forcibly
 - and run `make reborn-withlog`
 
-## Update to a newer Nextcloud
+## Upgrade to a newer Nextcloud
 
 - run `make backup`
-- change NEXTCLOUD_VERSION
+- edit config.env and increase NEXTCLOUD_VERSION by one
 - run `make reborn-withlog`
 
 SEE ALSO:
@@ -291,6 +296,20 @@ https://github.com/nextcloud/docker/blob/master/README.md#update-to-a-newer-vers
 It is only possible to upgrade one major version at a time.
 For example, if you want to upgrade from version 14 to 16, you will
 have to upgrade from version 14 to 15, then from 15 to 16.
+
+NOTE: Downgrading is not supported.
+
+For example, if the following error occurred, set `NEXTCLOUD_VERSION=22` in `config.env`.
+
+```
+nextcloud_1  | Can't start Nextcloud because the version of the data (23.0.1.2) is higher than the docker image version (22.2.5.1) and downgrading is not supported. Are you sure you have pulled the newest image version?
+nextcloud-gfarm_nextcloud_1 exited with code 1
+```
+
+NOTE: If the upgrade fails:
+
+Undo NEXTCLOUD_VERSION and see `Restore` section.
+
 
 ## Change DB password
 
