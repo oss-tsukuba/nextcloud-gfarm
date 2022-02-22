@@ -25,6 +25,7 @@ For other details, please refer to
     - All applications will be build in container.
 - /bin/bash
 - openssl command
+- curl command
 
 Optional:
 
