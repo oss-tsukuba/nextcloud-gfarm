@@ -93,7 +93,7 @@ _REINSTAL_FOR_DEVELOP:
 
 down-REMOVE_VOLUMES:
 	$(call yesno,ERASE ALL LOCAL DATA. Do you have a backup?)
-	echo $(COMPOSE) down --volumes --remove-orphans
+	$(COMPOSE) down --volumes --remove-orphans
 
 reborn-nowait:
 	$(COMPOSE) build
