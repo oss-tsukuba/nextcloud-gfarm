@@ -39,6 +39,13 @@ TARGET_LOGS_FOLLOW = $(call gentarget,logs-follow)
 TARGET_LOGS_TIME = $(call gentarget,logs-time)
 .PONY += $(TARGET_LOGS_TIME)
 
+define yesno
+	@read -p "$1 (y/N): " YN; \
+	case "$$YN" in [yY]*) true;; \
+	*) echo "Aborted ($${YN})"; false;; \
+	esac
+endef
+
 ps:
 	$(COMPOSE) ps
 
@@ -86,9 +93,8 @@ _REINSTAL_FOR_DEVELOP:
 	$(MAKE) reborn-withlog
 
 down-REMOVE_VOLUMES:
-	read -p "ERASE ALL LOCAL DATA. Do you have a backup? (y/N): " YN; \
-	case "$$YN" in [yY]*) $(COMPOSE) down --volumes --remove-orphans;; \
-	*) echo ; echo "ABORT ($${YN})"; false;; esac
+	$(call yesno,ERASE ALL LOCAL DATA. Do you have a backup?)
+	echo $(COMPOSE) down --volumes --remove-orphans
 
 reborn:
 	$(COMPOSE) build
@@ -154,6 +160,7 @@ files-scan:
 	$(EXEC) /nc-gfarm/files_scan.sh
 
 backup:
+	$(call yesno,Nextcloud service will be temporarily stopped.  Do you wish to continue?)
 	$(EXEC) /nc-gfarm/backup.sh
 
 auth-init:
@@ -205,6 +212,4 @@ copy-gsi_user_proxy:
 	$(EXEC_ROOT) /nc-gfarm/copy_gsi_user_proxy.sh
 
 resetpassword-admin:
-	echo "reset admin password on database"
-	echo "NOTE: ./secrets/nextcloud_admin_password is not changed"
-	$(OCC) user:resetpassword admin
+	./resetpassword-admin.sh "$(EXEC_COMMON_USER)" nextcloud

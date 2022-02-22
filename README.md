@@ -327,9 +327,11 @@ NOTE: Nextcloud may not have official instructions on how to change the password
 
 ## Reset Nextcloud admin password
 
-- run `make resetpassword-admin` to set a new password.
-- edit `./secrets/nextcloud_admin_password` and set the same new password.
-- run `make reborn-withlog` to reflect the password files in container.
+- run `make resetpassword-admin`
+- input a new password.
+    - `./secrets/nextcloud_admin_password` will be updated.
+    - The Password in DB will also be updated.
+- run `make reborn-withlog` to reflect the password file in container.
 - run `make backup` to change the password for backup data.
 
 SEE ALSO:

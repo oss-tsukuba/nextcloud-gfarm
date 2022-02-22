@@ -97,6 +97,7 @@ upload()
     gfmv "${DST_TMP}" "${DST}"
 }
 
+INFO "Uploading to Gfarm...."
 upload "" "${SYSTEM_ARCH}" &
 p1=$!
 # encrypt DB only
