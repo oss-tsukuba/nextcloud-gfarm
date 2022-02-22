@@ -19,10 +19,12 @@ For other details, please refer to
 - [Docker Compose](https://docs.docker.com/compose/)
     - v1 : https://docs.docker.com/compose/install/
     - v2 : https://docs.docker.com/compose/cli-command/#install-on-linux
-- GNU make
-    - All applications will be build in container.
 - Gfarm configuration file (gfarm2.conf)
     - There is no need to install Gfarm on the host OS.
+- GNU make
+    - All applications will be build in container.
+- /bin/bash
+- openssl command
 
 Optional:
 
@@ -331,7 +333,7 @@ NOTE: Nextcloud may not have official instructions on how to change the password
 - input a new password.
     - `./secrets/nextcloud_admin_password` will be updated.
     - The Password in DB will also be updated.
-- run `make reborn-withlog` to reflect the password file in container.
+- run `make reborn` to reflect the password file in container.
 - run `make backup` to change the password for backup data.
 
 SEE ALSO:

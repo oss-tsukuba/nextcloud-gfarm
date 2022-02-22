@@ -95,14 +95,18 @@ down-REMOVE_VOLUMES:
 	$(call yesno,ERASE ALL LOCAL DATA. Do you have a backup?)
 	echo $(COMPOSE) down --volumes --remove-orphans
 
-reborn:
+reborn-nowait:
 	$(COMPOSE) build
 	$(MAKE) down
 	$(COMPOSE) up -d || { $(MAKE) logs; false; }
 	$(MAKE) auth-init || { $(MAKE) logs; false; }
 
+reborn:
+	$(MAKE) reborn-nowait
+	./wait.sh
+
 reborn-withlog:
-	$(MAKE) reborn
+	$(MAKE) reborn-nowait
 	$(MAKE) logs-follow
 
 build-nocache:
@@ -111,12 +115,16 @@ build-nocache:
 stop:
 	$(COMPOSE) stop
 
-restart:
+restart-nowait:
 	$(COMPOSE) restart || $(MAKE) logs
 	$(MAKE) auth-init
 
+restart:
+	$(MAKE) restart-nowait
+	./wait.sh
+
 restart-withlog:
-	$(MAKE) restart
+	$(MAKE) restart-nowait
 	$(MAKE) logs-follow
 
 restart-revproxy:

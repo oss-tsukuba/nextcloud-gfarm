@@ -90,7 +90,7 @@ touch "${NEXTCLOUD_LOG_PATH}"
 
 LINK_DATA="${HOMEDIR}/data"
 [ -d "${LINK_DATA}" ] && rmdir "${LINK_DATA}"
-${SUDO_USER} ln -s "${DATA_DIR}" "${LINK_DATA}"
+[ -h "${LINK_DATA}" ] || ${SUDO_USER} ln -s "${DATA_DIR}" "${LINK_DATA}"
 
 # force online
 ${OCC} maintenance:mode --off || true
