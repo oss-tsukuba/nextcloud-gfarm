@@ -144,6 +144,7 @@ optional parameters (default values are listed in docker-compose.yml):
 - https_proxy: http_proxy environment variable
 - HTTP_ACCESS_LOG: access log (1=enable)
 - TZ: TZ environment variable
+- NEXTCLOUD_UPDATE: 0 is required in case of version mismatch after restore.
 - NEXTCLOUD_FILES_SCAN_TIME: file scan time (crontab format)
 - NEXTCLOUD_BACKUP_TIME: backup time (crontab format)
 - NEXTCLOUD_TRUSTED_DOMAINS: Nextcloud parameter
@@ -255,11 +256,12 @@ NOTE: `./secrets/nextcloud_admin_password` is also used to encrypt the backup da
 
 ## Restore
 
-When Nextcloud database is broken, you can restore from backup data:
+Even if Nextcloud database is broken or lost, you can restore from backup:
 
-- deploy `./secrets/*` files and `config.env`
 - run `make down-REMOVE_VOLUMES`
     - WARNING: Local database will be removed.
+- deploy `./secrets/*` files and `config.env`
+- edit `config.env` and set `NEXTCLOUD_UPDATE=0`
 - run `make reborn-withlog`
 
 ## Logging

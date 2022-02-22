@@ -257,7 +257,8 @@ fi
 # command is used (apache-foreground or php-fpm). If you use a custom
 # command you have to enable the install / update with
 # NEXTCLOUD_UPDATE (default: 0)
-export NEXTCLOUD_UPDATE=1
+# (default on nextcloud-gfarm: 1)
+export NEXTCLOUD_UPDATE=${NEXTCLOUD_UPDATE:-1}
 
 export NEXTCLOUD_DATA_DIR="${DATA_DIR}"
 exec "$@"
