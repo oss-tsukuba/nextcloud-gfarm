@@ -80,7 +80,7 @@ Optional:
         - https://github.com/nginx-proxy/acme-companion/blob/main/docs/Docker-Compose.md
         - https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/with-nginx-proxy/mariadb/fpm/docker-compose.yml
     - or etc.
-- run `make restart-revproxy` after certificate files for HTTPS are updated.
+- run `make restart@revproxy` after certificate files for HTTPS are updated.
 - open the URL in a browser
     - example: `https://<hostname>/`
 - login
@@ -269,7 +269,7 @@ Even if Nextcloud database is broken or lost, you can restore from backup:
 - Nextcloud log: Nextcloud UI -> Logging
     - or /var/www/html/nextcloud.log in container.
     - This is included in the backup.
-- `make logs-<container name>` for containers
+- `make logs@<container name>` for containers
     - NOTE: These are not included in the backup.
     - NOTE: These logs are removed when running `make reborn` or `make down`
 - /var/log/* in Nextcloud container

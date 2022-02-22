@@ -26,7 +26,7 @@ CONTAINERS = nextcloud mariadb redis revproxy
 .PONY =
 
 define gentarget
-       $(foreach name,$(CONTAINERS),$(1)-$(name))
+       $(foreach name,$(CONTAINERS),$(1)@$(name))
 endef
 
 TARGET_LOGS = $(call gentarget,logs)
@@ -37,6 +37,9 @@ TARGET_LOGS_FOLLOW = $(call gentarget,logs-follow)
 
 TARGET_LOGS_TIME = $(call gentarget,logs-time)
 .PONY += $(TARGET_LOGS_TIME)
+
+TARGET_SHELL = $(call gentarget,shell)
+.PONY += $(TARGET_SHELL)
 
 define yesno
 	@read -p "$1 (y/N): " YN; \
@@ -127,7 +130,7 @@ restart-withlog:
 	$(MAKE) restart-nowait
 	$(MAKE) logs-follow
 
-restart-revproxy:
+restart@revproxy:
 	$(COMPOSE) restart revproxy
 
 shell:
@@ -136,8 +139,8 @@ shell:
 shell-root:
 	$(EXEC_ROOT) bash
 
-shell-revproxy:
-	$(COMPOSE) exec revproxy /bin/bash
+$(TARGET_SHELL): shell@%:
+	$(COMPOSE) exec $* /bin/sh
 
 logs:
 	$(COMPOSE) logs nextcloud
@@ -145,13 +148,13 @@ logs:
 logs-follow:
 	$(COMPOSE) logs --follow nextcloud
 
-$(TARGET_LOGS): logs-%:
+$(TARGET_LOGS): logs@%:
 	$(COMPOSE) logs $*
 
-$(TARGET_LOGS_FOLLOW): logs-follow-%:
+$(TARGET_LOGS_FOLLOW): logs-follow@%:
 	$(COMPOSE) logs --follow $*
 
-$(TARGET_LOGS_TIME): logs-time-%:
+$(TARGET_LOGS_TIME): logs-time@%:
 	$(COMPOSE) logs --timestamps $*
 
 occ-add-missing-indices:
