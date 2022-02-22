@@ -12,9 +12,8 @@ COMPOSE = $(SUDO) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) $(COMPOSE_SW) $(E
 EXEC_COMMON_USER = $(COMPOSE) exec -u www-data
 EXEC_COMMON_ROOT = $(COMPOSE) exec -u root
 
-
 EXEC = $(EXEC_COMMON_USER) nextcloud
-EXEC_ROOT = $(EXEC_COMMON_USER) nextcloud
+EXEC_ROOT = $(EXEC_COMMON_ROOT) nextcloud
 
 OCC = $(COMPOSE) exec -u www-data nextcloud php /var/www/html/occ
 SHELL=/bin/bash
