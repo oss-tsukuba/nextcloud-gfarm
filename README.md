@@ -291,7 +291,10 @@ You can describe docker-compose.override.yml to change logging driver.
 ## Upgrade to a newer Nextcloud
 
 - run `make backup`
-- edit config.env and increase NEXTCLOUD_VERSION by one
+- edit `config.env`
+    - set `NEXTCLOUD_UPDATE=1`
+    - increase `NEXTCLOUD_VERSION` by exactly 1 more than current major version
+       - run `show-nextcloud-version` to show current version
 - run `make reborn-withlog`
 
 SEE ALSO:

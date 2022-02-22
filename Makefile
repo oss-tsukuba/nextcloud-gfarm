@@ -220,3 +220,6 @@ copy-gsi_user_proxy:
 
 resetpassword-admin:
 	./resetpassword-admin.sh "$(EXEC_COMMON_USER)" nextcloud
+
+show-nextcloud-version:
+	$(OCC) --version
