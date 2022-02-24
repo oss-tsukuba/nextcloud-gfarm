@@ -7,6 +7,8 @@ services:
 
   revproxy:
     build: ./revproxy
+    privileged: false
+    restart: ${DOCKER_OPT_RESTART:-unless-stopped}
     ports:
       - ${HTTP_PORT}:${HTTP_PORT}
     environment:
