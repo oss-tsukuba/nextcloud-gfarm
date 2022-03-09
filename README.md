@@ -60,19 +60,20 @@ Optional:
     - use one of other `docker-compose.override.yml.*`
     - or write new `docker-compose.override.yml` for your environment
 - run `make config` to check configurations.
-- run `make reborn-withlog` to create and start containers.
+- run `make selfsigned-cert-generate` to activate HTTPS when using HTTPS.
+- run `make reborn` to create and start containers.
     - If containers exist, these will be recreated.
     - Persistent data (DB, coniguration files, and etc.) is not removed.
 - input password of myproxy-logon or grid-proxy-init for Gfarm
   authentication method (when not using .gfarm_shared_key)
-- `ctrl-c` to stop output of `make reborn-withlog`
-- copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume when using `docker-compose.override.yml.https`
+- copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume when using HTTPS and not using selfsigned certificate.
     - NOTE: HTTPS port is disabled when certificate files do not exist.
     - prepare the following files
         - ${SERVER_NAME}.key (SSL_KEY)
         - ${SERVER_NAME}.csr (SSL_CSR)
         - ${SERVER_NAME}.crt (SSL_CERT)
         - and run `sudo docker cp <filename> nextcloud-gfarm-revproxy-1:/etc/nginx/certs/<filename>` to copy a file
+        - and run `make restart@revproxy`
     - or run `make selfsigned-cert-generate` to generate and copy self-signed certificate
         - and run `make selfsigned-cert-fingerprint` to show fingerprint
     - or (unsurveyed:) write new docker-compose.override.yml and use acme-companion for nginx-proxy to use Let's Encrypt certificate
@@ -175,9 +176,16 @@ start:
 
 ```
 make restart-withlog
+### `ctrl-c` to stop log messages
 ```
 
 ## After updating configurations (config.env)
+
+```
+make reborn
+```
+
+or
 
 ```
 make reborn-withlog
@@ -262,7 +270,7 @@ Even if Nextcloud database is broken or lost, you can restore from backup:
     - WARNING: Local database will be removed.
 - deploy `./secrets/*` files and `config.env`
 - edit `config.env` and set `NEXTCLOUD_UPDATE=0`
-- run `make reborn-withlog`
+- run `make reborn`
 
 ## Logging
 
@@ -286,7 +294,7 @@ You can describe docker-compose.override.yml to change logging driver.
 - or update `config.env`
 - or update docker-compose.yml
 - or run `make build-nocache` to update packages forcibly
-- and run `make reborn-withlog`
+- and run `make reborn`
 
 ## Upgrade to a newer Nextcloud
 
@@ -295,7 +303,7 @@ You can describe docker-compose.override.yml to change logging driver.
     - set `NEXTCLOUD_UPDATE=1`
     - increase `NEXTCLOUD_VERSION` by exactly 1 more than current major version
        - run `show-nextcloud-version` to show current version
-- run `make reborn-withlog`
+- run `make reborn`
 
 SEE ALSO:
 
@@ -325,7 +333,7 @@ Undo NEXTCLOUD_VERSION and see `Restore` section.
 - run `make down-REMOVE_VOLUMES`
     - clear password for root user of mariadb
 - edit `./secrets/db_password`
-- run `make reborn-withlog`
+- run `make reborn`
     - set new password for root user of mariadb in mariadb container
     - set new password for nextcloud user of mariadb in nextcloud container
 

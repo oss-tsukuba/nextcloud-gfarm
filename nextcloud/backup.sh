@@ -51,6 +51,7 @@ mysqldump --defaults-file="${MYSQL_CONF}" \
     ${MYSQL_DATABASE} > ${DB_FILE_NAME}
 ${OCC} maintenance:mode --off
 
+INFO "Creating backup files...."
 tar czpf ${SYSTEM_ARCH} ${SYSTEM_DIR_NAME}
 gzip -c ${DB_FILE_NAME} > ${DB_ARCH}
 
