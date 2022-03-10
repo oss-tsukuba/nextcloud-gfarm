@@ -9,10 +9,10 @@ services:
     build:
       context: ./nextcloud
       args:
-        # use GFARM_SRC_GIT_URL if empty
-        - GFARM_SRC_URL=${GFARM_SRC_URL:-https://github.com/oss-tsukuba/gfarm/archive/refs/tags/2.7.19.tar.gz}
+        # use GFARM_SRC_GIT_URL if GFARM_SRC_URL is empty
+        - GFARM_SRC_URL=${GFARM_SRC_URL-https://github.com/oss-tsukuba/gfarm/archive/refs/tags/2.7.19.tar.gz}
         - GFARM_SRC_GIT_URL=${GFARM_SRC_GIT_URL:-https://github.com/oss-tsukuba/gfarm.git}
-        - GFARM_SRC_GIT_BRANCH=${GFARM_SRC_GIT_BRANCH:-2.7}
+        - GFARM_SRC_GIT_BRANCH=${GFARM_SRC_GIT_BRANCH:-2.8}
         # use GFARM2FS_SRC_GIT_URL if empty
         - GFARM2FS_SRC_URL=${GFARM2FS_SRC_URL:-https://github.com/oss-tsukuba/gfarm2fs/archive/refs/tags/1.2.15.tar.gz}
         - GFARM2FS_SRC_GIT_URL=${GFARM2FS_SRC_GIT_URL:-https://github.com/oss-tsukuba/gfarm2fs.git}
