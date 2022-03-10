@@ -59,7 +59,7 @@ Optional:
     - If you do not need symlink of `docker-compose.override.yml`, remove it.
     - use one of other `docker-compose.override.yml.*`
     - or write new `docker-compose.override.yml` for your environment
-- run `make config` to check configurations.
+- run `make check-config` to check configurations.
 - run `make selfsigned-cert-generate` to activate HTTPS when using HTTPS.
 - run `make reborn` to create and start containers.
     - If containers exist, these will be recreated.

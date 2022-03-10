@@ -69,13 +69,13 @@ selfsigned-cert-generate:
 selfsigned-cert-ps:
 	$(SSC_COMPOSE) ps
 
-selfsigned-cert-config:
+selfsigned-cert-check-config:
 	$(SSC_COMPOSE) config
 
 selfsigned-cert-fingerprint:
 	$(EXEC_COMMON_ROOT) revproxy /cert-fingerprint.sh
 
-config:
+check-config:
 	$(COMPOSE) config
 
 down:
