@@ -3,7 +3,7 @@
 set -eu
 #set -x
 
-eval $(cat config.env | grep -e ^PROTOCOL= -e ^HTTP_PORT= -e ^HTTPS_PORT=)
+eval $(cat config.env | egrep '^(PROTOCOL|HTTP_PORT|HTTPS_PORT)=')
 
 if [ $PROTOCOL = https ]; then
     PORT=$HTTPS_PORT
@@ -18,7 +18,7 @@ SILENT="-s"
 
 while :; do
     if CODE=$(curl ${SILENT} -k -w '%{http_code}' ${URL}); then
-        if [ "$CODE" = 302 ]; then
+        if [[ "$CODE" =~ ^30.*$ ]]; then
             break
         fi
     fi

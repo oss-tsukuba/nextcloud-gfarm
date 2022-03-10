@@ -3,7 +3,9 @@
 set -eu
 set -x
 
-source ./.env
+# for "make init-dev"
+
+eval $(cat config.env | egrep '^(GFARM_CONF_USER_DIR_FROM|GFARM_CONF_USER_DIR)=')
 
 FROM=${GFARM_CONF_USER_DIR_FROM:-${HOME}}
 TO=${GFARM_CONF_USER_DIR}
