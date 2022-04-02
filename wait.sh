@@ -13,10 +13,23 @@ fi
 
 URL="${PROTOCOL}://localhost:${PORT}"
 
+COMPOSE=$(make -s ECHO_COMPOSE)
+CONT_NAME=nextcloud
+
 SILENT="-s"
 #SILENT=""
 
+container_exists()
+{
+    ${COMPOSE} exec ${CONT_NAME} true
+}
+
 while :; do
+    if ! container_exists; then
+        make stop ${CONT_NAME}
+        make logs | tail -20
+        exit 1
+    fi
     if CODE=$(curl ${SILENT} -k -w '%{http_code}' ${URL}); then
         if [[ "$CODE" =~ ^30.*$ ]]; then
             break
