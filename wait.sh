@@ -24,6 +24,7 @@ container_exists()
     ${COMPOSE} exec ${CONT_NAME} true
 }
 
+echo -n "Waiting for Nextcloud startup..."
 while :; do
     if ! container_exists; then
         make stop ${CONT_NAME}
@@ -35,8 +36,9 @@ while :; do
             break
         fi
     fi
-    echo "Waiting for Nextcloud startup..."
+    echo -n .
     sleep 1
 done
+echo
 
 echo "Nextcloud is ready."
