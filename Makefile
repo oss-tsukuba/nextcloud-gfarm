@@ -158,7 +158,7 @@ $(TARGET_LOGS_TIME): logs-time@%:
 	$(COMPOSE) logs --timestamps $*
 
 ECHO_COMPOSE:
-	@echo $(COMPOSE)
+	@echo eval $(COMPOSE)
 
 occ-add-missing-indices:
 	$(OCC) db:add-missing-indices
