@@ -277,11 +277,15 @@ Even if Nextcloud database is broken or lost, you can restore from backup:
 - Nextcloud log: Nextcloud UI -> Logging
     - or /var/www/html/nextcloud.log in container.
     - This is included in the backup.
-- `make logs@<container name>` for containers
-    - NOTE: These are not included in the backup.
-    - NOTE: These logs are removed when running `make reborn` or `make down`
+
 - /var/log/* in Nextcloud container
     - NOTE: This is not included in the backup.
+
+- run `make logs` to show log of nextcloud (main container)
+- run `make logs@<container name>` to show log of the other containr
+- run `make logs-follow` or `make logs-follow@<container name>` to follow log
+    - NOTE: These are not included in the backup.
+    - NOTE: These logs are removed when running `make reborn` or `make down`
 
 You can describe docker-compose.override.yml to change logging driver.
 
