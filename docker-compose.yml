@@ -31,10 +31,11 @@ services:
       - REDIS_HOST=redis
 
       ### mandatory
+      - SERVER_NAME=${SERVER_NAME:?SERVER_NAME}
+      - PROTOCOL=${PROTOCOL:?PROTOCOL}
       - GFARM_USER=${GFARM_USER:?GFARM_USER}
       - GFARM_DATA_PATH=${GFARM_DATA_PATH:?GFARM_DATA_PATH}
       - GFARM_BACKUP_PATH=${GFARM_BACKUP_PATH:?GFARM_BACKUP_PATH}
-      - SERVER_NAME=${SERVER_NAME:?SERVER_NAME}
 
       ### Gfarm parameters (if necessary)
       - MYPROXY_SERVER=${MYPROXY_SERVER:-}
@@ -42,7 +43,6 @@ services:
       - GSI_PROXY_HOURS=${GSI_PROXY_HOURS:-168}
 
       ### optional
-      - PROTOCOL=${PROTOCOL:-https}
       - HTTP_PORT=${HTTP_PORT:-80}
       - HTTPS_PORT=${HTTPS_PORT:-443}
 

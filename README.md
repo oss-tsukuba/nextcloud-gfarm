@@ -101,7 +101,7 @@ docker-compose.override.yml for the environment.
 
 ## Configuration file (config.env)
 
-configuration format:
+### Configuration format
 
 ```
 KEY=VALUE
@@ -110,10 +110,10 @@ KEY=VALUE
 For details of Nextcloud parameters, please refer to
 [nextcloud/docker](https://hub.docker.com/_/nextcloud/).
 
-mandatory parameters:
-
+### Mandatory parameters
 - NEXTCLOUD_VERSION: Nextcloud version
 - SERVER_NAME: server name for this Nextcloud
+- PROTOCOL: https or http
 - GFARM_USER: Gfarm user name
 - GFARM_DATA_PATH: Gfarm data directory
     - NOTE: Do not share GFARM_DATA_PATH with other nextcloud-gfarm.
@@ -122,24 +122,29 @@ mandatory parameters:
 - GFARM_CONF_DIR: path to parent directory on host OS for the following files
      - gfarm2.conf: Gfarm configuration file
 
-Gfarm parameters (if necessary)
-(default values are listed in docker-compose.yml):
+### Required parameters when using http
+- PROTOCOL: `http` is required
+- HTTP_PORT: http port
 
+### Required parameters when using https
+- PROTOCOL: `https` is required
+- HTTP_PORT: http port (redirect to https port)
+- HTTPS_PORT: https port
+
+### Gfarm parameters
+Default is specified by `docker-compose.yml`.
 - GFARM_CONF_USER_DIR: path to parent directory on host OS for the following files (Please make a special directory and copy the files)
     - `gfarm2rc` (optional) (copy from `~/.gfarm2rc`)
     - `gfarm_shared_key` (optional) (copy from `~/.gfarm_shared_key`)
     - `user_proxy_cert` (optional) (copy from `/tmp/x509up_u<UID>`)
-- GSI_CERTIFICATES_DIR: `/etc/grid-security/certificates/` on host OS
 - GSI_USER_DIR: path to `~/.globus` on host OS
-- MYPROXY_SERVER: myproxy server (hostname:port)
-- MYPROXY_USER: username for myproxy server
-- GSI_PROXY_HOUR: hours for grid-proxy-init or myproxy-logon
+- MYPROXY_SERVER: myproxy server (hostname:port) (optional)
+- MYPROXY_USER: username for myproxy server (when using MYPROXY_SERVER)
 
-optional parameters (default values are listed in docker-compose.yml):
-
-- PROTOCOL: https or http
-- HTTP_PORT: http port number
-- HTTPS_PORT: https port number
+### Optional parameters
+Default is specified by `docker-compose.yml`.
+- GSI_PROXY_HOUR: expiration hours of the certificate for grid-proxy-init or myproxy-logon
+- GSI_CERTIFICATES_DIR: a directory for public keys for trusted certificate authorities on the host OS
 - NEXTCLOUD_GFARM_DEBUG: debug mode (0: disable)
 - http_proxy: http_proxy environment variable
 - https_proxy: http_proxy environment variable
