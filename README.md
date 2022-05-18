@@ -15,10 +15,8 @@ For other details, please refer to
 
 ## Requirements
 
-- [Docker](https://docs.docker.com/engine/install/)
-- [Docker Compose](https://docs.docker.com/compose/)
-    - v1 : https://docs.docker.com/compose/install/
-    - v2 : https://docs.docker.com/compose/cli-command/#install-on-linux
+- [Docker Engine and Docker Compose](https://docs.docker.com/engine/install/)
+    - (Docker Desktop is not required.)
 - Gfarm configuration file (gfarm2.conf)
     - There is no need to install Gfarm on the host OS.
 - GNU make
@@ -37,8 +35,7 @@ Optional:
 
 ## Quick start
 
-- install Docker
-- install Docker Compose
+- install Docker and Docker Compose
 - run `make init` to configure parameters and create `config.env`.
   (or run `make init-hpci` for HPCI shared storage.)
     - `KEY [DEFAULT]: <your input to set VALUE>`
