@@ -10,7 +10,7 @@ source ${CONFIG_LIB}
 
 FORCE=${1:-}
 
-if [ ! -s "${GSI_USER_KEY}" ]; then
+if [ ! -s "${GSI_USER_KEY_ORIG}" ]; then
     exit 0
 fi
 

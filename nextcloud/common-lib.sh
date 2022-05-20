@@ -48,11 +48,12 @@ gfarm2fs_is_mounted()
 
 retry_command()
 {
-    MAX_RETRY=3
+    MAX_RETRY=5
     COUNT=1
     until "$@"; do
         [ ${COUNT} -ge ${MAX_RETRY} ] && return 1  # FAIL
         INFO "Retry [$(( COUNT++ ))/${MAX_RETRY}]: $@"
+        sleep 1
     done
     return 0
 }

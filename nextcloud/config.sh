@@ -143,6 +143,7 @@ GFARM_SHARED_KEY="${HOMEDIR}/.gfarm_shared_key"
 GSI_CERTIFICATES_DIR="/etc/grid-security/certificates"
 
 GSI_USER_DIR_ORIG="/gsi_user"
+GSI_USER_KEY_ORIG="/gsi_user/userkey.pem"
 GSI_USER_DIR="${HOMEDIR}/.globus"
 GSI_USER_KEY="${GSI_USER_DIR}/userkey.pem"
 
