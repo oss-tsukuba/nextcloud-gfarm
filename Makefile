@@ -94,9 +94,12 @@ _REINSTAL_FOR_DEVELOP:
 	$(MAKE) selfsigned-cert-generate
 	$(MAKE) reborn-withlog
 
+down-REMOVE_VOLUMES_FORCE:
+	$(COMPOSE) down --volumes --remove-orphans
+
 down-REMOVE_VOLUMES:
 	$(call yesno,ERASE ALL LOCAL DATA. Do you have a backup?)
-	$(COMPOSE) down --volumes --remove-orphans
+	$(MAKE) down-REMOVE_VOLUMES_FORCE
 
 reborn-nowait:
 	$(COMPOSE) build
