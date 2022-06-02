@@ -160,9 +160,15 @@ networks:
     # overridable
     name: ${NETWORK1_NAME:-nextcloud-gfarm_internal}
     external: ${NETWORK1_EXTERNAL:-false}
+    ipam:
+      config:
+        - subnet: ${NETWORK1_SUBNET:-10.123.101.0/24}
   mynet2:
     # (reverse proxy tier)
     # external (outside of Docker Compose) network name
     # overridable
     name: ${NETWORK2_NAME:-nextcloud-gfarm_revproxy}
     external: ${NETWORK2_EXTERNAL:-false}
+    ipam:
+      config:
+        - subnet: ${NETWORK2_SUBNET:-10.123.102.0/24}
