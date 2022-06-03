@@ -1,0 +1,12 @@
+#! /bin/sh
+
+
+logger -p local7.debug $0 "$@"
+
+cat > /tmp/pass
+
+logger -p local7.debug $0 password = $(cat /tmp/pass)
+
+touch /tmp/cert
+
+exit 0

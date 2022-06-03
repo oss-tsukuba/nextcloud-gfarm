@@ -1,0 +1,16 @@
+#! /bin/sh
+
+logger -p local7.debug $0 "$@"
+
+touch /tmp/now
+
+n=$(stat -c %Y /tmp/now)
+o=$(stat -c %Y /tmp/cert)
+
+o=$((o + 60))
+
+if [ $o -lt $n ]; then
+	exit 1
+else
+	exit 0
+fi

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>files_external_gfarm</id>
+    <name>External Storage: Gfarm</name>
+    <summary>Integrate Gfarm as an external storage</summary>
+    <description><![CDATA[gfarm bra bra bar...]]></description>
+    <version>1.0.0</version>
+    <licence>agpl</licence>
+    <author>nis</author>
+    <namespace>Files_external_gfarm</namespace>
+    <types>
+	    <filesystem/>
+    </types>
+    <category>files</category>
+    <category>tools</category>
+    <website>https://github.com/hevelius/files_external_gfarm</website>
+    <bugs>https://github.com/hevelius/files_external_gfarm/issues</bugs>
+    <repository type="git">https://github.com/hevelius/files_external_gfarm.git</repository>
+    <dependencies>
+        <nextcloud min-version="23.0" max-version="23.0"/>
+    </dependencies>
+    <background-jobs>
+              <job>OCA\Files_external_gfarm\BackgroundJob\RefreshToken</job>
+    </background-jobs>
+</info>

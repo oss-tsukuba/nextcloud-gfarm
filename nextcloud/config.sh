@@ -71,6 +71,15 @@ HOMEDIR="/var/www"
 HTML_DIR="${HOMEDIR}/html"
 DATA_DIR="${HTML_DIR}/data"
 CONFIG_DIR="${HTML_DIR}/config"
+CUSTOM_APPS_DIR="${HTML_DIR}/custom_apps"
+BIN_DIR="${HOMEDIR}/bin"
+
+APP_GFARM_DEST="${CUSTOM_APPS_DIR}/files_external_gfarm"
+
+APP_GFARM_SRC="${NCGFARM_DIR}/app-gfarm"
+APP_GFARM_SRC_CUSTOM_APPS="${APP_GFARM_SRC}/html/custom_apps"
+APP_GFARM_SRC_MAIN="${APP_GFARM_SRC_CUSTOM_APPS}/files_external_gfarm"
+APP_GFARM_SRC_BINDIR="${APP_GFARM_SRC}/bin"
 
 MAIN_CONFIG="${CONFIG_DIR}/config.php"
 DBPASSWORD_CONFIG="${CONFIG_DIR}/nc-gfarm-dbpassword.config.php"
