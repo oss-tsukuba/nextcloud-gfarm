@@ -70,6 +70,15 @@ if [ ! -f "${POST_FLAG_PATH}" ]; then
     touch "${POST_FLAG_PATH}"
 fi
 
+APPS="
+files_external
+files_external_gfarm
+"
+
+for APP in ${APPS}; do
+    ${OCC} app:enable ${APP}
+done
+
 if [ -z "${TRUSTED_PROXIES:-}" ]; then
     # use dig (from bind9-dnsutils)
     # revproxy container name
