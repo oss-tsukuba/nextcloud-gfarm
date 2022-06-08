@@ -53,6 +53,31 @@ fi
 : ${HTTP_ACCESS_LOG:=1}
 
 ##########################################################
+# setup OVERWRITEHOST and OVERWRITEPROTOCOL automatically
+
+TMP_OVERWRITEHOST=""
+TMP_OVERWRITEPROTOCOL=""
+if [ "${PROTOCOL}" = "https" ]; then
+    if [ "${HTTPS_PORT}" = 443 ]; then
+        TMP_OVERWRITEHOST="${SERVER_NAME}"
+    else
+        TMP_OVERWRITEHOST="${SERVER_NAME}:${HTTPS_PORT}"
+    fi
+    TMP_OVERWRITEPROTOCOL="https"
+else
+    if [ "${HTTP_PORT}" = 80 ]; then
+        TMP_OVERWRITEHOST="${SERVER_NAME}"
+    else
+        TMP_OVERWRITEHOST="${SERVER_NAME}:${HTTP_PORT}"
+    fi
+    TMP_OVERWRITEPROTOCOL="http"
+fi
+
+# overridable
+OVERWRITEHOST=${OVERWRITEHOST:-${TMP_OVERWRITEHOST}}
+OVERWRITEPROTOCOL=${OVERWRITEPROTOCOL:-${TMP_OVERWRITEPROTOCOL}}
+
+##########################################################
 
 MYSQL_DATABASE="nextcloud"
 MYSQL_USER="nextcloud"
@@ -160,3 +185,21 @@ GSI_USER_PROXY_BACKUP="/gsi_proxy/user_proxy_cert"
 GSI_USER_PROXY_ORIG="/${GFARM_CONF_USER_DIR}/user_proxy_cert"
 GSI_USER_PROXY_PREFIX="/tmp/x509up_u"
 GSI_USER_PROXY_FILE="${GSI_USER_PROXY_PREFIX}${NEXTCLOUD_USER_ID}"
+
+##########################################################
+# for development
+: ${KEYCLOAK_PORT:=51080}
+: ${KEYCLOAK_PROTOCOL:=http}
+KEYCLOAK_URL=${KEYCLOAK_URL:-${KEYCLOAK_PROTOCOL}://${SERVER_NAME}:${KEYCLOAK_PORT}}
+: ${KEYCLOAK_REALM:="test_realm"}
+
+: ${OIDC_LOGIN_ENABLE:=true}
+OIDC_LOGIN_CONFIG_TEMPLATE="${NCGFARM_DIR}/oidc.config.php.tmpl"
+OIDC_LOGIN_CONFIG="${CONFIG_DIR}/oidc.config.php"
+OIDC_LOGIN_URL=${OIDC_LOGIN_URL:-${KEYCLOAK_URL}/auth/realms/${KEYCLOAK_REALM}}
+
+: ${OIDC_LOGIN_CLIENT_ID:=${SERVER_NAME}}
+# mandatory
+: ${OIDC_LOGIN_CLIENT_SECRET:=dummy}
+
+: ${OIDC_LOGIN_LOGOUT_URL:=${OIDC_LOGIN_URL}/protocol/openid-connect/logout?redirect_uri=${OVERWRITEPROTOCOL}%3A%2F%2F${OVERWRITEHOST}}

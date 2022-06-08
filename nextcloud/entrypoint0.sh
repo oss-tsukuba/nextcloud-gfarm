@@ -8,30 +8,6 @@ set -o pipefail
 source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
 
-# setup OVERWRITEHOST and OVERWRITEPROTOCOL automatically
-
-TMP_OVERWRITEHOST=""
-TMP_OVERWRITEPROTOCOL=""
-if [ "${PROTOCOL}" = "https" ]; then
-    if [ "${HTTPS_PORT}" = 443 ]; then
-        TMP_OVERWRITEHOST="${SERVER_NAME}"
-    else
-        TMP_OVERWRITEHOST="${SERVER_NAME}:${HTTPS_PORT}"
-    fi
-    TMP_OVERWRITEPROTOCOL="https"
-else
-    if [ "${HTTP_PORT}" = 80 ]; then
-        TMP_OVERWRITEHOST="${SERVER_NAME}"
-    else
-        TMP_OVERWRITEHOST="${SERVER_NAME}:${HTTP_PORT}"
-    fi
-    TMP_OVERWRITEPROTOCOL="http"
-fi
-
-# overridable
-OVERWRITEHOST=${OVERWRITEHOST:-${TMP_OVERWRITEHOST}}
-OVERWRITEPROTOCOL=${OVERWRITEPROTOCOL:-${TMP_OVERWRITEPROTOCOL}}
-
 export OVERWRITEHOST
 export OVERWRITEPROTOCOL
 
@@ -241,6 +217,7 @@ if [ -f "${MAIN_CONFIG}" ]; then
 <?php
 \$CONFIG['dbpassword'] = "${MYSQL_PASSWORD}";
 EOF
+    chown0 "${DBPASSWORD_CONFIG}"
 
     # after restore and config:system:set dbpassword
     cat <<EOF | sed -e "s;@PASSWORD@;${MYSQL_PASSWORD};" | "${MYSQL_ROOT_SH}"

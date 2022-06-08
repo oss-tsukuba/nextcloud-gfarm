@@ -73,11 +73,23 @@ fi
 APPS="
 files_external
 files_external_gfarm
+oidc_login
 "
 
 for APP in ${APPS}; do
     ${OCC} app:enable ${APP}
 done
+
+### oidc_login
+if ${OIDC_LOGIN_ENABLE}; then
+    sed -e "s;@OIDC_LOGIN_URL@;${OIDC_LOGIN_URL};" \
+	-e "s;@OIDC_LOGIN_CLIENT_ID@;${OIDC_LOGIN_CLIENT_ID};" \
+	-e "s;@OIDC_LOGIN_CLIENT_SECRET@;${OIDC_LOGIN_CLIENT_SECRET};" \
+	-e "s;@OIDC_LOGIN_LOGOUT_URL@;${OIDC_LOGIN_LOGOUT_URL};" \
+	"${OIDC_LOGIN_CONFIG_TEMPLATE}" \
+	| dd of=${OIDC_LOGIN_CONFIG}
+    chown0 ${OIDC_LOGIN_CONFIG}
+fi
 
 if [ -z "${TRUSTED_PROXIES:-}" ]; then
     # use dig (from bind9-dnsutils)
