@@ -22,8 +22,8 @@ syslog(LOG_DEBUG, "@@@ Backend.Gfarm.__construct");
 			->setStorageClass('OCA\Files_external_gfarm\Storage\Gfarm')
 			->setText($l->t('Gfarm'))
 			->addParameters([
-				new DefinitionParameter('gfarm_path', $l->t('Gfarm Subfolder')),
-
+				new DefinitionParameter('gfarm_path', $l->t('Gfarm sub directory')),
+//				(new DefinitionParameter('test_param1', $l->t('test param1'))),
 //				(new DefinitionParameter('user', $l->t('Username'))),
 //				(new DefinitionParameter('password', $l->t('Password')))
 //					->setType(DefinitionParameter::VALUE_PASSWORD),

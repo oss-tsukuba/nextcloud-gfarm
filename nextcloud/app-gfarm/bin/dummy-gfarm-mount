@@ -1,7 +1,78 @@
-#! /bin/sh
+#! /bin/bash
 
-logger -p local7.debug $0 "$@"
+set -eu -o pipefail
 
-mkdir -p "$2"
+gfarm_path="$1"
+mountpoint="$2"
 
-exit 0
+lockfile="${mountpoint}.lock"
+
+facility="local7"
+
+: ${GFARM_ATTR_CACHE_TIMEOUT:="60"}
+: ${FUSE_ENTRY_TIMEOUT:="60"}
+: ${FUSE_NEGATIVE_TIMEOUT:="5"}
+: ${FUSE_ATTR_TIMEOUT:="60"}
+: ${GFARM2FS_LOGLEVEL:="info"}
+
+MNT_OPT="-o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
+
+LOG_DEBUG()
+{
+    logger -p ${facility}.debug "$0" "$@"
+}
+
+LOG_ERROR()
+{
+    logger -p ${facility}.err "$0" "$@"
+}
+
+lock_expired()
+{
+    min=1
+    num=$(find "$lockfile" -maxdepth 0 -type d -mmin +${min} | wc -l)
+    if [ -e "$lockfile" -a  $num -eq 1 ]; then
+        return 0  # expired
+    fi
+    return 1
+}
+
+lock_and_wait()
+{
+    while ! mkdir "$lockfile"; do
+        if lock_expired; then
+            break
+        fi
+        sleep 1
+    done
+    return 0
+}
+
+unlock()
+{
+    rmdir "$lockfile" || :
+}
+
+trap unlock EXIT
+
+mkdir -p "$mountpoint"
+lock_and_wait
+
+LOG_DEBUG "$@"
+
+
+dfout=$(df "$mountpoint" | tail -1)
+dffstype=$(echo "$dfout" | awk '{print $1}')
+dfmp=$(echo "$dfout" | awk '{print $6}')
+
+if [ $dffstype = "gfarm2fs" ]; then
+    if [ "$mountpoint" = "$dfmp" ]; then
+        LOG_DEBUG "already mounted: $mountpoint"
+        exit 0
+    else
+        LOG_ERR "unexpected: mountpoint=${mountpoint} != $dfmp"
+        exit 1
+    fi
+fi
+
+gfarm2fs ${MNT_OPT} -o subdir="${gfarm_path}" "${mountpoint}"

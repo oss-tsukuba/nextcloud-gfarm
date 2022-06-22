@@ -5,6 +5,8 @@ namespace OCA\Files_external_gfarm\Storage;
 use OC\Files\Storage\Flysystem;
 use OC\Files\Storage\Flysystem\Common;
 //use OCA\Files_External\Lib\StorageConfig;
+//TODO use OCP\Files\ForbiddenException;
+use OCP\Files\StorageAuthException;
 
 class Gfarm extends \OC\Files\Storage\Local {
 	const APP_NAME = 'files_external_gfarm';
@@ -15,7 +17,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	private $debug_traceid = NULL;
 
 	public function __construct($arguments) {
-syslog(LOG_DEBUG, "@@@ Local.Gfarm.__construct");
+syslog(LOG_DEBUG, "@@@ Storage.Gfarm.__construct");
 syslog(LOG_DEBUG, "__construct: class(this): " . get_class($this));
 //syslog(LOG_DEBUG, "__construct: arguments: " . gettype($arguments));
 		$this->debug_traceid = bin2hex(random_bytes(8));
@@ -62,29 +64,31 @@ syslog(LOG_DEBUG, "__construct: class(this): " . get_class($this));
 		$this->mountpoint = $this->gfarm_mountpoint($gfarm_path, $this->gfarm_user);
 
 		$datadir = str_replace('//', '/', $this->mountpoint);
-		// some crazy code uses a local storage on root...
-		if ($datadir === '/') {
-			$this->realDataDir = $datadir;
-		} else {
-			$realPath = realpath($datadir) ?: $datadir;
-			$this->realDataDir = rtrim($realPath, '/') . '/';
-		}
-		if (substr($datadir, -1) !== '/') {
-			$datadir .= '/';
-		}
-		$this->dataDirLength = strlen($this->realDataDir);
-		$this->datadir = $datadir;
-//syslog(LOG_DEBUG, "realDataDir: [" . print_r($this->realDataDir, true) . "]");
+
 //syslog(LOG_DEBUG, "datadir: [" . print_r($this->datadir, true) . "]");
+
+		$retval = $this->grid_proxy_info($gfarm_path, $datadir, $this->gfarm_user);
+//syslog(LOG_DEBUG, "stat: call parent::start()");
+		if ($retval != 0) {
+			$this->myproxy_logon($gfarm_path, $datadir, $this->gfarm_user, $gfarm_password);
+		}
+
 		$this->gfarm_mount($gfarm_path, $this->mountpoint);
-		$this->myproxy_logon($this->realDataDir, $this->mountpoint, $this->gfarm_user, $gfarm_password);
+
 //syslog(LOG_DEBUG, "__construct end");
+
+		$arguments['datadir'] = $datadir;
+		parent::__construct($arguments);
 	}
 
+	// override
 	public function stat($path) {
-//syslog(LOG_DEBUG, "stat: " . $this->debug_traceid . " [" . $path . "]");
-		$this->grid_proxy_info($this->mountpoint, $this->mountpoint, $this->gfarm_user);
-//syslog(LOG_DEBUG, "stat: call parent::start()");
+syslog(LOG_DEBUG, "stat: " . $this->debug_traceid . " [" . $path . "]");
+
+//TODO cache
+		// if (!ret) {
+		// 	throw new StorageAuthException("unauthorized: gfarm username=" . $this->gfarm_user);
+		// }
 		return parent::stat($path);
 	}
 
@@ -121,6 +125,7 @@ syslog(LOG_DEBUG, "__construct: class(this): " . get_class($this));
 		return $user;
 	}
 
+	// TODO mountpoint()
 	private function gfarm_mountpoint($gfarm_path, $gfarm_user) {
 syslog(LOG_DEBUG, "gfarm_mountpoint: [" . $gfarm_path . "] [" . $gfarm_user . "]");
 syslog(LOG_DEBUG, "gfarm_user: (" . gettype($gfarm_user) . ")");
@@ -137,16 +142,21 @@ syslog(LOG_DEBUG, "mountpoint: [" . $mountpoint . "]");
 
 	private function gfarm_mount($gfarm_path, $mountpoint) {
 //syslog(LOG_DEBUG, "gfarm_mount: [" . $gfarm_path . "] [" . $mountpoint . "]");
-		$command = self::GFARM_MOUNT . " " . $gfarm_path . " " . $mountpoint;
+		$command = self::GFARM_MOUNT . " " . escapeshellarg($gfarm_path) . " " . escapeshellarg($mountpoint);
 		$output = null;
 		$retval = null;
 		exec($command, $output, $retval);
 //syslog(LOG_DEBUG, "command: [" . print_r($command, true) . "]");
 //syslog(LOG_DEBUG, "output: [" . print_r($output, true) . "]");
 //syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
-		return true;
+		if ($retval == 0) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
+	//TODO logon_switch
 	private function myproxy_logon($gfarm_path, $mountpoint, $user, $password) {
 //syslog(LOG_DEBUG, "myproxy_logon");
 		$command = self::MYPROXY_LOGON . " " . $mountpoint . " " . $user . " " . $gfarm_path;
@@ -177,30 +187,17 @@ syslog(LOG_DEBUG, "mountpoint: [" . $mountpoint . "]");
 //syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
 	}
 
+	// TODO authenticated()
 	private function grid_proxy_info($gfarm_path, $mountpoint, $user) {
 //syslog(LOG_DEBUG, "grid_proxy_info");
-		$command = self::GRID_PROXY_INFO . " " . $gfarm_path;
+		$command = self::GRID_PROXY_INFO . " " . escapeshellarg($mountpoint);
 		$output = null;
 		$retval = null;
 		exec($command, $output, $retval);
 //syslog(LOG_DEBUG, "command: [" . print_r($command, true) . "]");
 //syslog(LOG_DEBUG, "output: [" . print_r($output, true) . "]");
-//syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
+syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
+		return $retval;
 	}
-
-	/**
-	 * Returns whether the storage is local, which means that files
-	 * are stored on the local filesystem instead of remotely.
-	 * Calling getLocalFile() for local storages should always
-	 * return the local files, whereas for non-local storages
-	 * it might return a temporary file.
-	 *
-	 * @return bool true if the files are stored locally, false otherwise
-	 * @since 7.0.0
-	 */
-//	public function isLocal() {
-//		return true;
-//	}
-
 
 }

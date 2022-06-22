@@ -1,5 +1,7 @@
 #! /bin/sh
 
+set -eu
+
 logger -p local7.debug $0 "$@"
 
 touch /tmp/now
