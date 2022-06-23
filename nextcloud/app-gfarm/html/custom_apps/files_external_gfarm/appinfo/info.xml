@@ -3,23 +3,22 @@
     <id>files_external_gfarm</id>
     <name>External Storage: Gfarm</name>
     <summary>Integrate Gfarm as an external storage</summary>
-    <description><![CDATA[gfarm bra bra bar...]]></description>
+    <description><![CDATA[Gfarm Backend for External storage support.]]></description>
     <version>1.0.0</version>
     <licence>agpl</licence>
-    <author>nis</author>
+    <author>oss-tsukuba</author>
     <namespace>Files_external_gfarm</namespace>
     <types>
 	    <filesystem/>
     </types>
     <category>files</category>
     <category>tools</category>
-    <website>https://github.com/hevelius/files_external_gfarm</website>
-    <bugs>https://github.com/hevelius/files_external_gfarm/issues</bugs>
-    <repository type="git">https://github.com/hevelius/files_external_gfarm.git</repository>
+    <website>https://github.com/oss-tsukuba/nextcloud-gfarm</website>
+    <bugs>https://github.com/oss-tsukuba/nextcloud-gfarm/issues</bugs>
+    <repository type="git">https://github.com/oss-tsukuba/nextcloud-gfarm.git</repository>
     <dependencies>
         <nextcloud min-version="23.0" max-version="23.0"/>
     </dependencies>
     <background-jobs>
-              <job>OCA\Files_external_gfarm\BackgroundJob\RefreshToken</job>
     </background-jobs>
 </info>

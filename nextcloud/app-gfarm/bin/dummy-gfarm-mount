@@ -19,18 +19,18 @@ MNT_OPT="-o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,entry_timeout=
 
 LOG_DEBUG()
 {
-    logger -p ${facility}.debug "$0" "$@"
+    logger -p ${facility}.debug "$0" "DEBUG: $@"
 }
 
 LOG_ERROR()
 {
-    logger -p ${facility}.err "$0" "$@"
+    logger -p ${facility}.err "$0" "ERR: $@"
 }
 
 lock_expired()
 {
     min=1
-    num=$(find "$lockfile" -maxdepth 0 -type d -mmin +${min} | wc -l)
+    num=$(find "$lockfile" -maxdepth 0 -type d -mmin +${min} > /dev/null 2>&1 | wc -l)
     if [ -e "$lockfile" -a  $num -eq 1 ]; then
         return 0  # expired
     fi
@@ -39,10 +39,11 @@ lock_expired()
 
 lock_and_wait()
 {
-    while ! mkdir "$lockfile"; do
+    while ! mkdir "$lockfile" > /dev/null 2>&1; do
         if lock_expired; then
             break
         fi
+        LOG_DEBUG "wait for other mount"
         sleep 1
     done
     return 0
@@ -75,4 +76,5 @@ if [ $dffstype = "gfarm2fs" ]; then
     fi
 fi
 
+sleep 2
 gfarm2fs ${MNT_OPT} -o subdir="${gfarm_path}" "${mountpoint}"

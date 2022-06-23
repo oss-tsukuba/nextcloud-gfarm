@@ -6,16 +6,15 @@ use OCA\Files_External\Lib\Auth\AuthMechanism;
 use OCA\Files_External\Lib\Auth\Password\Password;
 use OCA\Files_External\Lib\DefinitionParameter;
 use OCA\Files_External\Lib\LegacyDependencyCheckPolyfill;
-use OCA\Files_External\Lib\Backend;
+use OCA\Files_External\Lib\Backend\Backend;
 use OCP\IL10N;
 
-class Gfarm extends Backend\Backend {
+// TODO GfarmMyProxy, setIdentifier('gfarm_myproxy')
+class Gfarm extends Backend {
 
 	public function __construct(IL10N $l, Password $legacyAuth) {
-syslog(LOG_DEBUG, "@@@ Backend.Gfarm.__construct");
-		$user = \OC_User::getUser();
+		//$user = \OC_User::getUser();
 
-//syslog(LOG_DEBUG, "__construct: user: " . print_r($user, true));
 		$this
 			->setIdentifier('gfarm')
 			->addIdentifierAlias('OCA\Files_external_gfarm\Storage\Gfarm') // legacy compat
@@ -23,7 +22,6 @@ syslog(LOG_DEBUG, "@@@ Backend.Gfarm.__construct");
 			->setText($l->t('Gfarm'))
 			->addParameters([
 				new DefinitionParameter('gfarm_path', $l->t('Gfarm sub directory')),
-//				(new DefinitionParameter('test_param1', $l->t('test param1'))),
 //				(new DefinitionParameter('user', $l->t('Username'))),
 //				(new DefinitionParameter('password', $l->t('Password')))
 //					->setType(DefinitionParameter::VALUE_PASSWORD),
