@@ -70,6 +70,12 @@ if [ ! -f "${POST_FLAG_PATH}" ]; then
     touch "${POST_FLAG_PATH}"
 fi
 
+rsync -av "${APP_GFARM_SRC_MAIN}/" "${APP_GFARM_DEST}/"
+chown0 "${APP_GFARM_DEST}/"
+mkdir -p "${BIN_DIR}"
+cp "${APP_GFARM_SRC_BINDIR}/"* "${BIN_DIR}/"
+chown0 "${BIN_DIR}/"
+
 APPS="
 files_external
 files_external_gfarm

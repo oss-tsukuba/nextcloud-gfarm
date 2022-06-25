@@ -229,12 +229,6 @@ if [ ${NEXTCLOUD_GFARM_DEBUG_SLEEP} -eq 1 ]; then
     exec sleep infinity
 fi
 
-rsync -av "${APP_GFARM_SRC_MAIN}/" "${APP_GFARM_DEST}/"
-chown0 "${APP_GFARM_DEST}/"
-mkdir -p "${BIN_DIR}"
-cp "${APP_GFARM_SRC_BINDIR}/"* "${BIN_DIR}/"
-chown0 "${BIN_DIR}/"
-
 # from: https://hub.docker.com/_/nextcloud/
 # The install and update script is only triggered when a default
 # command is used (apache-foreground or php-fpm). If you use a custom

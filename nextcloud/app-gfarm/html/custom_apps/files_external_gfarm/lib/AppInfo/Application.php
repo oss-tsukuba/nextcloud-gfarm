@@ -8,7 +8,9 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCA\Files_External\Lib\Config\IBackendProvider;
 use OCA\Files_External\Service\BackendService;
-use OCA\Files_external_gfarm\Backend\Gfarm;
+use OCA\Files_external_gfarm\Backend\GfarmSharedKey;
+use OCA\Files_external_gfarm\Backend\GfarmMyProxy;
+use OCA\Files_external_gfarm\Backend\GfarmGridProxy;
 
 /**
  * @package OCA\Files_external_gfarm\AppInfo
@@ -28,7 +30,9 @@ class Application extends App implements IBackendProvider
 	{
 		$container = $this->getContainer();
 		return [
-			$container->query(Gfarm::class)
+			$container->query(GfarmSharedKey::class),
+			$container->query(GfarmMyProxy::class),
+			$container->query(GfarmGridProxy::class),
 		];
 	}
 

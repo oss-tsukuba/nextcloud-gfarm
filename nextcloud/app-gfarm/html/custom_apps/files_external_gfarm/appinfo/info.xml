@@ -19,6 +19,4 @@
     <dependencies>
         <nextcloud min-version="23.0" max-version="23.0"/>
     </dependencies>
-    <background-jobs>
-    </background-jobs>
 </info>

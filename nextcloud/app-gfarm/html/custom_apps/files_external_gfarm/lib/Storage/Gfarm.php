@@ -19,7 +19,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	private $enable_debug = true;
 
 	private function log_prefix() {
-		return "[" . $this->debug_traceid . "](" . __CLASS__ . ": nextcloud user=" . $this->nextcloud_user . ". gfarm user=" . $this->user . ", gfarm path=" . $this->gfarm_path . ", mountpoint=" . $this->mountpoint . ", settings owner=" . $this->owner . ") ";
+		return "[" . $this->debug_traceid . "](" . __CLASS__ . ": nextcloud user=" . $this->nextcloud_user . ". gfarm user=" . $this->user . ", gfarm dir=" . $this->gfarm_dir . ", mountpoint=" . $this->mountpoint . ", settings owner=" . $this->owner . ") ";
 	}
 
 	private function debug($message) {
@@ -52,8 +52,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 			syslog(LOG_DEBUG, "__construct: arguments: " . print_r($arguments, true));
 		}
 
-		if (!isset($arguments['gfarm_path'])
-			|| !is_string($arguments['gfarm_path'])) {
+		if (!isset($arguments['gfarm_dir'])
+			|| !is_string($arguments['gfarm_dir'])) {
 			throw new \InvalidArgumentException('No data directory (Gfarm Path) set for gfarm storage');
 		}
 		if (!isset($arguments['user'])
@@ -65,7 +65,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 		$this->debug_traceid = bin2hex(random_bytes(4));
 
-		$this->gfarm_path = $arguments['gfarm_path'];
+		$this->gfarm_dir = $arguments['gfarm_dir'];
 		$this->user = $arguments['user'];
 		$password = $arguments['password'];
 
@@ -78,7 +78,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 
 		if (!$this->gfarm_mount()) {
-			throw new StorageAuthException("mount failed: gfarm user=" . $this->user . ", gfarm path=" . $gfarm_path);
+			throw new StorageAuthException("mount failed: gfarm user=" . $this->user . ", gfarm path=" . $gfarm_dir);
 		}
 
 		$this->debug("__construct() done");
@@ -94,11 +94,10 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	// override Local
-	public function stat($path) {
-		$this->debug("stat: " . $path);
-
-		return parent::stat($path);
-	}
+	// public function stat($path) {
+	// 	$this->debug("stat: " . $path);
+	// 	return parent::stat($path);
+	// }
 
 	private function getUser() {
 		//$user = get_current_user();
@@ -114,27 +113,27 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	private function mountpoint_init() {
-		$gfarm_path = $this->gfarm_path;
+		$gfarm_dir = $this->gfarm_dir;
 		$user = $this->user;
 		$length = 8;
 
-		$hashed_path = substr(sha1($gfarm_path), 0, $length);
+		$hashed_path = substr(sha1($gfarm_dir), 0, $length);
 		$mountpoint = self::GFARM_MOUNTPOINT_POOL . "/" . $user . "/" . $hashed_path;
 		return str_replace('//', '/', $mountpoint);
 	}
 
 	private function gfarm_mount() {
-		$gfarm_path = $this->gfarm_path;
+		$gfarm_dir = $this->gfarm_dir;
 		$mountpoint = $this->mountpoint;
 
-		$command = self::GFARM_MOUNT . " " . escapeshellarg($gfarm_path) . " " . escapeshellarg($mountpoint);
+		$command = self::GFARM_MOUNT . " " . escapeshellarg($gfarm_dir) . " " . escapeshellarg($mountpoint);
 		$output = null;
 		$retval = null;
 		exec($command, $output, $retval);
 //syslog(LOG_DEBUG, "command: [" . print_r($command, true) . "]");
 //syslog(LOG_DEBUG, "output: [" . print_r($output, true) . "]");
 //syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
-		if ($retval == 0) {
+		if ($retval === 0) {
 			return true;
 		} else {
 			return false;
@@ -153,11 +152,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	private function myproxy_logon($password) {
-		$gfarm_path = $this->gfarm_path;
+		$gfarm_dir = $this->gfarm_dir;
 		$mountpoint = $this->mountpoint;
 		$user = $this->user;
 
-		$command = self::MYPROXY_LOGON . " " . $mountpoint . " " . $user . " " . $gfarm_path;
+		$command = self::MYPROXY_LOGON . " " . $mountpoint . " " . $user . " " . $gfarm_dir;
 
 		$descriptorspec = array(
 			0 => array("pipe", "r"),
@@ -190,7 +189,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	private function grid_proxy_info() {
-		$gfarm_path = $this->gfarm_path;
+		$gfarm_dir = $this->gfarm_dir;
 		$mountpoint = $this->mountpoint;
 		$user = $this->user;
 
