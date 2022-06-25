@@ -31,7 +31,7 @@ RUN echo ${NEXTCLOUD_VERSION} \
   git \
   vim \
   less \
-  libmagickcore-6.q16-6-extra \
+  libmagickcore-*-extra \
   iproute2 \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
