@@ -91,6 +91,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 		$this->gfarm_dir = $arguments['gfarm_dir'];
 		$password = $arguments['password'];
+		$this->private_key = $arguments['private_key'];
 
 		$this->auth_scheme = $arguments['auth_scheme'];
 
@@ -99,12 +100,15 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 		$this->debug("all parameters initialized");
 
-		$retval = $this->grid_proxy_info();
-		if ($retval != 0) {
+		// ----------------------------------------
+
+		$remount = false;
+		if (! $this->authenticated()) {
 			$this->logon($password);
+			$remount = true;
 		}
 
-		if (!$this->gfarm_mount()) {
+		if (!$this->gfarm_mount($remount)) {
 			throw new StorageAuthException("mount failed: gfarm user=" . $this->user . ", gfarm path=" . $this->gfarm_dir);
 		}
 
@@ -142,11 +146,12 @@ class Gfarm extends \OC\Files\Storage\Local {
 		return str_replace('//', '/', $mountpoint);
 	}
 
-	private function gfarm_mount() {
+	private function gfarm_mount($remount) {
 		$gfarm_dir = $this->gfarm_dir;
 		$mountpoint = $this->mountpoint;
+		$remount_opt = $remount ? "REMOUNT=1" : "REMOUNT=0";
 
-		$command = self::GFARM_MOUNT . " " . escapeshellarg($gfarm_dir) . " " . escapeshellarg($mountpoint);
+		$command = self::GFARM_MOUNT . " " . $remount_opt . " " .escapeshellarg($gfarm_dir) . " " . escapeshellarg($mountpoint);
 		$output = null;
 		$retval = null;
 		exec($command, $output, $retval);

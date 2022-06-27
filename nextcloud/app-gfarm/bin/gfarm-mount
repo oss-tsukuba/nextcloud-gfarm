@@ -2,8 +2,9 @@
 
 set -eu -o pipefail
 
-gfarm_path="$1"
-mountpoint="$2"
+remount_opt="$1"
+gfarm_path="$2"
+mountpoint="$3"
 
 lockfile="${mountpoint}.lock"
 
@@ -16,6 +17,12 @@ facility="local7"
 : ${GFARM2FS_LOGLEVEL:="info"}
 
 MNT_OPT="-o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
+
+if [ "$remount_opt" = "REMOUNT=1" ]; then
+    remount=1
+else
+    remount=0
+fi
 
 LOG_DEBUG()
 {
@@ -70,12 +77,14 @@ check_mounted()
             LOG_DEBUG "already mounted: $mountpoint"
             exit 0
         else
-            LOG_ERR "unexpected: mountpoint=${mountpoint} != $dfmp"
-            exit 1
+            #LOG_ERR "unexpected: mountpoint=${mountpoint} != $dfmp"
+            #exit 1
+            remount=1
         fi
     fi
     # not mounted
 }
+
 
 check_mounted
 
@@ -85,6 +94,9 @@ lock_and_wait
 
 LOG_DEBUG "$@"
 
+if [ $remount -eq 1 ]; then
+    fusermount -u "${mountpoint}"
+fi
 gfarm2fs ${MNT_OPT} -o subdir="${gfarm_path}" "${mountpoint}"
 retval=$?
 if [ $retval -ne 0 ]; then
