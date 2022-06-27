@@ -14,7 +14,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 	const GRID_PROXY_INFO = "/var/www/bin/dummy-grid-proxy-info";
 	const GFARM_MOUNT = "/var/www/bin/dummy-gfarm-mount";
 	const GFARM_UMOUNT = "fusermount -u";
-	const GFARM_MOUNTPOINT_POOL = "/tmp/gfarm/";
+	//const GFARM_MOUNTPOINT_POOL = "/tmp/gfarm/";
+	const GFARM_MOUNTPOINT_POOL = "/dev/shm/gf/";
 
 	const MOUNT_TYPE_ADMIN_DIR_NAME = "__ADMIN__";
 

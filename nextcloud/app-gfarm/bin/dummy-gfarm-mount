@@ -54,32 +54,40 @@ unlock()
     rmdir "$lockfile" || :
 }
 
+check_mounted()
+{
+    if [ ! -d "$mountpoint" ]; then
+        mkdir -p "$mountpoint"
+        return 0
+    fi
+
+    dfout=$(df "$mountpoint" | tail -1)
+    dffstype=$(echo "$dfout" | awk '{print $1}')
+    dfmp=$(echo "$dfout" | awk '{print $6}')
+
+    if [ $dffstype = "gfarm2fs" ]; then
+        if [ "$mountpoint" = "$dfmp" ]; then
+            LOG_DEBUG "already mounted: $mountpoint"
+            exit 0
+        else
+            LOG_ERR "unexpected: mountpoint=${mountpoint} != $dfmp"
+            exit 1
+        fi
+    fi
+    # not mounted
+}
+
+check_mounted
+
 trap unlock EXIT
 
-mkdir -p "$mountpoint"
 lock_and_wait
 
 LOG_DEBUG "$@"
 
-
-dfout=$(df "$mountpoint" | tail -1)
-dffstype=$(echo "$dfout" | awk '{print $1}')
-dfmp=$(echo "$dfout" | awk '{print $6}')
-
-if [ $dffstype = "gfarm2fs" ]; then
-    if [ "$mountpoint" = "$dfmp" ]; then
-        LOG_DEBUG "already mounted: $mountpoint"
-        exit 0
-    else
-        LOG_ERR "unexpected: mountpoint=${mountpoint} != $dfmp"
-        exit 1
-    fi
-fi
-
-sleep 2
 gfarm2fs ${MNT_OPT} -o subdir="${gfarm_path}" "${mountpoint}"
 retval=$?
 if [ $retval -ne 0 ]; then
-    LOG_ERR "gfarm2fs failed"
+    LOG_ERR "gfarm2fs mount failed: mountpoint=${mountpoint}"
 fi
 exit $retval
