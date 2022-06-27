@@ -2,14 +2,14 @@
 
 namespace OCA\Files_external_gfarm\Backend;
 
-use OCA\Files_External\Lib\Auth\AuthMechanism;
 use OCA\Files_External\Lib\Auth\Password\Password;
 use OCA\Files_External\Lib\DefinitionParameter;
 use OCA\Files_External\Lib\LegacyDependencyCheckPolyfill;
 use OCA\Files_External\Lib\Backend\Backend;
 use OCP\IL10N;
+use OCA\Files_external_gfarm\Auth\AuthMechanismGfarm;
 
-class GfarmBackend extends Backend {
+class BackendGfarm extends Backend {
 
 	public function __construct(IL10N $l, Password $legacyAuth) {
 		$storage_class = 'OCA\Files_external_gfarm\Storage\Gfarm';
@@ -23,8 +23,18 @@ class GfarmBackend extends Backend {
 				new DefinitionParameter('gfarm_dir',
 										$l->t('Gfarm directory')),
 			])
-			->addAuthScheme(AuthMechanism::SCHEME_PASSWORD)
+			->addAuthScheme(AuthMechanismGfarm::SCHEME_GFARM_SHARED_KEY)
+			->addAuthScheme(AuthMechanismGfarm::SCHEME_GFARM_MYPROXY)
+			->addAuthScheme(AuthMechanismGfarm::SCHEME_GFARM_X509_PROXY)
 			->setLegacyAuthMechanism($legacyAuth)
 		;
+	}
+}
+
+class Gfarm extends BackendGfarm {
+
+	protected function init(IL10N $l) {
+		$this->identifier = 'gfarm';
+		$this->text = $l->t('Gfarm');
 	}
 }

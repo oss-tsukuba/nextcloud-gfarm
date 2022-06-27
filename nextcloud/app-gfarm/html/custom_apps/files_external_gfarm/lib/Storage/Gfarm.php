@@ -5,6 +5,7 @@ namespace OCA\Files_external_gfarm\Storage;
 use OC\Files\Storage\Flysystem;
 use OC\Files\Storage\Flysystem\Common;
 use OCP\Files\StorageAuthException;
+use OCA\Files_External\Lib\StorageConfig;
 
 class Gfarm extends \OC\Files\Storage\Local {
 	//const APP_NAME = 'files_external_gfarm';
@@ -15,11 +16,13 @@ class Gfarm extends \OC\Files\Storage\Local {
 	const GFARM_UMOUNT = "fusermount -u";
 	const GFARM_MOUNTPOINT_POOL = "/tmp/gfarm/";
 
+	const MOUNT_TYPE_ADMIN_DIR_NAME = "__ADMIN__";
+
 	private $debug_traceid = NULL;
 	private $enable_debug = true;
 
 	private function log_prefix() {
-		return "[" . $this->debug_traceid . "](" . __CLASS__ . ": nextcloud user=" . $this->nextcloud_user . ". gfarm user=" . $this->user . ", gfarm dir=" . $this->gfarm_dir . ", mountpoint=" . $this->mountpoint . ", settings owner=" . $this->owner . ") ";
+		return "[" . $this->debug_traceid . "](" . __CLASS__ . ": access nextcloud_user=" . $this->nextcloud_user . ". gfarm_user=" . $this->user . ", gfarm_dir=" . $this->gfarm_dir . ", mountpoint=" . $this->mountpoint . ", storage_owner=" . $this->storage_owner . ", auth_scheme=" . $this->auth_scheme . ") ";
 	}
 
 	private function debug($message) {
@@ -46,31 +49,53 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 	}
 
+	private static function is_valid_param($param) {
+		return !empty($param) && is_string($param);
+	}
+
 	public function __construct($arguments) {
 		if ($this->enable_debug) {
 			syslog(LOG_DEBUG, __CLASS__ . ": __construct()");
 			syslog(LOG_DEBUG, "__construct: arguments: " . print_r($arguments, true));
 		}
 
-		if (!isset($arguments['gfarm_dir'])
-			|| !is_string($arguments['gfarm_dir'])) {
-			throw new \InvalidArgumentException('No data directory (Gfarm Path) set for gfarm storage');
+		if (! self::is_valid_param($arguments['gfarm_dir'])) {
+			throw new \InvalidArgumentException('Empty Gfarm directory');
 		}
-		if (!isset($arguments['user'])
-			|| !is_string($arguments['user'])
-			|| !isset($arguments['password'])
-			|| !is_string($arguments['password'])) {
-			throw new \InvalidArgumentException('No authentication info set for gfarm storage');
+		if (! self::is_valid_param($arguments['password'])) {
+			throw new \InvalidArgumentException('Empty password for gfarm storage');
+		}
+
+		if (self::is_valid_param($arguments['storage_owner'])) {
+			if ($arguments['mount_type'] === StorageConfig::MOUNT_TYPE_ADMIN) {
+				$this->storage_owner = self::MOUNT_TYPE_ADMIN_DIR_NAME;
+			} else {
+				// from Personal External storage settings
+				$this->storage_owner = $arguments['storage_owner'];
+			}
+		} else {
+			// from Administration External storage settings
+			$this->storage_owner = self::MOUNT_TYPE_ADMIN_DIR_NAME;
+		}
+
+		// Gfarm username
+		if (self::is_valid_param($arguments['user'])) {
+			$this->user = $arguments['user'];
+		} else {
+			$this->user = $this->storage_owner;
 		}
 
 		$this->debug_traceid = bin2hex(random_bytes(4));
 
 		$this->gfarm_dir = $arguments['gfarm_dir'];
-		$this->user = $arguments['user'];
 		$password = $arguments['password'];
 
-		$this->nextcloud_user = $this->getUser();
+		$this->auth_scheme = $arguments['auth_scheme'];
+
+		$this->nextcloud_user = $this->getAccessUser();
 		$this->mountpoint = $this->mountpoint_init();
+
+		$this->debug("all parameters initialized");
 
 		$retval = $this->grid_proxy_info();
 		if ($retval != 0) {
@@ -78,11 +103,12 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 
 		if (!$this->gfarm_mount()) {
-			throw new StorageAuthException("mount failed: gfarm user=" . $this->user . ", gfarm path=" . $gfarm_dir);
+			throw new StorageAuthException("mount failed: gfarm user=" . $this->user . ", gfarm path=" . $this->gfarm_dir);
 		}
 
-		$this->debug("__construct() done");
+		//$this->debug("__construct() done");
 
+		# for Local.php
 		$arguments['datadir'] = $this->mountpoint;
 		parent::__construct($arguments);
 	}
@@ -90,7 +116,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	public function __destruct() {
 		//$this->gfarm_umount();  //TODO umount in backgroud ?
 
-		$this->debug("__destruct() done");
+		//$this->debug("__destruct() done");
 	}
 
 	// override Local
@@ -99,26 +125,18 @@ class Gfarm extends \OC\Files\Storage\Local {
 	// 	return parent::stat($path);
 	// }
 
-	private function getUser() {
-		//$user = get_current_user();
-		//$user = $userSession->getUser();
-		//$user = OC\User::getUser();
-		//$user = OCP\User::checkLoggedIn();
-		//$user = $this->userSession->getUser();
-		//$user = $userSession->getUser()->getDisplayName();
-		//$user = $this->userManager->get($status->getUserId());
-		//$user = getDisplayName();
-		$user = \OC_User::getUser();
-		return $user;
+	private function getAccessUser() {
+		return \OC_User::getUser();
 	}
 
 	private function mountpoint_init() {
-		$gfarm_dir = $this->gfarm_dir;
+		$owner_dir = $this->storage_owner;
 		$user = $this->user;
+		$gfarm_dir = $this->gfarm_dir;
 		$length = 8;
 
 		$hashed_path = substr(sha1($gfarm_dir), 0, $length);
-		$mountpoint = self::GFARM_MOUNTPOINT_POOL . "/" . $user . "/" . $hashed_path;
+		$mountpoint = self::GFARM_MOUNTPOINT_POOL . "/" . $owner_dir . "/" . $user . "/" . $hashed_path;
 		return str_replace('//', '/', $mountpoint);
 	}
 

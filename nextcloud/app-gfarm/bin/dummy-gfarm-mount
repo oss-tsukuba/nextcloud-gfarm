@@ -22,7 +22,7 @@ LOG_DEBUG()
     logger -p ${facility}.debug "$0" "DEBUG: $@"
 }
 
-LOG_ERROR()
+LOG_ERR()
 {
     logger -p ${facility}.err "$0" "ERR: $@"
 }
@@ -78,3 +78,8 @@ fi
 
 sleep 2
 gfarm2fs ${MNT_OPT} -o subdir="${gfarm_path}" "${mountpoint}"
+retval=$?
+if [ $retval -ne 0 ]; then
+    LOG_ERR "gfarm2fs failed"
+fi
+exit $retval

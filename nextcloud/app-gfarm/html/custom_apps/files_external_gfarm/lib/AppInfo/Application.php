@@ -6,16 +6,16 @@ namespace OCA\Files_external_gfarm\AppInfo;
 
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootstrap;
+use OCA\Files_External\Lib\Config\IAuthMechanismProvider;
 use OCA\Files_External\Lib\Config\IBackendProvider;
 use OCA\Files_External\Service\BackendService;
-use OCA\Files_external_gfarm\Backend\GfarmSharedKey;
-use OCA\Files_external_gfarm\Backend\GfarmMyProxy;
-use OCA\Files_external_gfarm\Backend\GfarmGridProxy;
+use OCA\Files_external_gfarm\Backend;
+use OCA\Files_external_gfarm\Auth;
 
 /**
  * @package OCA\Files_external_gfarm\AppInfo
  */
-class Application extends App implements IBackendProvider
+class Application extends App implements IBackendProvider, IAuthMechanismProvider
 {
 
 	public function __construct(array $urlParams = array())
@@ -30,10 +30,21 @@ class Application extends App implements IBackendProvider
 	{
 		$container = $this->getContainer();
 		return [
-			$container->query(GfarmSharedKey::class),
-			$container->query(GfarmMyProxy::class),
-			$container->query(GfarmGridProxy::class),
+			$container->query(Backend\Gfarm::class),
 		];
+	}
+
+	/**
+	 * @{inheritdoc}
+	 */
+	public function getAuthMechanisms() {
+		$container = $this->getContainer();
+
+		return [
+			$container->get(Auth\MyProxy::class),
+			$container->get(Auth\X509ProxyCert::class),
+			$container->get(Auth\GfarmSharedKey::class),
+			];
 	}
 
 	public function register()
@@ -46,6 +57,7 @@ class Application extends App implements IBackendProvider
 			function() use ($server) {
 				$backendService = $server->query(BackendService::class);
 				$backendService->registerBackendProvider($this);
+				$backendService->registerAuthMechanismProvider($this);
 			}
 		);
 	}
