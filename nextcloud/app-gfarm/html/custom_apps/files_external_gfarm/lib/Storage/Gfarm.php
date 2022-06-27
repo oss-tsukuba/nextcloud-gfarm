@@ -10,10 +10,11 @@ use OCA\Files_External\Lib\StorageConfig;
 class Gfarm extends \OC\Files\Storage\Local {
 	//const APP_NAME = 'files_external_gfarm';
 
-	const MYPROXY_LOGON = "/var/www/bin/dummy-myproxy-logon";
-	const GRID_PROXY_INFO = "/var/www/bin/dummy-grid-proxy-info";
-	const GFARM_MOUNT = "/var/www/bin/dummy-gfarm-mount";
+	const MYPROXY_LOGON = "/nc-gfarm/app-gfarm/bin/dummy-myproxy-logon";
+	const GRID_PROXY_INFO = "/nc-gfarm/app-gfarm/bin/dummy-grid-proxy-info";
+	const GFARM_MOUNT = "/nc-gfarm/app-gfarm/bin/gfarm-mount";
 	const GFARM_UMOUNT = "fusermount -u";
+
 	//const GFARM_MOUNTPOINT_POOL = "/tmp/gfarm/";
 	const GFARM_MOUNTPOINT_POOL = "/dev/shm/gf/";
 

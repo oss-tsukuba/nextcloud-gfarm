@@ -72,9 +72,9 @@ fi
 
 rsync -av --delete "${APP_GFARM_SRC_MAIN}/" "${APP_GFARM_DEST}/"
 chown0 "${APP_GFARM_DEST}/"
-mkdir -p "${BIN_DIR}"
-cp "${APP_GFARM_SRC_BINDIR}/"* "${BIN_DIR}/"
-chown0 "${BIN_DIR}/"
+# mkdir -p "${BIN_DIR}"
+# cp "${APP_GFARM_SRC_BINDIR}/"* "${BIN_DIR}/"
+# chown0 "${BIN_DIR}/"
 
 APPS="
 files_external
