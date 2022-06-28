@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace OCA\Files_external_gfarm\AppInfo;
 
 use OCP\AppFramework\App;
+use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCA\Files_External\Lib\Config\IAuthMechanismProvider;
 use OCA\Files_External\Lib\Config\IBackendProvider;
 use OCA\Files_External\Service\BackendService;
 use OCA\Files_external_gfarm\Backend;
 use OCA\Files_external_gfarm\Auth;
+use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
  * @package OCA\Files_external_gfarm\AppInfo
  */
-class Application extends App implements IBackendProvider, IAuthMechanismProvider
+class Application extends App implements IBackendProvider, IAuthMechanismProvider, IBootstrap
 {
 
 	public function __construct(array $urlParams = array())
@@ -47,7 +49,8 @@ class Application extends App implements IBackendProvider, IAuthMechanismProvide
 			];
 	}
 
-	public function register()
+	// from app.php (deprecated)
+	public function register0()
 	{
 		$container = $this->getContainer();
 		$server = $container->getServer();
@@ -60,5 +63,16 @@ class Application extends App implements IBackendProvider, IAuthMechanismProvide
 				$backendService->registerAuthMechanismProvider($this);
 			}
 		);
+	}
+
+	public function register(IRegistrationContext $context): void {
+	}
+
+	public function boot(IBootContext $context): void {
+		$context->injectFn(
+			function (BackendService $backendService) {
+				$backendService->registerBackendProvider($this);
+				$backendService->registerAuthMechanismProvider($this);
+			});
 	}
 }

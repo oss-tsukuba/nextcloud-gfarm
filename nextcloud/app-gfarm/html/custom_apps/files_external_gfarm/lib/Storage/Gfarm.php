@@ -270,7 +270,7 @@ class GfarmAuthGfarmSharedKey extends GfarmAuth {
 	public function __construct(Gfarm $gf) {
 		parent::__construct($gf);
 
-		$mp = $this->gf->gfarm_mountpoint;
+		$mp = $this->gf->mountpoint;
 		$this->gfarm_conf =  $mp . ".gfarm2.conf";
 		$this->gfarm_usermap = $mp . ".gfarm_usermap";
 		$this->gfarm_shared_key = $mp . ".gfarm_shared_key";

@@ -40,6 +40,10 @@ if [ ${FILE_NUM} -gt 0 ]; then  # not empty
     fi
 fi
 
+# rsync before calling occ
+rsync -av --delete "${APP_GFARM_SRC_MAIN}/" "${APP_GFARM_DEST}/"
+chown0 "${APP_GFARM_DEST}/"
+
 # initialization after creating new (or renew) container
 # (The following parameters are not changed when restarting container)
 if [ ! -f "${POST_FLAG_PATH}" ]; then
@@ -69,12 +73,6 @@ if [ ! -f "${POST_FLAG_PATH}" ]; then
 
     touch "${POST_FLAG_PATH}"
 fi
-
-rsync -av --delete "${APP_GFARM_SRC_MAIN}/" "${APP_GFARM_DEST}/"
-chown0 "${APP_GFARM_DEST}/"
-# mkdir -p "${BIN_DIR}"
-# cp "${APP_GFARM_SRC_BINDIR}/"* "${BIN_DIR}/"
-# chown0 "${BIN_DIR}/"
 
 APPS="
 files_external
