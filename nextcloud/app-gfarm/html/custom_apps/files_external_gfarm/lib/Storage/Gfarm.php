@@ -7,6 +7,8 @@ use OC\Files\Storage\Flysystem\Common;
 use OCP\Files\StorageAuthException;
 use OCA\Files_External\Lib\StorageConfig;
 
+use OCA\Files_external_gfarm\Auth\AuthMechanismGfarm;
+
 class Gfarm extends \OC\Files\Storage\Local {
 	//const APP_NAME = 'files_external_gfarm';
 
@@ -15,8 +17,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 	const GFARM_MOUNT = "/nc-gfarm/app-gfarm/bin/gfarm-mount";
 	const GFARM_UMOUNT = "fusermount -u";
 
-	//const GFARM_MOUNTPOINT_POOL = "/tmp/gfarm/";
-	const GFARM_MOUNTPOINT_POOL = "/dev/shm/gf/";
+	const GFARM_MOUNTPOINT_POOL = "/tmp/gf/";
+	//const GFARM_MOUNTPOINT_POOL = "/dev/shm/gf/";
 
 	const MOUNT_TYPE_ADMIN_DIR_NAME = "__ADMIN__";
 
@@ -91,25 +93,50 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 		$this->gfarm_dir = $arguments['gfarm_dir'];
 		$password = $arguments['password'];
-		$this->private_key = $arguments['private_key'];
 
 		$this->auth_scheme = $arguments['auth_scheme'];
 
 		$this->nextcloud_user = $this->getAccessUser();
 		$this->mountpoint = $this->mountpoint_init();
 
+		$this->arguments = $arguments;
+
 		$this->debug("all parameters initialized");
 
 		// ----------------------------------------
 
+		if ($this->auth_scheme
+			=== AuthMechanismGfarm::SCHEME_GFARM_SHARED_KEY) {
+			$this->auth = new GfarmAuthGfarmSharedKey($this);
+		} elseif ($this->auth_scheme
+				  === AuthMechanismGfarm::SCHEME_GFARM_MYPROXY) {
+			//$this->auth = new GfarmAuthMyProxy($this); //TODO
+			$this->auth = new GfarmAuthGfarmSharedKey($this);
+		} elseif ($this->auth_scheme
+				  === AuthMechanismGfarm::SCHEME_GFARM_X509_PROXY) {
+			//$this->auth = new GfarmAuthX509Proxy($this); //TODO
+			$this->auth = new GfarmAuthGfarmSharedKey($this);
+		} else {
+			$msg = "unknown auth_scheme";
+			$this->error($msg);
+			throw new StorageAuthException($msg . ": auth_scheme=" . $this->auth_scheme);
+		}
+
 		$remount = false;
-		if (! $this->authenticated()) {
-			$this->logon($password);
+		if (! $this->auth->conf_ready()) {
+			$this->auth->conf_init();
+		}
+		if (! $this->auth->authenticated()) {
+			$this->auth->conf_init(); // reset
+			$this->auth->logon($password);
 			$remount = true;
+			if (! $this->auth->authenticated()) {
+				throw new StorageAuthException("authentication failed: gfarm_user=" . $this->user . ", gfarm_dir=" . $this->gfarm_dir);
+			}
 		}
 
 		if (!$this->gfarm_mount($remount)) {
-			throw new StorageAuthException("mount failed: gfarm user=" . $this->user . ", gfarm path=" . $this->gfarm_dir);
+			throw new StorageAuthException("mount failed: gfarm_user=" . $this->user . ", gfarm_dir=" . $this->gfarm_dir);
 		}
 
 		//$this->debug("__construct() done");
@@ -209,10 +236,6 @@ class Gfarm extends \OC\Files\Storage\Local {
 //syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
 	}
 
-	private function authenticated() {
-		return $this->grid_proxy_info();
-	}
-
 	private function grid_proxy_info() {
 		$gfarm_dir = $this->gfarm_dir;
 		$mountpoint = $this->mountpoint;
@@ -228,4 +251,53 @@ class Gfarm extends \OC\Files\Storage\Local {
 		return $retval;
 	}
 
+}
+
+abstract class GfarmAuth {
+
+	public function __construct(Gfarm $gf) {
+		$this->gf = $gf;
+	}
+
+	abstract public function conf_init();
+	abstract public function conf_ready();
+	abstract public function authenticated();
+	abstract public function login();
+}
+
+class GfarmAuthGfarmSharedKey extends GfarmAuth {
+
+	public function __construct(Gfarm $gf) {
+		parent::__construct($gf);
+
+		$mp = $this->gf->gfarm_mountpoint;
+		$this->gfarm_conf =  $mp . ".gfarm2.conf";
+		$this->gfarm_usermap = $mp . ".gfarm_usermap";
+		$this->gfarm_shared_key = $mp . ".gfarm_shared_key";
+
+		//$this->private_key_str = $this->gf->arguments['private_key'];
+		//$this->x509_proxy_cert = $mp . ".x509_proxy_cert";
+		//$this->gx509_private_key = $mp . ".x509_private_key";
+	}
+
+	public function conf_init() {
+		//file_put_contents
+		return true;
+	}
+
+	public function conf_ready() {
+		return (file_exists($this->gfarm_conf)
+				&& file_exists($this->gfarm_usermap)
+				&& !file_exists($this->gfarm_shared_key));
+	}
+
+	public function authenticated() {
+		return true;
+		//$command = self::GFKEY . " -e";
+		//putenv("GFARM_CONFIG_FILE=" . );
+	}
+
+	public function login() {
+		return true;
+	}
 }
