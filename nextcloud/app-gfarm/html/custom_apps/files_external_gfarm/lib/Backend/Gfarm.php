@@ -34,10 +34,10 @@ class BackendGfarm extends Backend {
 
 class Gfarm extends BackendGfarm {
 
-	public const NAME = 'gfarm';
+	public const ID = 'gfarm';
 
 	protected function init(IL10N $l) {
-		$this->identifier = self::NAME;
+		$this->identifier = self::ID;
 		$this->text = $l->t('Gfarm');
 	}
 }

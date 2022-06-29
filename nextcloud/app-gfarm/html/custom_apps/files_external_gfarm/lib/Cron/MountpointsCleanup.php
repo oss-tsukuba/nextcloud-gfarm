@@ -29,7 +29,7 @@ class MountpointsCleanup extends TimedJob {
 		foreach ($configs as $config) {
 			// OCA\Files_External\Lib\Backend\Backend
 			$back = $config->getBackend()->jsonSerialize();
-			if ($back['identifier'] !== Backend\Gfarm::NAME) {
+			if ($back['identifier'] !== Backend\Gfarm::ID) {
 				continue;
 			}
 			//syslog(LOG_DEBUG, "backend=" . print_r($back, true));
