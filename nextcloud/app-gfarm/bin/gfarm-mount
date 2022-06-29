@@ -70,14 +70,14 @@ check_mounted()
 
     dfout=$(df "$mountpoint" | tail -1)
     dffstype=$(echo "$dfout" | awk '{print $1}')
-    dfmp=$(echo "$dfout" | awk '{print $6}')
+    dfmp=$(echo "$dfout" | xargs | cut -d ' ' -f 6-)
 
     if [ $dffstype = "gfarm2fs" ]; then
         if [ "$mountpoint" = "$dfmp" ]; then
             LOG_DEBUG "already mounted: $mountpoint"
             exit 0
         else
-            #LOG_ERR "unexpected: mountpoint=${mountpoint} != $dfmp"
+            LOG_ERR "unexpected: mountpoint=${mountpoint} != $dfmp"
             #exit 1
             remount=1
         fi
@@ -85,16 +85,19 @@ check_mounted()
     # not mounted
 }
 
-
+# shortcut
 check_mounted
 
 trap unlock EXIT
 
 lock_and_wait
+# recheck in lock
+check_mounted
 
 LOG_DEBUG "$@"
 
 if [ $remount -eq 1 ]; then
+    LOG_DEBUG "umount when REMOUNT=1"
     fusermount -u "${mountpoint}"
 fi
 gfarm2fs ${MNT_OPT} -o subdir="${gfarm_path}" "${mountpoint}"

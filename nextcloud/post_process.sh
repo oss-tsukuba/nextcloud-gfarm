@@ -80,6 +80,8 @@ files_external_gfarm
 oidc_login
 "
 
+# TODO ??? to enable background job
+${OCC} app:disable files_external_gfarm
 for APP in ${APPS}; do
     ${OCC} app:enable ${APP}
 done

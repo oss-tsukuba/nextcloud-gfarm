@@ -15,7 +15,7 @@ EXEC_COMMON_ROOT = $(COMPOSE) exec -u root
 EXEC = $(EXEC_COMMON_USER) nextcloud
 EXEC_ROOT = $(EXEC_COMMON_ROOT) nextcloud
 
-OCC = $(COMPOSE) exec -u www-data nextcloud php /var/www/html/occ
+OCC = $(EXEC) php /var/www/html/occ
 SHELL=/bin/bash
 
 # use selfsigned certificate
@@ -238,3 +238,6 @@ resetpassword-admin:
 
 show-nextcloud-version:
 	$(OCC) --version
+
+cron-force:
+	$(EXEC) php /var/www/html/cron.php

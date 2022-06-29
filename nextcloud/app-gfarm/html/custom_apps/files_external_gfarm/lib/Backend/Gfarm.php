@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace OCA\Files_external_gfarm\Backend;
 
@@ -33,8 +34,10 @@ class BackendGfarm extends Backend {
 
 class Gfarm extends BackendGfarm {
 
+	public const NAME = 'gfarm';
+
 	protected function init(IL10N $l) {
-		$this->identifier = 'gfarm';
+		$this->identifier = self::NAME;
 		$this->text = $l->t('Gfarm');
 	}
 }

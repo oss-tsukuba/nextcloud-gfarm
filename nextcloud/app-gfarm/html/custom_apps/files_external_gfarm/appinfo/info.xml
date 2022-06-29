@@ -9,7 +9,7 @@
     <author>oss-tsukuba</author>
     <namespace>Files_external_gfarm</namespace>
     <types>
-	    <filesystem/>
+        <filesystem/>
     </types>
     <category>files</category>
     <category>tools</category>
@@ -19,4 +19,8 @@
     <dependencies>
         <nextcloud min-version="20.0" max-version="23.0"/>
     </dependencies>
+
+    <background-jobs>
+      <job>OCA\Files_external_gfarm\Cron\MountpointsCleanup</job>
+    </background-jobs>
 </info>

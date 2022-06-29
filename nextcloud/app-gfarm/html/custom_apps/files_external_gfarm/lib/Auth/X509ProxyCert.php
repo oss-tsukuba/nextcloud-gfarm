@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace OCA\Files_external_gfarm\Auth;
 
 use OCA\Files_External\Lib\Auth\AuthMechanism;

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace OCA\Files_external_gfarm\Auth;
 
 use OCA\Files_External\Lib\Auth\AuthMechanism;
@@ -10,23 +12,37 @@ class AuthMechanismGfarm extends AuthMechanism {
 	public const SCHEME_GFARM_MYPROXY = 'gfarm::myproxy';
 	public const SCHEME_GFARM_X509_PROXY = 'gfarm::x509proxy';
 
+	public const ADMIN_NAME = "__ADMIN__";
+
 	// StorageModifierTrait
-	public function manipulateStorageConfig(StorageConfig &$storage, IUser $user = null) {
+	public function manipulateStorageConfig(StorageConfig &$storage, IUser $iuser = null) {
+		// access (session) $user is not used
+
 		$storage->setBackendOption('auth_scheme', $this->getScheme());
 
-		if ($user === null) {
-			$user_id = null;
-		} else {
-			$user_id = $user->getUID();
-		}
-		$storage->setBackendOption('storage_owner', $user_id);
-
+		$type = $storage->getType();
 		// StorageConfig::MOUNT_TYPE_*
-		$storage->setBackendOption('mount_type', $storage->getType());
+		$storage->setBackendOption('mount_type', $type);
 
-		$user = $storage->getBackendOption('user');
-		if ($user === '__USER__') {
-			$storage->setBackendOption('user', $user_id);
+		$owner = self::ADMIN_NAME;
+		if ($type === StorageConfig::MOUNT_TYPE_PERSONAl) {
+			$values = $storage->getApplicableUsers();
+			if (count($values) > 0) {
+				$owner = $values[0];
+			} else {
+				throw new \UnexpectedValueException(
+					'no owner of StorageConfig::MOUNT_TYPE_PERSONAl');
+			}
+			if ($owner === self::ADMIN_NAME) {
+				throw new \UnexpectedValueException(
+					'invalid owner of StorageConfig::MOUNT_TYPE_PERSONAl');
+			}
+		}
+		$storage->setBackendOption('storage_owner', $owner);
+
+		$username = $storage->getBackendOption('user');
+		if ($username === '__USER__') {
+			$storage->setBackendOption('user', $owner);
 		}
 	}
 }
