@@ -8,6 +8,7 @@ mountpoint="$3"
 auth_type="$4"
 gfarm_conf="$5"
 x509proxy="$6"
+trace_id="$7"
 
 lockfile="${mountpoint}.lock"
 
@@ -33,12 +34,12 @@ fi
 
 LOG_DEBUG()
 {
-    logger -p ${facility}.debug "$0" "DEBUG: $@"
+    logger -p ${facility}.debug "$0" "[${trace_id}]DEBUG: $@"
 }
 
 LOG_ERR()
 {
-    logger -p ${facility}.err "$0" "ERR: $@"
+    logger -p ${facility}.err "$0" "[${trace_id}]ERR: $@"
 }
 
 LOG_DEBUG "$@"

@@ -104,8 +104,9 @@ services:
 
       ### Gfarm parameters (if necessary)
       - ${GFARM_CONF_USER_DIR:-/dev/null}:/gfarm_conf_user:ro
-      - ${GSI_CERTIFICATES_DIR:-/dev/null}:/etc/grid-security/certificates:ro
       - ${GSI_USER_DIR:-/dev/null}:/gsi_user:ro
+      - ${GSI_CERTIFICATES_DIR:-/dev/null}:/etc/grid-security/certificates:ro
+      - ${TLS_CERTIFICATES_DIR:-/dev/null}:/etc/pki/tls/certs/gfarm:ro
     depends_on:
       - mariadb
       - redis

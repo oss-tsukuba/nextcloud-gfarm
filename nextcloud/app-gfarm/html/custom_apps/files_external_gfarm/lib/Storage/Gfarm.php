@@ -30,7 +30,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 			. __CLASS__
 			. ": access nextcloud_user=" . $this->nextcloud_user
 			. ", storage_owner=" . $this->storage_owner
-			. ". gfarm_user=" . $this->user
+			. ", gfarm_user=" . $this->user
 			. ", gfarm_dir=" . $this->gfarm_dir
 			. ", mountpoint=" . $this->mountpoint
 			. ", auth_scheme=" . $this->auth_scheme
@@ -216,25 +216,21 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	private function mount_common($mode) {
-		$gfarm_dir = $this->gfarm_dir;
-		$mountpoint = $this->mountpoint;
-		$auth_type = $this->auth->type;
-		$gfarm_conf = $this->auth->gfarm_conf;
-		$x509_proxy_cert = $this->auth->x509_proxy_cert;
-
 		$command = self::GFARM_MOUNT
 				   . " "
 				   . $mode
 				   . " "
-				   . escapeshellarg($gfarm_dir)
+				   . escapeshellarg($this->gfarm_dir)
 				   . " "
-				   . escapeshellarg($mountpoint)
+				   . escapeshellarg($this->mountpoint)
 				   . " "
-				   . escapeshellarg($auth_type)
+				   . escapeshellarg($this->auth->type)
 				   . " "
-				   . escapeshellarg($gfarm_conf)
+				   . escapeshellarg($this->auth->gfarm_conf)
 				   . " "
-				   . escapeshellarg($x509_proxy_cert)
+				   . escapeshellarg($this->auth->x509_proxy_cert)
+				   . " "
+				   . escapeshellarg($this->debug_traceid)
 				   ;
 		$output = null;
 		$retval = null;
@@ -349,6 +345,102 @@ abstract class GfarmAuth {
 		}
 		return file_put_contents($filename, $content, LOCK_EX);
 	}
+
+	private function support_auth_common($filename, $type) {
+		// check once
+		if (file_exists($filename)) {
+			$flag = trim(file_get_contents($filename));
+			return ($flag === "1");
+		}
+
+		// TODO from config ?
+		return true;
+
+		// not work because gfstatus call gfarm_initialize() before
+		// preparing configuration files.
+
+		// $command = "gfstatus";
+		// exec($command, $output, $retval);
+		// if ($retval !== 0) {
+		// 	return false;
+		// }
+		// foreach ($output as $line) {
+		// 	if (preg_match('^client auth ' . $type, $line)
+		// 		&& preg_match(': available', $line)) {
+		// 		file_put_contents($filename, "1");
+		// 		return true;
+		// 	}
+		// }
+		// file_put_contents($filename, "0");
+		// return false;
+	}
+
+	private const SUPPORT_GSI_FILE = "SUPPORT_GSI";
+	private const SUPPORT_TLS_FILE = "SUPPORT_TLS";
+	private const SUPPORT_KERBEROS_FILE = "SUPPORT_KERBEROS";
+
+	protected function support_gsi() {
+		$f = $this->gf::GFARM_MOUNTPOINT_POOL . self::SUPPORT_GSI_FILE;
+		return $this->support_auth_common($f, 'gsi');
+	}
+
+	protected function support_tls() {
+		$f = $this->gf::GFARM_MOUNTPOINT_POOL . self::SUPPORT_TLS_FILE;
+		return $this->support_auth_common($f, 'tls');
+	}
+
+	protected function support_kerberos() {
+		$f = $this->gf::GFARM_MOUNTPOINT_POOL . self::SUPPORT_KERBEROS_FILE;
+		return $this->support_auth_common($f, 'kerberos');
+	}
+
+	public const METHOD_SHARED_KEY = 0x01;
+	public const METHOD_TLS        = 0x02;
+	public const METHOD_TLS_CLIENT = 0x04;
+	public const METHOD_GSI_AUTH   = 0x08;
+	public const METHOD_GSI        = 0x10;
+	public const METHOD_KRB_AUTH   = 0x20;
+	public const METHOD_KRB        = 0x40;
+
+	private function enabled($a, $b) {
+		return ($a & $b) ? "enable" : "disable";
+	}
+
+	protected function auth_conf($methods) {
+		$enable_sharedsecret = $this->enabled($methods, self::METHOD_SHARED_KEY);
+		$enable_tls = $this->enabled($methods, self::METHOD_TLS);
+		$enable_tls_client = $this->enabled($methods, self::METHOD_TLS_CLIENT);
+		$enable_gsi_auth = $this->enabled($methods, self::METHOD_GSI_AUTH);
+		$enable_gsi = $this->enabled($methods, self::METHOD_GSI);
+		$enable_kerberos_auth = $this->enabled($methods, self::METHOD_KRB_AUTH);
+		$enable_kerberos = $this->enabled($methods, self::METHOD_KRB);
+
+		$delete_tls = "";
+		$delete_gsi = "";
+		$delete_kerberos = "";
+
+		if (! $this->support_tls()) {
+			$delete_tls = "# ";
+		}
+		if (! $this->support_gsi()) {
+			$delete_gsi = "# ";
+		}
+		if (! $this->support_kerberos()) {
+			$delete_kerberos = "# ";
+		}
+
+		$conf_str = <<<EOF
+auth {$enable_sharedsecret} sharedsecret *
+{$delete_tls}auth {$enable_tls} tls_sharedsecret *
+{$delete_tls}auth {$enable_tls_client} tls_client_certificate *
+{$delete_gsi}auth {$enable_gsi_auth} gsi_auth *
+{$delete_gsi}auth {$enable_gsi} gsi *
+{$delete_kerberos}auth {$enable_kerberos_auth} kerberos_auth *
+{$delete_kerberos}auth {$enable_kerberos} kerberos *
+
+EOF;
+		return $conf_str;
+	}
 }
 
 class GfarmAuthGfarmSharedKey extends GfarmAuth {
@@ -366,18 +458,12 @@ class GfarmAuthGfarmSharedKey extends GfarmAuth {
 
 	public function conf_init() {
 		$conf_str = <<<EOF
-shared_key_file   "$this->gfarm_shared_key"
-local_user_map    "$this->gfarm_usermap"
-
-auth enable sharedsecret *
-#auth disable tls_sharedsecret *
-#auth disable tls_client_certificate *
-auth disable gsi_auth *
-auth disable gsi *
-#auth disable kerberos_auth *
-#auth disable kerberos *
+shared_key_file   "{$this->gfarm_shared_key}"
+local_user_map    "{$this->gfarm_usermap}"
 
 EOF;
+		$conf_str = $conf_str . $this->auth_conf(self::METHOD_SHARED_KEY);
+
 		$gfarm_user = $this->gf->user;
 		$local_user = self::LOCAL_USER;
 		$usermap_str = <<<EOF
