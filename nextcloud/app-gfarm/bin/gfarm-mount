@@ -2,9 +2,12 @@
 
 set -eu -o pipefail
 
-remount_opt="$1"
+mode="$1"
 gfarm_path="$2"
 mountpoint="$3"
+auth_type="$4"
+gfarm_conf="$5"
+x509proxy="$6"
 
 lockfile="${mountpoint}.lock"
 
@@ -18,10 +21,14 @@ facility="local7"
 
 MNT_OPT="-o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
 
-if [ "$remount_opt" = "REMOUNT=1" ]; then
-    remount=1
-else
-    remount=0
+[ -z "${gfarm_conf}" ] && exit 1
+
+GFARM_CONFIG_FILE="${gfarm_conf}"
+export GFARM_CONFIG_FILE
+
+if [ -n "${x509proxy}" ]; then
+    X509_PROXY_CERT="${x509proxy}"
+    export X509_PROXY_CERT
 fi
 
 LOG_DEBUG()
@@ -33,6 +40,40 @@ LOG_ERR()
 {
     logger -p ${facility}.err "$0" "ERR: $@"
 }
+
+LOG_DEBUG "$@"
+
+remount=0
+case "$mode" in
+    MOUNT)
+        ;;
+    REMOUNT)
+        remount=1
+        ;;
+    CHECK_AUTH)
+        case "$auth_type" in
+            sharedsecret)
+                LOG_DEBUG "gfkey -e"
+                gfkey -e > /dev/null 2>&1
+                exit $?
+                ;;
+            gsi|myproxy)
+                LOG_DEBUG "grid-proxy-info"
+                grid-proxy-info > /dev/null 2>&1
+                exit $?
+                ;;
+            *)
+                LOG_ERR "unknown auth_type: $auth_type"
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        LOG_ERR "unknown mode: $mode"
+        exit 1
+        ;;
+esac
+
 
 lock_expired()
 {
@@ -61,43 +102,46 @@ unlock()
     rmdir "$lockfile" || :
 }
 
-check_mounted()
+check_mount_quick()
 {
-    if [ ! -d "$mountpoint" ]; then
-        mkdir -p "$mountpoint"
-        return 0
-    fi
+    # check quickly
+    for mp in $(mount -t fuse.gfarm2fs | cut -d " " -f 3- | awk -F" type fuse" '{print $1}'); do
+        if [ "$mountpoint" = "$mp" ]; then
+            LOG_DEBUG "already mounted: $mountpoint"
+            exit 0
+        fi
+    done
+}
 
+check_mount()
+{
+    # check carefully
     dfout=$(df "$mountpoint" | tail -1)
-    dffstype=$(echo "$dfout" | awk '{print $1}')
-    dfmp=$(echo "$dfout" | xargs | cut -d ' ' -f 6-)
-
-    if [ $dffstype = "gfarm2fs" ]; then
-        if [ "$mountpoint" = "$dfmp" ]; then
+    fstype=$(echo "$dfout" | awk '{print $1}')
+    mp=$(echo "$dfout" | xargs | cut -d ' ' -f 6-)
+    if [ "$fstype" = "gfarm2fs" ]; then
+        if [ "$mountpoint" = "$mp" ]; then
             LOG_DEBUG "already mounted: $mountpoint"
             exit 0
         else
-            LOG_ERR "unexpected: mountpoint=${mountpoint} != $dfmp"
-            #exit 1
-            remount=1
+            LOG_ERR "unexpected: mountpoint=${mountpoint} != $mp"
+            exit 1
         fi
     fi
     # not mounted
 }
 
 # shortcut
-check_mounted
+check_mount_quick
 
 trap unlock EXIT
 
 lock_and_wait
 # recheck in lock
-check_mounted
-
-LOG_DEBUG "$@"
+check_mount
 
 if [ $remount -eq 1 ]; then
-    LOG_DEBUG "umount when REMOUNT=1"
+    LOG_DEBUG "umount when remount=1"
     fusermount -u "${mountpoint}"
 fi
 gfarm2fs ${MNT_OPT} -o subdir="${gfarm_path}" "${mountpoint}"

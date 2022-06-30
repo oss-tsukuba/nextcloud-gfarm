@@ -42,6 +42,9 @@ class AuthMechanismGfarm extends AuthMechanism {
 
 		$username = $storage->getBackendOption('user');
 		if ($username === '__USER__') {
+			if ($type === StorageConfig::MOUNT_TYPE_ADMIN) {
+				throw new \UnexpectedValueException("username required");
+			}
 			$storage->setBackendOption('user', $owner);
 		}
 	}

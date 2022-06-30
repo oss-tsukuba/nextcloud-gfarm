@@ -26,7 +26,15 @@ class Gfarm extends \OC\Files\Storage\Local {
 	//private $enable_debug = false;
 
 	private function log_prefix() {
-		return "[" . $this->debug_traceid . "](" . __CLASS__ . ": access nextcloud_user=" . $this->nextcloud_user . ". gfarm_user=" . $this->user . ", gfarm_dir=" . $this->gfarm_dir . ", mountpoint=" . $this->mountpoint . ", storage_owner=" . $this->storage_owner . ", auth_scheme=" . $this->auth_scheme . ") ";
+		return "[" . $this->debug_traceid . "]("
+			. __CLASS__
+			. ": access nextcloud_user=" . $this->nextcloud_user
+			. ", storage_owner=" . $this->storage_owner
+			. ". gfarm_user=" . $this->user
+			. ", gfarm_dir=" . $this->gfarm_dir
+			. ", mountpoint=" . $this->mountpoint
+			. ", auth_scheme=" . $this->auth_scheme
+			. ") ";
 	}
 
 	private function debug($message) {
@@ -37,6 +45,25 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 	private function error($message) {
 			syslog(LOG_ERR, $this->log_prefix() . $message);
+	}
+
+	private function exception_params() {
+		return " (access nextcloud_user=" . $this->nextcloud_user
+			. ", storage_owner=" . $this->storage_owner
+			. ". gfarm_user=" . $this->user
+			. ", gfarm_dir=" . $this->gfarm_dir
+			. ", auth_scheme=" . $this->auth_scheme
+			. ")";
+	}
+
+	private function invalid_arg_exception($message) {
+			$this->error($message);
+			return new \InvalidArgumentException($message  . $this->exception_params());
+	}
+
+	private function auth_exception($message) {
+			$this->error($message);
+			return new StorageAuthException($message  . $this->exception_params());
 	}
 
 	private function stacktrace() {
@@ -64,29 +91,33 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 
 		if (! self::is_valid_param($arguments['storage_owner'])) {
-			throw new \InvalidArgumentException('no storage owner username');
+			throw $this->invalid_arg_exception('no storage owner username');
 		}
 		if (! self::is_valid_param($arguments['user'])) {
-			throw new \InvalidArgumentException('no Gfarm username');
+			throw $this->invalid_arg_exception('no Gfarm username');
 		}
 		if (! self::is_valid_param($arguments['gfarm_dir'])) {
-			throw new \InvalidArgumentException('no Gfarm directory');
+			throw $this->invalid_arg_exception('no Gfarm directory');
 		}
 		if (! self::is_valid_param($arguments['password'])) {
-			throw new \InvalidArgumentException('no password for gfarm storage');
+			throw $this->invalid_arg_exception('no password');
 		}
 
 		$this->debug_traceid = bin2hex(random_bytes(4));
 
 		$this->storage_owner = $arguments['storage_owner'];
-		$this->user = $arguments['user']; // Gfarm username
+
 		$this->gfarm_dir = $arguments['gfarm_dir'];
-		$password = $arguments['password'];
+		$this->user = $arguments['user']; // Gfarm username
+		$this->password = $arguments['password'];
 
 		$this->auth_scheme = $arguments['auth_scheme'];
 
 		$this->nextcloud_user = $this->getAccessUser();
 		$this->mountpoint = $this->mountpoint_init();
+		if ($this->mountpoint === null) {
+			throw $this->invalid_arg_exception('cannot create mountpoint');
+		}
 
 		$this->arguments = $arguments;
 
@@ -106,31 +137,40 @@ class Gfarm extends \OC\Files\Storage\Local {
 			//$this->auth = new GfarmAuthX509Proxy($this); //TODO
 			$this->auth = new GfarmAuthGfarmSharedKey($this);
 		} else {
-			$msg = "unknown auth_scheme";
-			$this->error($msg);
-			throw new StorageAuthException($msg . ": auth_scheme=" . $this->auth_scheme);
+			throw this->auth_exception("unknown auth_scheme");
 		}
 
 		$remount = false;
 		if (! $this->auth->conf_ready()) {
-			$this->auth->conf_init();
+			if (! $this->auth->conf_init()) {
+				throw $this->auth_xception("cannot create files for authentication");
+			}
 		}
 		if (! $this->auth->authenticated()) {
-			$this->auth->conf_init(); // reset
-			$this->auth->logon($password);
+			if (! $this->auth->conf_init()) { // reset
+				throw $this->auth_xception("cannot recreate files for authentication");
+			}
+			if (! $this->auth->logon()) {
+				throw $this->auth_exception("logon failed");
+			}
 			$remount = true;
 			if (! $this->auth->authenticated()) {
-				throw new StorageAuthException("authentication failed: gfarm_user=" . $this->user . ", gfarm_dir=" . $this->gfarm_dir);
+				throw $this->auth_exception("authentication failed");
 			}
 		}
 
-		$mount = $arguments['mount'];
-		//if (empty($mount) || !is_bool($mount)) { // default
-		if($mount !== "false") {
-			$mount = "true";
-		}  // "false" condition to umount
-		if ($mount === "true" && !$this->gfarm_mount($remount)) {
-			throw new StorageAuthException("mount failed: gfarm_user=" . $this->user . ", gfarm_dir=" . $this->gfarm_dir);
+		if (isset($arguments['mount'])) {
+			$mount = $arguments['mount'];
+		} else {
+			$mount = "true"; // default
+		}
+		if($mount !== "false") {  // not bool type
+			$mount = "true"; // default
+		}
+		// "false" to umount
+		if ($mount === "true"
+			&& ! $this->gfarm_mount($remount)) {
+			throw $this->auth_exception("gfarm mount failed");
 		}
 
 		//$this->debug("__construct() done");
@@ -164,26 +204,56 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 		$hashed_path = substr(sha1($gfarm_dir), 0, $length);
 		$mountpoint = self::GFARM_MOUNTPOINT_POOL . "/" . $owner_dir . "/" . $user . "/" . $hashed_path;
-		return str_replace('//', '/', $mountpoint);
+		$mountpoint = str_replace('//', '/', $mountpoint);
+		$recursive = true;
+		if (! file_exists($mountpoint)) {
+			mkdir($mountpoint, 0700, $recursive); // may race
+			if (! file_exists($mountpoint)) {
+				return null;
+			}
+		}
+		return $mountpoint;
 	}
 
-	private function gfarm_mount($remount) {
+	private function mount_common($mode) {
 		$gfarm_dir = $this->gfarm_dir;
 		$mountpoint = $this->mountpoint;
-		$remount_opt = $remount ? "REMOUNT=1" : "REMOUNT=0";
+		$auth_type = $this->auth->type;
+		$gfarm_conf = $this->auth->gfarm_conf;
+		$x509_proxy_cert = $this->auth->x509_proxy_cert;
 
-		$command = self::GFARM_MOUNT . " " . $remount_opt . " " .escapeshellarg($gfarm_dir) . " " . escapeshellarg($mountpoint);
+		$command = self::GFARM_MOUNT
+				   . " "
+				   . $mode
+				   . " "
+				   . escapeshellarg($gfarm_dir)
+				   . " "
+				   . escapeshellarg($mountpoint)
+				   . " "
+				   . escapeshellarg($auth_type)
+				   . " "
+				   . escapeshellarg($gfarm_conf)
+				   . " "
+				   . escapeshellarg($x509_proxy_cert)
+				   ;
 		$output = null;
 		$retval = null;
 		exec($command, $output, $retval);
-//syslog(LOG_DEBUG, "command: [" . print_r($command, true) . "]");
-//syslog(LOG_DEBUG, "output: [" . print_r($output, true) . "]");
-//syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
 		if ($retval === 0) {
 			return true;
 		} else {
 			return false;
 		}
+	}
+
+	public function gfarm_check_auth() {
+		$this->debug("gfarm_check_auth");
+		return $this->mount_common("CHECK_AUTH");
+	}
+
+	public function gfarm_mount($remount) {
+		$mode = $remount ? "REMOUNT" : "MOUNT";
+		return $this->mount_common($mode);
 	}
 
 	public function gfarm_umount() {
@@ -196,91 +266,135 @@ class Gfarm extends \OC\Files\Storage\Local {
 		} else {
 				$this->error("gfarm_umount failed");
 		}
+		$this->auth->conf_clear();
 	}
 
-	private function logon($password) {
-		return $this->myproxy_logon($password);
-	}
+// 	private function logon() {
+// 		return $this->myproxy_logon($password);
+// 	}
 
-	private function myproxy_logon($password) {
-		$gfarm_dir = $this->gfarm_dir;
-		$mountpoint = $this->mountpoint;
-		$user = $this->user;
+// 	private function myproxy_logon($password) {
+// 		$gfarm_dir = $this->gfarm_dir;
+// 		$mountpoint = $this->mountpoint;
+// 		$user = $this->user;
 
-		$command = self::MYPROXY_LOGON . " " . $mountpoint . " " . $user . " " . $gfarm_dir;
+// 		$command = self::MYPROXY_LOGON . " " . $mountpoint . " " . $user . " " . $gfarm_dir;
 
-		$descriptorspec = array(
-			0 => array("pipe", "r"),
-			1 => array("pipe", "w"),
-			2 => array("pipe", "w") );
+// 		$descriptorspec = array(
+// 			0 => array("pipe", "r"),
+// 			1 => array("pipe", "w"),
+// 			2 => array("pipe", "w") );
 
-		$cwd = '/';
-		$env = array();
+// 		$cwd = '/';
+// 		$env = array();
 
-		$process = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
+// 		$process = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
 
-		$output = null;
-		$retval = null;
-		if (is_resource($process)) {
-			fwrite($pipes[0], "$password\n");
-			fclose($pipes[0]);
-			$output = stream_get_contents($pipes[1]);
-			fclose($pipes[1]);
-			fclose($pipes[2]);
+// 		$output = null;
+// 		$retval = null;
+// 		if (is_resource($process)) {
+// 			fwrite($pipes[0], "$password\n");
+// 			fclose($pipes[0]);
+// 			$output = stream_get_contents($pipes[1]);
+// 			fclose($pipes[1]);
+// 			fclose($pipes[2]);
 
-			$retval = proc_close($process);
-		}
-//syslog(LOG_DEBUG, "command: [" . print_r($command, true) . "]");
-//syslog(LOG_DEBUG, "output: [" . print_r($output, true) . "]");
-//syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
-	}
+// 			$retval = proc_close($process);
+// 		}
+// //syslog(LOG_DEBUG, "command: [" . print_r($command, true) . "]");
+// //syslog(LOG_DEBUG, "output: [" . print_r($output, true) . "]");
+// //syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
+// 	}
 
-	private function grid_proxy_info() {
-		$gfarm_dir = $this->gfarm_dir;
-		$mountpoint = $this->mountpoint;
-		$user = $this->user;
+// 	private function grid_proxy_info() {
+// 		$gfarm_dir = $this->gfarm_dir;
+// 		$mountpoint = $this->mountpoint;
+// 		$user = $this->user;
 
-		$command = self::GRID_PROXY_INFO . " " . escapeshellarg($mountpoint);
-		$output = null;
-		$retval = null;
-		exec($command, $output, $retval);
-//syslog(LOG_DEBUG, "command: [" . print_r($command, true) . "]");
-//syslog(LOG_DEBUG, "output: [" . print_r($output, true) . "]");
-//syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
-		return $retval;
-	}
+// 		$command = self::GRID_PROXY_INFO . " " . escapeshellarg($mountpoint);
+// 		$output = null;
+// 		$retval = null;
+// 		exec($command, $output, $retval);
+// //syslog(LOG_DEBUG, "command: [" . print_r($command, true) . "]");
+// //syslog(LOG_DEBUG, "output: [" . print_r($output, true) . "]");
+// //syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
+// 		return $retval;
+// 	}
 
 }
 
 abstract class GfarmAuth {
+	public const LOCAL_USER = "www-data";
 
-	public function __construct(Gfarm $gf) {
+	public function __construct(Gfarm $gf, $type) {
+		$this->type = $type;
 		$this->gf = $gf;
+		$this->mp = $gf->mountpoint;
+		$this->gfarm_conf =  $this->mp . ".gfarm2.conf";
+		$this->x509_proxy_cert = $this->mp . ".x509_proxy_cert";
 	}
 
 	abstract public function conf_init();
 	abstract public function conf_ready();
+	abstract public function conf_clear();
 	abstract public function authenticated();
-	abstract public function login();
+	abstract public function logon();
+
+	protected function file_put($filename, $content) {
+		if (! file_exists($filename)) {
+			touch($filename);
+			if (! chmod($filename, 0600)) {
+				return false;
+			}
+		}
+		return file_put_contents($filename, $content, LOCK_EX);
+	}
 }
 
 class GfarmAuthGfarmSharedKey extends GfarmAuth {
+	public const TYPE = "sharedsecret";
 
 	public function __construct(Gfarm $gf) {
-		parent::__construct($gf);
+		parent::__construct($gf, self::TYPE);
 
-		$mp = $this->gf->mountpoint;
-		$this->gfarm_conf =  $mp . ".gfarm2.conf";
-		$this->gfarm_usermap = $mp . ".gfarm_usermap";
-		$this->gfarm_shared_key = $mp . ".gfarm_shared_key";
+		$this->gfarm_usermap = $this->mp . ".gfarm_usermap";
+		$this->gfarm_shared_key = $this->mp . ".gfarm_shared_key";
 
 		//$this->private_key_str = $this->gf->arguments['private_key'];
-		//$this->x509_proxy_cert = $mp . ".x509_proxy_cert";
 		//$this->gx509_private_key = $mp . ".x509_private_key";
 	}
 
 	public function conf_init() {
-		//file_put_contents
+		$conf_str = <<<EOF
+shared_key_file   "$this->gfarm_shared_key"
+local_user_map    "$this->gfarm_usermap"
+
+auth enable sharedsecret *
+#auth disable tls_sharedsecret *
+#auth disable tls_client_certificate *
+auth disable gsi_auth *
+auth disable gsi *
+#auth disable kerberos_auth *
+#auth disable kerberos *
+
+EOF;
+		$gfarm_user = $this->gf->user;
+		$local_user = self::LOCAL_USER;
+		$usermap_str = <<<EOF
+$gfarm_user $local_user
+
+EOF;
+
+		// overwrite
+		if (! $this->file_put($this->gfarm_conf, $conf_str)) {
+			return false;
+		}
+		if (! $this->file_put($this->gfarm_usermap, $usermap_str)) {
+			return false;
+		}
+		if (! $this->file_put($this->gfarm_shared_key, $this->gf->password . "\n")) {
+			return false;
+		}
 		return true;
 	}
 
@@ -290,13 +404,17 @@ class GfarmAuthGfarmSharedKey extends GfarmAuth {
 				&& !file_exists($this->gfarm_shared_key));
 	}
 
-	public function authenticated() {
-		return true;
-		//$command = self::GFKEY . " -e";
-		//putenv("GFARM_CONFIG_FILE=" . );
+	public function conf_clear() {
+		unlink($this->gfarm_conf);
+		unlink($this->gfarm_usermap);
+		unlink($this->gfarm_shared_key);
 	}
 
-	public function login() {
+	public function authenticated() {
+		return $this->gf->gfarm_check_auth();
+	}
+
+	public function logon() {
 		return true;
 	}
 }

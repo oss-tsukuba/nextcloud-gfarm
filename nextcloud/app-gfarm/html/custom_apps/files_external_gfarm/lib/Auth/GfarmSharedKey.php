@@ -17,15 +17,15 @@ class GfarmSharedKey extends AuthMechanismGfarm {
 		$this
 			->setIdentifier(self::SCHEME_GFARM_SHARED_KEY)
 			->setScheme(self::SCHEME_GFARM_SHARED_KEY)
-			->setText($l->t('.gfarm_shared_key'))
+			->setText($l->t('Shared key'))
 			->addParameters(
 				[
 					(new DefinitionParameter('user', $l->t('Username')))
-					->setTooltip($l->t('Gfarm username (__USER__ is equal to the name of this settings owner)')),
+					->setTooltip($l->t('Gfarm username (__USER__ is equal to the owner name(Personal use only))')),
 
 					(new DefinitionParameter('password', $l->t('Shared key string')))
 					->setType(DefinitionParameter::VALUE_PASSWORD)
-					->setTooltip($l->t('cat ~/.gfarm_shared_key')),
+					->setTooltip($l->t('"gfkey -l" or "cat ~/.gfarm_shared_key"')),
 
 					]);
 	}

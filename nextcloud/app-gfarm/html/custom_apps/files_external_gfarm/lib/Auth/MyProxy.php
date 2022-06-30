@@ -21,7 +21,7 @@ class MyProxy extends AuthMechanismGfarm {
 			->addParameters(
 				[
 					(new DefinitionParameter('user', $l->t('Username')))
-					->setTooltip($l->t('MyProxy username (__USER__ is equal to the name of this settings owner)')),
+					->setTooltip($l->t('MyProxy username (__USER__ is equal to the owner name (Personal use only))')),
 
 					(new DefinitionParameter('password', $l->t('Passphrase')))
 					->setType(DefinitionParameter::VALUE_PASSWORD)
