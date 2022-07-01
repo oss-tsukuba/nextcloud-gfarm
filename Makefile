@@ -152,10 +152,12 @@ logs-follow:
 	$(COMPOSE) logs --follow nextcloud
 
 nextcloud.log:
-	$(EXEC) cat /var/www/html/nextcloud.log
+#	$(EXEC) cat /var/www/html/nextcloud.log
+	$(OCC) log:tail
 
 nextcloud.log-follow:
-	$(EXEC) tail -f /var/www/html/nextcloud.log
+#	$(EXEC) tail -f /var/www/html/nextcloud.log
+	$(OCC) log:tail -f
 
 $(TARGET_LOGS): logs@%:
 	$(COMPOSE) logs $*
