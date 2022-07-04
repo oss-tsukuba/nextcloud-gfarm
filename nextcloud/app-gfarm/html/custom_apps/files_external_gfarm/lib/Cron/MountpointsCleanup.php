@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace OCA\Files_external_gfarm\Cron;
 
+use Exception;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -17,8 +18,9 @@ class MountpointsCleanup extends TimedJob {
 
 		// sec.
 		//$this->setInterval(60);
-		$this->setInterval(60*60*24);
-		//$this->setTimeSensitivity(IJob::TIME_INSENSITIVE);
+		//$this->setInterval(60*60*24);
+		$this->setInterval(1);  //TODO
+		$this->setTimeSensitivity(IJob::TIME_INSENSITIVE);
 	}
 
 	protected function run($arguments) {
@@ -39,10 +41,16 @@ class MountpointsCleanup extends TimedJob {
 			$auth->manipulateStorageConfig($config);
 			$config->setBackendOption('mount', 'false');
 			$opts = $config->getBackendOptions();
-			$storage = new Storage\Gfarm($opts);
-			// TODO umount_if_recently_unused()
-			$storage->gfarm_umount();
+			try {
+				$storage = new Storage\Gfarm($opts);
+				// TODO umount_if_recently_unused()
+				$storage->gfarm_umount();
+			} catch (Exception $e) {
+				// next
+			}
 		}
+
+		// TODO umount unknown mountpoints
 
 		return true;
 	}

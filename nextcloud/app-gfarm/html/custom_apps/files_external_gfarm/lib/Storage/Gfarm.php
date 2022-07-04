@@ -32,18 +32,19 @@ class Gfarm extends \OC\Files\Storage\Local {
 			. ", storage_owner=" . $this->storage_owner
 			. ", gfarm_user=" . $this->user
 			. ", gfarm_dir=" . $this->gfarm_dir
+			. ", encryption=" . print_r($this->encryption, true)
 			. ", mountpoint=" . $this->mountpoint
 			. ", auth_scheme=" . $this->auth_scheme
 			. ") ";
 	}
 
-	private function debug($message) {
+	public function debug($message) {
 		if ($this->enable_debug) {
 			syslog(LOG_DEBUG, $this->log_prefix() . $message);
 		}
 	}
 
-	private function error($message) {
+	public function error($message) {
 			syslog(LOG_ERR, $this->log_prefix() . $message);
 	}
 
@@ -56,17 +57,17 @@ class Gfarm extends \OC\Files\Storage\Local {
 			. ")";
 	}
 
-	private function invalid_arg_exception($message) {
-			$this->error($message);
-			return new \InvalidArgumentException($message  . $this->exception_params());
+	public function invalid_arg_exception($message) {
+		$this->error($message);  // print empty arguments
+		return new \InvalidArgumentException($message);
 	}
 
-	private function auth_exception($message) {
-			$this->error($message);
-			return new StorageAuthException($message  . $this->exception_params());
+	public function auth_exception($message) {
+		$this->error($message);
+		return new StorageAuthException($message  . $this->exception_params());
 	}
 
-	private function stacktrace() {
+	public function stacktrace() {
 		$backtrace = debug_backtrace(0, 0);
 		foreach ($backtrace as $step) {
 			if (isset($step['class'], $step['function'])) {
@@ -87,7 +88,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	public function __construct($arguments) {
 		if ($this->enable_debug) {
 			//syslog(LOG_DEBUG, __CLASS__ . ": __construct()");
-			syslog(LOG_DEBUG, "__construct: arguments: " . print_r($arguments, true));
+			//syslog(LOG_DEBUG, "__construct: arguments: " . print_r($arguments, true));
 		}
 
 		if (! self::is_valid_param($arguments['storage_owner'])) {
@@ -114,9 +115,24 @@ class Gfarm extends \OC\Files\Storage\Local {
 		$this->auth_scheme = $arguments['auth_scheme'];
 
 		$this->nextcloud_user = $this->getAccessUser();
+
+		if (isset($arguments['encryption'])) {
+			$this->encryption = $arguments['encryption'];
+		} else {
+			$this->encryption = true;  // default
+		}
 		$this->mountpoint = $this->mountpoint_init();
 		if ($this->mountpoint === null) {
 			throw $this->invalid_arg_exception('cannot create mountpoint');
+		}
+
+		if (isset($arguments['mount'])) {
+			$mount = $arguments['mount'];
+		} else {
+			$mount = "true"; // default
+		}
+		if($mount !== "false") {  // not bool type
+			$mount = "true"; // default
 		}
 
 		$this->arguments = $arguments;
@@ -130,43 +146,39 @@ class Gfarm extends \OC\Files\Storage\Local {
 			$this->auth = new GfarmAuthGfarmSharedKey($this);
 		} elseif ($this->auth_scheme
 				  === AuthMechanismGfarm::SCHEME_GFARM_MYPROXY) {
-			//$this->auth = new GfarmAuthMyProxy($this); //TODO
-			$this->auth = new GfarmAuthGfarmSharedKey($this);
+			$this->auth = new GfarmAuthMyProxy($this);
 		} elseif ($this->auth_scheme
 				  === AuthMechanismGfarm::SCHEME_GFARM_X509_PROXY) {
 			//$this->auth = new GfarmAuthX509Proxy($this); //TODO
-			$this->auth = new GfarmAuthGfarmSharedKey($this);
+			throw $this->auth_exception("not implemented yet");
 		} else {
-			throw this->auth_exception("unknown auth_scheme");
+			throw $this->auth_exception("unknown auth_scheme");
+		}
+
+		if ($this->encryption && ! $this->auth->encryption_supported()) {
+			throw $this->auth_exception("encryption unsupported");
 		}
 
 		$remount = false;
 		if (! $this->auth->conf_ready()) {
 			if (! $this->auth->conf_init()) {
-				throw $this->auth_xception("cannot create files for authentication");
+				throw $this->auth_exception("cannot create files for authentication");
 			}
 		}
 		if (! $this->auth->authenticated()) {
 			if (! $this->auth->conf_init()) { // reset
-				throw $this->auth_xception("cannot recreate files for authentication");
+				throw $this->auth_exception("cannot recreate files for authentication");
 			}
 			if (! $this->auth->logon()) {
 				throw $this->auth_exception("logon failed");
 			}
 			$remount = true;
 			if (! $this->auth->authenticated()) {
+				$this->gfarm_umount();
 				throw $this->auth_exception("authentication failed");
 			}
 		}
 
-		if (isset($arguments['mount'])) {
-			$mount = $arguments['mount'];
-		} else {
-			$mount = "true"; // default
-		}
-		if($mount !== "false") {  // not bool type
-			$mount = "true"; // default
-		}
 		// "false" to umount
 		if ($mount === "true"
 			&& ! $this->gfarm_mount($remount)) {
@@ -181,16 +193,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	public function __destruct() {
-		//$this->gfarm_umount();  //TODO umount in backgroud ?
-
-		//$this->debug("__destruct() done");
 	}
-
-	// override Local
-	// public function stat($path) {
-	// 	$this->debug("stat: " . $path);
-	// 	return parent::stat($path);
-	// }
 
 	private function getAccessUser() {
 		return \OC_User::getUser();
@@ -200,9 +203,21 @@ class Gfarm extends \OC\Files\Storage\Local {
 		$owner_dir = $this->storage_owner;
 		$user = $this->user;
 		$gfarm_dir = $this->gfarm_dir;
+		$encryption = $this->encryption;
 		$length = 8;
+		$allowed_chars = str_split('_ ');
 
-		$hashed_path = substr(sha1($gfarm_dir), 0, $length);
+		$owner_dir_tmp = str_replace($allowed_chars, '', $owner_dir);
+		if (! ctype_alnum($owner_dir_tmp)) {
+			$owner_dir = 'H:' . substr(sha1($owner_dir), 0, $length);
+		}
+
+		if ($encryption) {
+			$enc_str = "ENC:";
+		} else {
+			$enc_str = "NOENC:";
+		}
+		$hashed_path = substr(sha1($enc_str . $gfarm_dir), 0, $length);
 		$mountpoint = self::GFARM_MOUNTPOINT_POOL . "/" . $owner_dir . "/" . $user . "/" . $hashed_path;
 		$mountpoint = str_replace('//', '/', $mountpoint);
 		$recursive = true;
@@ -243,7 +258,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	public function gfarm_check_auth() {
-		$this->debug("gfarm_check_auth");
+		//$this->debug("gfarm_check_auth");
 		return $this->mount_common("CHECK_AUTH");
 	}
 
@@ -330,6 +345,7 @@ abstract class GfarmAuth {
 		$this->x509_proxy_cert = $this->mp . ".x509_proxy_cert";
 	}
 
+	abstract public function encryption_supported();
 	abstract public function conf_init();
 	abstract public function conf_ready();
 	abstract public function conf_clear();
@@ -346,56 +362,84 @@ abstract class GfarmAuth {
 		return file_put_contents($filename, $content, LOCK_EX);
 	}
 
-	private function support_auth_common($filename, $type) {
-		// check once
-		if (file_exists($filename)) {
-			$flag = trim(file_get_contents($filename));
+	private const SUPPORT_AUTH_TYPE_GSI = 'gsi';
+	private const SUPPORT_AUTH_TYPE_TLS = 'tls';
+	private const SUPPORT_AUTH_TYPE_KERBEROS = 'kerberos';
+
+	// type => filename
+	private const SUPPORT_AUTH = array(
+		GfarmAuth::SUPPORT_AUTH_TYPE_GSI => 'SUPPORT_AUTH_TYPE_GSI',
+		GfarmAuth::SUPPORT_AUTH_TYPE_TLS => 'SUPPORT_AUTH_TYPE_TLS',
+		GfarmAuth::SUPPORT_AUTH_TYPE_KERBEROS => 'SUPPORT_AUTH_TYPE_KERBEROS',
+		);
+
+	private function support_auth_common($type) {
+		$filename = self::SUPPORT_AUTH[$type];
+		$filepath = $this->gf::GFARM_MOUNTPOINT_POOL . $filename;
+		if (file_exists($filepath)) {  // initialized
+			$flag = trim(file_get_contents($filepath));
 			return ($flag === "1");
 		}
 
-		// TODO from config ?
-		return true;
+		// initializing
 
-		// not work because gfstatus call gfarm_initialize() before
-		// preparing configuration files.
+		// TODO : not work because gfstatus call gfarm_initialize()
+		// before preparing configuration files.
 
 		// $command = "gfstatus";
-		// exec($command, $output, $retval);
+		// exec($command, $lines, $retval);
 		// if ($retval !== 0) {
 		// 	return false;
 		// }
-		// foreach ($output as $line) {
-		// 	if (preg_match('^client auth ' . $type, $line)
-		// 		&& preg_match(': available', $line)) {
-		// 		file_put_contents($filename, "1");
-		// 		return true;
-		// 	}
-		// }
-		// file_put_contents($filename, "0");
-		// return false;
+
+		$output_str = <<<EOF
+client auth gsi     : available
+client auth tls     : available
+client auth kerberos: not available
+
+EOF;
+		$lines = explode("\n",
+						  str_replace(array("\r\n", "\r", "\n"), "\n",
+									  $output_str));
+
+		$result = false;
+		foreach (array_keys(self::SUPPORT_AUTH) as $t) {
+			$tmp = $this->support_auth_init($lines, $t);
+			if ($type === $t) {
+				$result = $tmp;
+			}
+		}
+		return $result;
 	}
 
-	private const SUPPORT_GSI_FILE = "SUPPORT_GSI";
-	private const SUPPORT_TLS_FILE = "SUPPORT_TLS";
-	private const SUPPORT_KERBEROS_FILE = "SUPPORT_KERBEROS";
-
-	protected function support_gsi() {
-		$f = $this->gf::GFARM_MOUNTPOINT_POOL . self::SUPPORT_GSI_FILE;
-		return $this->support_auth_common($f, 'gsi');
+	private function support_auth_init($gfstatus_lines, $type) {
+		$filename = self::SUPPORT_AUTH[$type];
+		$filepath = $this->gf::GFARM_MOUNTPOINT_POOL . $filename;
+		foreach ($gfstatus_lines as $line) {
+			if (preg_match('/^client auth ' . $type . '/', $line)
+				&& preg_match('/: available/', $line)) {
+				file_put_contents($filepath, "1");
+				return true;
+			}
+		}
+		file_put_contents($filepath, "0");
+		return false;
 	}
 
-	protected function support_tls() {
-		$f = $this->gf::GFARM_MOUNTPOINT_POOL . self::SUPPORT_TLS_FILE;
-		return $this->support_auth_common($f, 'tls');
+	protected function support_auth_gsi() {
+		return $this->support_auth_common(self::SUPPORT_AUTH_TYPE_GSI);
 	}
 
-	protected function support_kerberos() {
-		$f = $this->gf::GFARM_MOUNTPOINT_POOL . self::SUPPORT_KERBEROS_FILE;
-		return $this->support_auth_common($f, 'kerberos');
+	protected function support_auth_tls() {
+		return $this->support_auth_common(self::SUPPORT_AUTH_TYPE_TLS);
 	}
 
-	public const METHOD_SHARED_KEY = 0x01;
-	public const METHOD_TLS        = 0x02;
+	protected function support_auth_kerberos() {
+		return $this->support_auth_common(self::SUPPORT_AUTH_TYPE_KERBEROS);
+	}
+
+	public const METHOD_SHARED     = 0x01;
+	public const METHOD_TLS_SHARED = 0x02;
 	public const METHOD_TLS_CLIENT = 0x04;
 	public const METHOD_GSI_AUTH   = 0x08;
 	public const METHOD_GSI        = 0x10;
@@ -407,8 +451,8 @@ abstract class GfarmAuth {
 	}
 
 	protected function auth_conf($methods) {
-		$enable_sharedsecret = $this->enabled($methods, self::METHOD_SHARED_KEY);
-		$enable_tls = $this->enabled($methods, self::METHOD_TLS);
+		$enable_sharedsecret = $this->enabled($methods, self::METHOD_SHARED);
+		$enable_tls = $this->enabled($methods, self::METHOD_TLS_SHARED);
 		$enable_tls_client = $this->enabled($methods, self::METHOD_TLS_CLIENT);
 		$enable_gsi_auth = $this->enabled($methods, self::METHOD_GSI_AUTH);
 		$enable_gsi = $this->enabled($methods, self::METHOD_GSI);
@@ -419,13 +463,13 @@ abstract class GfarmAuth {
 		$delete_gsi = "";
 		$delete_kerberos = "";
 
-		if (! $this->support_tls()) {
+		if (! $this->support_auth_tls()) {
 			$delete_tls = "# ";
 		}
-		if (! $this->support_gsi()) {
+		if (! $this->support_auth_gsi()) {
 			$delete_gsi = "# ";
 		}
-		if (! $this->support_kerberos()) {
+		if (! $this->support_auth_kerberos()) {
 			$delete_kerberos = "# ";
 		}
 
@@ -456,14 +500,21 @@ class GfarmAuthGfarmSharedKey extends GfarmAuth {
 		//$this->gx509_private_key = $mp . ".x509_private_key";
 	}
 
+	public function encryption_supported() {
+		return $this->support_auth_tls();
+	}
+
 	public function conf_init() {
 		$conf_str = <<<EOF
 shared_key_file   "{$this->gfarm_shared_key}"
 local_user_map    "{$this->gfarm_usermap}"
 
 EOF;
-		$conf_str = $conf_str . $this->auth_conf(self::METHOD_SHARED_KEY);
-
+		if ($this->gf->encryption && $this->support_auth_tls()) {
+			$conf_str = $conf_str . $this->auth_conf(self::METHOD_TLS_SHARED);
+		} else {
+			$conf_str = $conf_str . $this->auth_conf(self::METHOD_SHARED);
+		}
 		$gfarm_user = $this->gf->user;
 		$local_user = self::LOCAL_USER;
 		$usermap_str = <<<EOF
@@ -503,4 +554,53 @@ EOF;
 	public function logon() {
 		return true;
 	}
+}
+
+class GfarmAuthMyProxy extends GfarmAuth {
+	public const TYPE = "myproxy";
+
+	public function __construct(Gfarm $gf) {
+		parent::__construct($gf, self::TYPE);
+	}
+
+	public function encryption_supported() {
+		return true;
+	}
+
+	public function conf_init() {
+		if ($this->gf->encryption) {
+			$conf_str = $this->auth_conf(self::METHOD_GSI);
+		} else {
+			$conf_str = $this->auth_conf(self::METHOD_GSI_AUTH);
+		}
+
+		$usermap_str = <<<EOF
+$gfarm_user $local_user
+
+EOF;
+
+		// overwrite
+		if (! $this->file_put($this->gfarm_conf, $conf_str)) {
+			return false;
+		}
+		return true;
+	}
+
+	public function conf_ready() {
+		return (file_exists($this->gfarm_conf));
+	}
+
+	public function conf_clear() {
+		unlink($this->gfarm_conf);
+	}
+
+	public function authenticated() {
+		return $this->gf->gfarm_check_auth();
+	}
+
+	public function logon() {
+		// TODO myproxy-logon
+		return true;
+	}
+
 }

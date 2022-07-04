@@ -47,5 +47,13 @@ class AuthMechanismGfarm extends AuthMechanism {
 			}
 			$storage->setBackendOption('user', $owner);
 		}
+
+		$encryption = $storage->getBackendOption('encryption');
+		if ($encryption === 1 || $encryption === true) {
+			$encryption = true;
+		} else {
+			$encryption = false;
+		}
+		$storage->setBackendOption('encryption', $encryption);
 	}
 }

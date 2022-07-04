@@ -23,6 +23,11 @@ class BackendGfarm extends Backend {
 			->addParameters([
 				new DefinitionParameter('gfarm_dir',
 										$l->t('Gfarm directory')),
+
+				(new DefinitionParameter('encryption', $l->t('Encryption')))
+				->setType(DefinitionParameter::VALUE_BOOLEAN)
+				->setTooltip($l->t('enable transport encryption if available')),
+
 			])
 			->addAuthScheme(AuthMechanismGfarm::SCHEME_GFARM_SHARED_KEY)
 			->addAuthScheme(AuthMechanismGfarm::SCHEME_GFARM_MYPROXY)
