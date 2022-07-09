@@ -5,7 +5,4 @@
 /gfarm2.conf
 /gfarm2rc
 /gfarm_shared_key
-/secrets/nextcloud_admin_password
-/secrets/db_password
-/secrets/grid_proxy_password
-/secrets/myproxy_password
+/secrets

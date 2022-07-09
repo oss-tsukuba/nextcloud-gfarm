@@ -33,6 +33,7 @@ RUN echo ${NEXTCLOUD_VERSION} \
   less \
   libmagickcore-*-extra \
   iproute2 \
+  pbzip2 \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   \

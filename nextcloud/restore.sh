@@ -8,6 +8,8 @@ set -o pipefail
 source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
 
+: ${RESTORE_TEST:=0}
+
 # root only
 [ $(id -u) -eq 0 ] || exit 1
 
@@ -17,6 +19,10 @@ if [ -f "${RESTORE_FLAG_PATH}" ]; then
 fi
 
 TMPDIR=$(mktemp --directory)
+ENC_SUFFIX=".enc"
+
+#COMPRESS_PROG=bzip2
+COMPRESS_PROG=pbzip2
 
 remove_tmpdir()
 {
@@ -34,9 +40,9 @@ cd ${TMPDIR}
 
 INFO "Restore is starting...."
 
-HAVE_GFCP=0
+USE_GFCP=0
 if [ ${NEXTCLOUD_BACKUP_USE_GFCP} -eq 1 ] && type gfcp > /dev/null; then
-    HAVE_GFCP=1
+    USE_GFCP=1
 fi
 
 dec()
@@ -53,41 +59,53 @@ dec()
 
 download()
 {
-    ENC="$1"
-    NAME="$2"
+    NAME="$1"
 
-    ENC_SUFFIX=".enc"
     SUFFIX=""
+    ENC=""
     SRC="${GFARM_BACKUP_PATH}/${NAME}"
-    if [ -n "${ENC}" ]; then
+    if ${SUDO_USER} gftest -f "${SRC}${ENC_SUFFIX}"; then
         SUFFIX="${ENC_SUFFIX}"
         SRC="${SRC}${SUFFIX}"
+        ENC="${NEXTCLOUD_BACKUP_ENCRYPT}"
     fi
     DST="${NAME}"
-    DST_ENC="${DST}${SUFFIX}"
-    if [ $HAVE_GFCP -eq 1 ]; then
-        ${SUDO_USER} gfcp "${GF_SCHEME}${SRC}" "${DST_ENC}"
+    DST_TMP="${DST}${SUFFIX}"
+    if [ $USE_GFCP -eq 1 ]; then
+        ${SUDO_USER} gfcp "${GF_SCHEME}${SRC}" "${DST_TMP}"
     else
-        ${SUDO_USER} gfexport "${SRC}" > "${DST_ENC}"
+        ${SUDO_USER} gfexport "${SRC}" > "${DST_TMP}"
     fi
     if [ -n "${ENC}" ]; then
-        dec "${ENC}" "${DST_ENC}" "${DST}"
+        dec "${ENC}" "${DST_TMP}" "${DST}"
     fi
 }
 
-download "" "${SYSTEM_ARCH}" &
+INFO "Downloading from Gfarm...."
+download "${SYSTEM_ARCH}" &
 p1=$!
-# encrypt DB only
-download "${NEXTCLOUD_BACKUP_ENCRYPT}" "${DB_ARCH}" &
+download "${DB_ARCH}" &
 p2=$!
 wait $p1
 wait $p2
 
-tar xzpf ${SYSTEM_ARCH}
+INFO "Decompressing...."
+
+tar xpf ${SYSTEM_ARCH} --use-compress-prog=${COMPRESS_PROG}
+${COMPRESS_PROG} -d ${DB_ARCH}
+
+if [ ${RESTORE_TEST} -eq 1 ]; then
+    ls -l
+    ls -l ${SYSTEM_DIR_NAME}/
+    INFO "Restore test ... PASS"
+    exit 0
+fi
+
+INFO "Copying backup files...."
+
 rsync -a ${SYSTEM_DIR_NAME}/ "${HTML_DIR}/"
 chown -R ${NEXTCLOUD_USER}:${NEXTCLOUD_USER} "${HTML_DIR}"
 
-gunzip ${DB_ARCH}
 # https://docs.nextcloud.com/server/latest/admin_manual/maintenance/restore.html
 if mysql --defaults-file="${MYSQL_CONF}" \
       -h ${MYSQL_HOST} \

@@ -183,9 +183,15 @@ occ-maintenancemode-off:
 files-scan:
 	$(EXEC) /nc-gfarm/files_scan.sh
 
+backup-force:
+	$(EXEC) /nc-gfarm/backup.sh
+
 backup:
 	$(call yesno,Nextcloud service will be temporarily stopped.  Do you wish to continue?)
-	$(EXEC) /nc-gfarm/backup.sh
+	$(MAKE) backup-force
+
+restore-test:
+	$(EXEC_ROOT) /nc-gfarm/restore-test.sh
 
 auth-init:
 	$(MAKE) grid-proxy-init

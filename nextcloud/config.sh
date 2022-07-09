@@ -99,6 +99,9 @@ CONFIG_DIR="${HTML_DIR}/config"
 CUSTOM_APPS_DIR="${HTML_DIR}/custom_apps"
 BIN_DIR="${HOMEDIR}/bin"
 
+BACKUP_DIR="/backup"
+KEEP_BACKUP_LOCAL=1
+
 APP_GFARM_DEST="${CUSTOM_APPS_DIR}/files_external_gfarm"
 
 APP_GFARM_SRC="${NCGFARM_DIR}/app-gfarm"
@@ -135,9 +138,9 @@ GFARM_CRED_STATUS_FILE="/tmp/nextcloud-gfarm-cred_status"
 GFARM_CHECK_ACCESS_FILE="${DATA_DIR}/.nextcloud-gfarm-accesstime"
 
 SYSTEM_DIR_NAME="html"
-SYSTEM_ARCH="${SYSTEM_DIR_NAME}.tar.gz"
+SYSTEM_ARCH="${SYSTEM_DIR_NAME}.tar.bz2"
 DB_FILE_NAME="dbdump.mysql"
-DB_ARCH="${DB_FILE_NAME}.gz"
+DB_ARCH="${DB_FILE_NAME}.bz2"
 
 NEXTCLOUD_SPOOL_PATH="/var/spool/nextcloud"
 INIT_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/init"

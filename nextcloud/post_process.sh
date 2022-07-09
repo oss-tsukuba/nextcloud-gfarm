@@ -112,8 +112,10 @@ else
     ln -s /dev/null "${ACCESS_LOG_FILE}"
 fi
 
-# backup.sh requires ${NEXTCLOUD_LOG_PATH}
+# for backup.sh
 touch "${NEXTCLOUD_LOG_PATH}"
+mkdir "${BACKUP_DIR}"
+chown ${NEXTCLOUD_USER} "${BACKUP_DIR}"
 
 LINK_DATA="${HOMEDIR}/data"
 [ -d "${LINK_DATA}" ] && rmdir "${LINK_DATA}"
