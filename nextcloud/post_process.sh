@@ -114,8 +114,7 @@ fi
 
 # for backup.sh
 touch "${NEXTCLOUD_LOG_PATH}"
-mkdir "${BACKUP_DIR}"
-chown ${NEXTCLOUD_USER} "${BACKUP_DIR}"
+chown0 "${BACKUP_DIR}"
 
 LINK_DATA="${HOMEDIR}/data"
 [ -d "${LINK_DATA}" ] && rmdir "${LINK_DATA}"
