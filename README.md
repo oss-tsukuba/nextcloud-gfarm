@@ -15,7 +15,7 @@ For other details, please refer to
 
 ## Requirements
 
-- [Docker Engine and Docker Compose](https://docs.docker.com/engine/install/)
+- [Docker Engine and Docker Compose v2](https://docs.docker.com/engine/install/)
     - (Docker Desktop is not required.)
 - Gfarm configuration file (gfarm2.conf)
     - There is no need to install Gfarm on the host OS.

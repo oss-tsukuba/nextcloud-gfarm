@@ -83,14 +83,17 @@ down:
 	$(MAKE) prune
 
 volume-list:
-	# $(COMPOSE) ps -q \
-	# | xargs docker container inspect \
-	# 	-f '{{ range .Mounts }}{{ .Name }} {{ end }}' \
-	# | xargs -n 1 echo
-	$(COMPOSE) config --volumes
+#	@$(COMPOSE) config --volumes
+	@$(DOCKER) volume ls -q | grep $(COMPOSE_PROJECT_NAME)_
+
+volume-list-2:
+	@ $(COMPOSE) ps -q \
+	 | xargs docker container inspect \
+		-f '{{ range .Mounts }}{{ .Name }} {{ end }}' \
+	 | xargs -n 1 echo
 
 service-list:
-	$(COMPOSE) config --services
+	@$(COMPOSE) config --services
 
 _REMOVE_ALL_FOR_DEVELOP:
 	$(MAKE) down-REMOVE_VOLUMES || true
@@ -185,6 +188,12 @@ $(TARGET_LOGS_FOLLOW): logs-follow@%:
 
 $(TARGET_LOGS_TIME): logs-time@%:
 	$(COMPOSE) logs --timestamps $*
+
+ECHO_PROJECT_NAME:
+	@echo $(COMPOSE_PROJECT_NAME)
+
+ECHO_SUDO:
+	@echo $(SUDO)
 
 ECHO_DOCKER:
 	@echo eval $(DOCKER)
