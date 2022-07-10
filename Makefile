@@ -82,6 +82,16 @@ down:
 	$(COMPOSE) down --remove-orphans
 	$(MAKE) prune
 
+volume-list:
+	# $(COMPOSE) ps -q \
+	# | xargs docker container inspect \
+	# 	-f '{{ range .Mounts }}{{ .Name }} {{ end }}' \
+	# | xargs -n 1 echo
+	$(COMPOSE) config --volumes
+
+service-list:
+	$(COMPOSE) config --services
+
 _REMOVE_ALL_FOR_DEVELOP:
 	$(MAKE) down-REMOVE_VOLUMES || true
 	BACKUP_CONF=config.env.`date +%Y%m%d`; [ -f $$BACKUP_CONF ] || cp config.env || true
@@ -167,6 +177,9 @@ $(TARGET_LOGS_FOLLOW): logs-follow@%:
 
 $(TARGET_LOGS_TIME): logs-time@%:
 	$(COMPOSE) logs --timestamps $*
+
+ECHO_DOCKER:
+	@echo eval $(DOCKER)
 
 ECHO_COMPOSE:
 	@echo eval $(COMPOSE)
