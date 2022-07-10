@@ -10,13 +10,6 @@ source ${CONFIG_LIB}
 
 BACKUP_FLAG="/tmp/nc-gfarm-backup"
 TMP_SUFFIX=".tmp"
-ENC_SUFFIX=".enc"
-
-SYSTEM_ARCH_USE_ENC=1
-DB_ARCH_USE_ENC=1
-
-#COMPRESS_PROG=bzip2
-COMPRESS_PROG=pbzip2
 
 # ${NEXTCLOUD_USER} only
 [ $(whoami) = "${NEXTCLOUD_USER}" ] || exit 1
@@ -74,6 +67,9 @@ else
     GF_SCHEME=""
 fi
 
+VERSION_FILE_NAME=$(basename ${NEXTCLOUD_GFARM_VERSION_FILE})
+cp "${NEXTCLOUD_GFARM_VERSION_FILE}" "${VERSION_FILE_NAME}"
+
 enc()
 {
     ENC="$1"
@@ -112,13 +108,16 @@ upload()
 }
 
 INFO "Uploading to Gfarm...."
-upload "${SYSTEM_ARCH_USE_ENC}" "${SYSTEM_ARCH}" &
+upload ${SYSTEM_ARCH_USE_ENC} "${SYSTEM_ARCH}" &
 p1=$!
 # encrypt DB only
-upload "${DB_ARCH_USE_ENC}" "${DB_ARCH}" &
+upload ${DB_ARCH_USE_ENC} "${DB_ARCH}" &
 p2=$!
+upload 0 "${VERSION_FILE_NAME}" &
+p3=$!
 wait $p1
 wait $p2
+wait $p3
 
 if [ ${KEEP_BACKUP_LOCAL} -eq 1 ]; then
     if [ ${DB_ARCH_USE_ENC} -eq 1 ]; then

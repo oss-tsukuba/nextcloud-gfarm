@@ -101,3 +101,23 @@ maintenance_enabled()
 {
     ${OCC} maintenance:mode | grep -q "enabled"
 }
+
+nextcloud_version()
+{
+    echo "NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION}"
+
+    image_version=$(php -r "require \"${HTML_DIR}/version.php\"; echo implode('.', \$OC_Version);")
+    echo "NEXTCLOUD_VERSION_REAL=${image_version}"
+}
+
+nextcloud_gfarm_version()
+{
+    if [ -z "${NEXTCLOUD_GFARM_VERSION:-}" ]; then
+        source "${NCGFARM_DIR}/version.sh"
+    fi
+    if [ -z "${NEXTCLOUD_GFARM_COMMIT_HASH:-}" ]; then
+        source "${NCGFARM_DIR}/commit_hash.sh"
+    fi
+    echo "NEXTCLOUD_GFARM_VERSION=${NEXTCLOUD_GFARM_VERSION}"
+    echo "NEXTCLOUD_GFARM_COMMIT_HASH=${NEXTCLOUD_GFARM_COMMIT_HASH}"
+}

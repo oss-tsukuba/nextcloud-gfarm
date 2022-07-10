@@ -19,10 +19,6 @@ if [ -f "${RESTORE_FLAG_PATH}" ]; then
 fi
 
 TMPDIR=$(mktemp --directory)
-ENC_SUFFIX=".enc"
-
-#COMPRESS_PROG=bzip2
-COMPRESS_PROG=pbzip2
 
 remove_tmpdir()
 {
@@ -59,12 +55,13 @@ dec()
 
 download()
 {
-    NAME="$1"
+    USE_ENC="$1"
+    NAME="$2"
 
     SUFFIX=""
     ENC=""
     SRC="${GFARM_BACKUP_PATH}/${NAME}"
-    if ${SUDO_USER} gftest -f "${SRC}${ENC_SUFFIX}"; then
+    if [ ${USE_ENC} -eq 1 ]; then
         SUFFIX="${ENC_SUFFIX}"
         SRC="${SRC}${SUFFIX}"
         ENC="${NEXTCLOUD_BACKUP_ENCRYPT}"
@@ -82,9 +79,9 @@ download()
 }
 
 INFO "Downloading from Gfarm...."
-download "${SYSTEM_ARCH}" &
+download "${SYSTEM_ARCH_USE_ENC}" "${SYSTEM_ARCH}" &
 p1=$!
-download "${DB_ARCH}" &
+download "${DB_ARCH_USE_ENC}" "${DB_ARCH}" &
 p2=$!
 wait $p1
 wait $p2

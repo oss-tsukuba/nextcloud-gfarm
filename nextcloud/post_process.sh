@@ -2,11 +2,14 @@
 
 # -*- mode: shell-script; indent-tabs-mode: nil; sh-basic-offset: 4; -*-
 
-set -eu
+set -eux
 set -o pipefail
 
 source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
+
+nextcloud_version > ${NEXTCLOUD_GFARM_VERSION_FILE}
+nextcloud_gfarm_version >> ${NEXTCLOUD_GFARM_VERSION_FILE}
 
 create_mount_point()
 {
@@ -114,8 +117,8 @@ fi
 
 # for backup.sh
 touch "${NEXTCLOUD_LOG_PATH}"
-mkdir "${BACKUP_DIR}"
-chown ${NEXTCLOUD_USER} "${BACKUP_DIR}"
+mkdir -p "${BACKUP_DIR}"
+chown0 "${BACKUP_DIR}"
 
 LINK_DATA="${HOMEDIR}/data"
 [ -d "${LINK_DATA}" ] && rmdir "${LINK_DATA}"

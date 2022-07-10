@@ -111,8 +111,13 @@ down-REMOVE_VOLUMES:
 	$(call yesno,ERASE ALL LOCAL DATA. Do you have a backup?)
 	$(MAKE) down-REMOVE_VOLUMES_FORCE
 
+COMMIT_HASH := nextcloud/commit_hash.sh
+commit_hash:
+	echo -n "NEXTCLOUD_GFARM_COMMIT_HASH=" > $(COMMIT_HASH)
+	git rev-parse HEAD >> $(COMMIT_HASH)
+
 reborn-nowait:
-	$(COMPOSE) build
+	$(MAKE) build
 	$(MAKE) down
 	$(COMPOSE) up -d || { $(MAKE) logs; false; }
 	$(MAKE) auth-init || { $(MAKE) logs; false; }
@@ -125,7 +130,10 @@ reborn-withlog:
 	$(MAKE) reborn-nowait
 	$(MAKE) logs-follow
 
-build-nocache:
+build: commit_hash
+	$(COMPOSE) build
+
+build-nocache: commit_hash
 	$(COMPOSE) build --no-cache
 
 stop:
@@ -262,3 +270,6 @@ show-nextcloud-version:
 
 cron-force:
 	$(EXEC) php /var/www/html/cron.php
+
+version:
+	$(EXEC) cat /nc-gfarm/version.txt
