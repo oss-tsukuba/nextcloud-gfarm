@@ -103,7 +103,6 @@ services:
       - nextcloud:/var/www/html
       - gsi_proxy:/gsi_proxy
       - log:/var/log
-      - backup:/backup
       ### mandatory
       - ${GFARM_CONF_DIR:?GFARM_CONF_DIR}:/gfarm_conf:ro
 
@@ -175,7 +174,6 @@ volumes:
   gsi_proxy:
   log:
   db:
-  backup:
 
 networks:
   mynet1:
