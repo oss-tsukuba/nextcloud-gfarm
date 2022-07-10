@@ -281,4 +281,4 @@ cron-force:
 	$(EXEC) php /var/www/html/cron.php
 
 version:
-	$(EXEC) cat /nc-gfarm/version.txt
+	@$(EXEC) cat /nc-gfarm/version.txt

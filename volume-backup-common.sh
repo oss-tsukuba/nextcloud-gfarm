@@ -10,6 +10,8 @@ SERVICE_ID=$(${COMPOSE} ps -q nextcloud)
 
 BACKUP_DIR="/backup"
 SECRETS_DIR_NAME="secrets"
+CONF_FILE_NAME="config.env"
+VERSION_FILE_NAME="version.txt"
 
 IMAGE=${PROJECT_NAME}_nextcloud
 
