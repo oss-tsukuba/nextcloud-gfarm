@@ -6,18 +6,15 @@ COMPOSE=$(make -s ECHO_COMPOSE)
 PROJECT_NAME=$(make -s ECHO_PROJECT_NAME)
 SUDO=$(make -s ECHO_SUDO)
 
-SERVICE_ID=$(${COMPOSE} ps -q nextcloud)
-
 BACKUP_DIR="/backup"
 SECRETS_DIR_NAME="secrets"
 CONF_FILE_NAME="config.env"
 VERSION_FILE_NAME="version.txt"
 
-IMAGE=${PROJECT_NAME}_nextcloud
+BACKUP_FILES=("${SECRETS_DIR_NAME}" "${CONF_FILE_NAME}")
 
-NAME=nextcloud-gfarm-backup-$(date +%Y%m%d-%H%M)
-NAME_TAR=${NAME}.tar
-NAME_ENC=${NAME_TAR}.enc
+IMAGE=${PROJECT_NAME}_nextcloud
+IMAGE_SIMPLE=alpine
 
 #COMPRESS_PROG=bzip2
 COMPRESS_PROG=pbzip2
@@ -26,7 +23,6 @@ NEXTCLOUD_BACKUP_ENCRYPT="aes-256-cbc"
 NEXTCLOUD_BACKUP_ENCRYPT_PBKDF2_ITER=10000
 
 TMPDIR=$(mktemp --directory)
-WORKDIR=${TMPDIR}/${NAME}
 
 remove_tmpdir()
 {
@@ -35,7 +31,7 @@ remove_tmpdir()
 
 reset_on_error()
 {
-    make occ-maintenancemode-off
+    call_on_error
     remove_tmpdir
 }
 

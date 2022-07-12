@@ -205,10 +205,10 @@ occ-add-missing-indices:
 	$(OCC) db:add-missing-indices
 
 occ-maintenancemode-on:
-	$(OCC) maintenance:mode --on
+	@$(OCC) maintenance:mode --on
 
 occ-maintenancemode-off:
-	$(OCC) maintenance:mode --off
+	@$(OCC) maintenance:mode --off
 
 files-scan:
 	$(EXEC) /nc-gfarm/files_scan.sh
