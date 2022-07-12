@@ -249,7 +249,31 @@ root user:
 make shell-root
 ```
 
-## Backup
+## Backup and Restore
+
+Two types are available:
+
+- Backup to a local file
+    - include `config.env` and `secrets/*`
+- Backup to Gfarm
+    - available only when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
+    - not include `config.env` and `secrets/*`
+    - with periodic automatic backup
+
+### Backup to a local file
+
+- run `./volume-backup.sh OUTPUT_DIRECTORY`
+
+OUTPUT_DIRECTORY/nextcloud-gfarm-backup-YYYYmmdd-HHMM.tar will be created.
+
+### Restore from a local file
+
+- run `make down-REMOVE_VOLUMES` if needed.
+    - WARNING: Local database will be removed.
+- remove `./secrets/*` files and `config.env` if needed.
+- run `./volume-restore.sh INPUT_FILE`
+
+### Backup to Gfarm
 
 Nextcloud database will be automatically backed up to Gfarm filesystem
 according to NEXTCLOUD_BACKUP_TIME.
@@ -264,11 +288,11 @@ To back up configuration files.
 
 NOTE: `./secrets/nextcloud_admin_password` is also used to encrypt the backup data.  So the same password is required when restoring.  However, `./secrets/nextcloud_admin_password` is not backed up by this function.
 
-## Restore
+### Restore from Gfarm
 
 Even if Nextcloud database is broken or lost, you can restore from backup:
 
-- run `make down-REMOVE_VOLUMES`
+- run `make down-REMOVE_VOLUMES` if needed.
     - WARNING: Local database will be removed.
 - deploy `./secrets/*` files and `config.env`
 - edit `config.env` and set `NEXTCLOUD_UPDATE=0`
