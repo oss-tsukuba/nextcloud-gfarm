@@ -24,7 +24,7 @@ class BackendGfarm extends Backend {
 				new DefinitionParameter('gfarm_dir',
 										$l->t('Gfarm directory')),
 
-				(new DefinitionParameter('encryption', $l->t('Encryption')))
+				(new DefinitionParameter('encryption', $l->t('Secure connection')))
 				->setType(DefinitionParameter::VALUE_BOOLEAN)
 				->setTooltip($l->t('enable transport encryption if available')),
 
