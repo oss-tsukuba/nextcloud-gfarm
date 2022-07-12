@@ -85,21 +85,21 @@ services:
       - FUSE_ATTR_TIMEOUT=${FUSE_ATTR_TIMEOUT:-60}
       - GFARM2FS_LOGLEVEL=${GFARM2FS_LOGLEVEL:-info}
 
-      ## for keycloak and oidc_login parameters
-      - KEYCLOAK_PORT=${KEYCLOAK_PORT:-51080}
-      - KEYCLOAK_PROTOCOL=${KEYCLOAK_PROTOCOL:-http}
-      # empty means default Keycloak URL
-      - KEYCLOAK_URL=${KEYCLOAK_URL-}
-      - KEYCLOAK_REALM=${KEYCLOAK_REALM:-gfarm}
-      # XXX TODO default...false
-      - OIDC_LOGIN_ENABLE=${OIDC_LOGIN_ENABLE:-true}
-      # empty means default Keycloak URL (overridable to use other provider)
+      ## for oidc_login and keycloak parameters
+      - OIDC_LOGIN_ENABLE=${OIDC_LOGIN_ENABLE:-0}
+      # default: ${KEYCLOAK_URL}/auth/realms/${KEYCLOAK_REALM}
       - OIDC_LOGIN_URL=${OIDC_LOGIN_URL:-}
+      # default: ${SERVER_NAME}
       - OIDC_LOGIN_CLIENT_ID=${OIDC_LOGIN_CLIENT_ID:-}
       # mandatory to use oidc_login
       - OIDC_LOGIN_CLIENT_SECRET=${OIDC_LOGIN_CLIENT_SECRET:-dummy}
-      # empty means default Keycloak URL
+      # empty means default Keycloak URL (see config.sh)
       - OIDC_LOGIN_LOGOUT_URL=${OIDC_LOGIN_LOGOUT_URL:-}
+      # default: ${KEYCLOAK_PROTOCOL}://${SERVER_NAME}:${KEYCLOAK_PORT}
+      - KEYCLOAK_URL=${KEYCLOAK_URL-}
+      - KEYCLOAK_PORT=${KEYCLOAK_PORT:-51080}
+      - KEYCLOAK_PROTOCOL=${KEYCLOAK_PROTOCOL:-http}
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM:-gfarm}
     volumes:
       - nextcloud:/var/www/html
       - gsi_proxy:/gsi_proxy

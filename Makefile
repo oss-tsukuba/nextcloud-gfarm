@@ -174,11 +174,11 @@ logs-follow:
 
 nextcloud.log:
 #	$(EXEC) cat /var/www/html/nextcloud.log
-	$(OCC) log:tail
+	$(OCC) log:tail 10000 | sed 's/\s*$$//g'
 
 nextcloud.log-follow:
 #	$(EXEC) tail -f /var/www/html/nextcloud.log
-	$(OCC) log:tail -f
+	$(OCC) log:tail -f | sed 's/\s*$$//g'
 
 $(TARGET_LOGS): logs@%:
 	$(COMPOSE) logs $*

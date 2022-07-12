@@ -101,7 +101,6 @@ fi
 APPS_ENABLE="
 files_external
 files_external_gfarm
-oidc_login
 "
 APPS_DISABLE="
 firstrunwizard
@@ -117,7 +116,9 @@ for APP in ${APPS_DISABLE}; do
 done
 
 ### oidc_login
-if ${OIDC_LOGIN_ENABLE}; then
+if [ ${OIDC_LOGIN_ENABLE} -eq 1 ]; then
+    ${OCC} app:enable oidc_login
+
     sed -e "s;@OIDC_LOGIN_URL@;${OIDC_LOGIN_URL};" \
 	-e "s;@OIDC_LOGIN_CLIENT_ID@;${OIDC_LOGIN_CLIENT_ID};" \
 	-e "s;@OIDC_LOGIN_CLIENT_SECRET@;${OIDC_LOGIN_CLIENT_SECRET};" \
