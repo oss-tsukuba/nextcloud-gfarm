@@ -1,16 +1,16 @@
 ERR()
 {
-    echo "ERR: $@" >&2
+    echo >&2 "ERR: $@"
 }
 
 WARN()
 {
-    echo "WARN: $@" >&2
+    echo >&2 "WARN: $@"
 }
 
 INFO()
 {
-    echo "INFO: $@" >&2
+    echo "INFO: $@"
 }
 
 chown0()
@@ -120,4 +120,9 @@ nextcloud_gfarm_version()
     fi
     echo "NEXTCLOUD_GFARM_VERSION=${NEXTCLOUD_GFARM_VERSION}"
     echo "NEXTCLOUD_GFARM_COMMIT_HASH=${NEXTCLOUD_GFARM_COMMIT_HASH}"
+}
+
+count_dirent()
+{
+    ${SUDO_USER} ls -1a --ignore=. --ignore=.. "${1}" | wc -l
 }

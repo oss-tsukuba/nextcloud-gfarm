@@ -24,6 +24,7 @@ fi
 
 ### optional
 : ${TZ:="Asia/Tokyo"}
+: ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR:=0}
 #### empty means disabled
 : "${NEXTCLOUD_FILES_SCAN_TIME='10 5 * * *'}"
 #### empty means disabled
@@ -114,6 +115,7 @@ APP_GFARM_SRC_BINDIR="${APP_GFARM_SRC}/bin"
 MAIN_CONFIG="${CONFIG_DIR}/config.php"
 DBPASSWORD_CONFIG="${CONFIG_DIR}/nc-gfarm-dbpassword.config.php"
 
+LOCAL_DATA_DIR="/netcloud_data"
 TMP_DATA_DIR="${DATA_DIR}.bak"
 NEXTCLOUD_LOG_PATH="${HTML_DIR}/nextcloud.log"
 
@@ -153,6 +155,7 @@ DB_ARCH_USE_ENC=1
 COMPRESS_PROG=pbzip2
 
 NEXTCLOUD_SPOOL_PATH="/var/spool/nextcloud"
+FLAG_DIR=${NEXTCLOUD_SPOOL_PATH}
 INIT_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/init"
 VOLUME_REUSE_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/reuse"
 RESTORE_FLAG_PATH="${NEXTCLOUD_SPOOL_PATH}/restore"
@@ -187,6 +190,7 @@ GFARM2RC="${HOMEDIR}/.gfarm2rc"
 GFARM_SHARED_KEY_ORIG="${GFARM_CONF_USER_DIR}/gfarm_shared_key"
 GFARM_SHARED_KEY="${HOMEDIR}/.gfarm_shared_key"
 
+TLS_CERTIFICATES_DIR="/etc/pki/tls/certs/gfarm"
 GSI_CERTIFICATES_DIR="/etc/grid-security/certificates"
 
 GSI_USER_DIR_ORIG="/gsi_user"

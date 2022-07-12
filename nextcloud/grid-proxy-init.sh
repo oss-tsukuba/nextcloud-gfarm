@@ -8,6 +8,11 @@ set -o pipefail
 source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
 
+if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -ne 1 ]; then
+    # not covered
+    exit 0
+fi
+
 FORCE=${1:-}
 
 if [ ! -s "${GSI_USER_KEY_ORIG}" ]; then

@@ -80,138 +80,141 @@ EOF
 fi
 
 copy0 "${NEXTCLOUD_ADMIN_PASSWORD_FILE}" "${NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER}"
-
-GFARM_USERMAP="${HOMEDIR}/.gfarm_usermap"
-echo "${GFARM_USER} ${NEXTCLOUD_USER}" > "${GFARM_USERMAP}"
-chown0 "${GFARM_USERMAP}"
+mkdir -p "${FLAG_DIR}"
 
 cp "${GFARM2_CONF_ORIG}" "${GFARM_CONF}"
-echo >> "${GFARM_CONF}"
-echo "local_user_map ${GFARM_USERMAP}" >> "${GFARM_CONF}"
 echo "attr_cache_timeout ${GFARM_ATTR_CACHE_TIMEOUT}" >> "${GFARM_CONF}"
 chown0 "${GFARM_CONF}"
 
-if [ -s "${GFARM2RC_ORIG}" ]; then
-    copy0 "${GFARM2RC_ORIG}" "${GFARM2RC}"
-fi
+if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
+    GFARM_USERMAP="${HOMEDIR}/.gfarm_usermap"
+    echo "${GFARM_USER} ${NEXTCLOUD_USER}" > "${GFARM_USERMAP}"
+    chown0 "${GFARM_USERMAP}"
 
-### check gfarm_shared_key
-USE_GFARM_SHARED_KEY=0
+    echo >> "${GFARM_CONF}"
+    echo "local_user_map ${GFARM_USERMAP}" >> "${GFARM_CONF}"
 
-if [ -s "${GFARM_SHARED_KEY_ORIG}" ]; then
-    "${COPY_GFARM_SHARED_KEY_SH}"
-    while ! is_valid_gfarm_shared_key; do
-        INFO "To start Nextcloud, you need to run ${COPY_GFARM_SHARED_KEY_SH}, waiting for ..."
-        sleep 5
-    done
-    USE_GFARM_SHARED_KEY=1
-fi
-
-### check X.509 proxy certificate
-USE_GSI=0
-
-if [ -d "${GSI_USER_DIR_ORIG}" ]; then
-    copy0 "${GSI_USER_DIR_ORIG}" "${GSI_USER_DIR}"
-    USE_GSI=1
-fi
-
-# copy from backup
-if [ -s "${GSI_USER_PROXY_BACKUP}" ]; then
-    copy0 "${GSI_USER_PROXY_BACKUP}" "${GSI_USER_PROXY_FILE}"
-    USE_GSI=1
-fi
-
-if [ -s "${GSI_USER_PROXY_ORIG}" ] && ! is_valid_proxy_cert; then
-    "${COPY_GSI_USER_PROXY_SH}"
-    USE_GSI=1
-fi
-
-if [ -f "${GRID_PROXY_PASSWORD_FILE}" ] && ! is_valid_proxy_cert; then
-    cat "${GRID_PROXY_PASSWORD_FILE}" | \
-        ${SUDO_USER} grid-proxy-init -pwstdin -hours "${GSI_PROXY_HOURS}"
-    USE_GSI=1
-fi
-
-if [ -n "${MYPROXY_SERVER}" ] && ! is_valid_proxy_cert; then
-    USE_GSI=1
-    if [ -f "${MYPROXY_PASSWORD_FILE}" ]; then
-        cat "${MYPROXY_PASSWORD_FILE}" | \
-            ${SUDO_USER} myproxy-logon --stdin_pass \
-            -s "${MYPROXY_SERVER}" -l "${MYPROXY_USER}" \
-            -t "${GSI_PROXY_HOURS}"
+    if [ -s "${GFARM2RC_ORIG}" ]; then
+        copy0 "${GFARM2RC_ORIG}" "${GFARM2RC}"
     fi
-fi
 
-if [ ${USE_GSI} -eq 1 ]; then
-    sleep_time=1
-    sleep_max=5
-    while ! is_valid_proxy_cert; do
-        INFO "To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH} or ${COPY_GSI_USER_PROXY_SH}, waiting for ..."
-        sleep $sleep_time
-        if [ $sleep_time -lt $sleep_max ]; then
-            sleep_time=$((sleep_time + 1))
+    ### check gfarm_shared_key
+    USE_GFARM_SHARED_KEY=0
+
+    if [ -s "${GFARM_SHARED_KEY_ORIG}" ]; then
+        "${COPY_GFARM_SHARED_KEY_SH}"
+        while ! is_valid_gfarm_shared_key; do
+            INFO "To start Nextcloud, you need to run ${COPY_GFARM_SHARED_KEY_SH}, waiting for ..."
+            sleep 5
+        done
+        USE_GFARM_SHARED_KEY=1
+    fi
+
+    ### check X.509 proxy certificate
+    USE_GSI=0
+
+    if [ -d "${GSI_USER_DIR_ORIG}" ]; then
+        copy0 "${GSI_USER_DIR_ORIG}" "${GSI_USER_DIR}"
+        USE_GSI=1
+    fi
+
+    # copy from backup
+    if [ -s "${GSI_USER_PROXY_BACKUP}" ]; then
+        copy0 "${GSI_USER_PROXY_BACKUP}" "${GSI_USER_PROXY_FILE}"
+        USE_GSI=1
+    fi
+
+    if [ -s "${GSI_USER_PROXY_ORIG}" ] && ! is_valid_proxy_cert; then
+        "${COPY_GSI_USER_PROXY_SH}"
+        USE_GSI=1
+    fi
+
+    if [ -f "${GRID_PROXY_PASSWORD_FILE}" ] && ! is_valid_proxy_cert; then
+        cat "${GRID_PROXY_PASSWORD_FILE}" | \
+            ${SUDO_USER} grid-proxy-init -pwstdin -hours "${GSI_PROXY_HOURS}"
+        USE_GSI=1
+    fi
+
+    if [ -n "${MYPROXY_SERVER}" ] && ! is_valid_proxy_cert; then
+        USE_GSI=1
+        if [ -f "${MYPROXY_PASSWORD_FILE}" ]; then
+            cat "${MYPROXY_PASSWORD_FILE}" | \
+                ${SUDO_USER} myproxy-logon --stdin_pass \
+                -s "${MYPROXY_SERVER}" -l "${MYPROXY_USER}" \
+                -t "${GSI_PROXY_HOURS}"
         fi
-    done
-fi
+    fi
 
-# for gfarm_check_online.sh
-gfarm_cred_status_set "${USE_GFARM_SHARED_KEY}" "${USE_GSI}"
+    if [ ${USE_GSI} -eq 1 ]; then
+        sleep_time=1
+        sleep_max=5
+        while ! is_valid_proxy_cert; do
+            INFO "To start Nextcloud, you need to run ${GRID_PROXY_INIT_SH} or ${MYPROXY_LOGON_SH} or ${COPY_GSI_USER_PROXY_SH}, waiting for ..."
+            sleep $sleep_time
+            if [ $sleep_time -lt $sleep_max ]; then
+                sleep_time=$((sleep_time + 1))
+            fi
+        done
+    fi
 
-if [ ! -f ${INIT_FLAG_PATH} ]; then
-    sed -i -e 's/^NAME_COMPATIBILITY=STRICT_RFC2818$/NAME_COMPATIBILITY=HYBRID/' /etc/grid-security/gsi.conf
+    # for gfarm_check_online.sh
+    gfarm_cred_status_set "${USE_GFARM_SHARED_KEY}" "${USE_GSI}"
 
-    mkdir -p "${CRONTAB_DIR_PATH}"
+    if [ ! -f ${INIT_FLAG_PATH} ]; then
+        sed -i -e 's/^NAME_COMPATIBILITY=STRICT_RFC2818$/NAME_COMPATIBILITY=HYBRID/' /etc/grid-security/gsi.conf
 
-    FLAG_DIR=$(dirname ${INIT_FLAG_PATH})
-    mkdir -p "${FLAG_DIR}"
-    chown0 "${FLAG_DIR}"
-    touch "${INIT_FLAG_PATH}"
-fi
+        mkdir -p "${CRONTAB_DIR_PATH}"
 
-### reset crontab
-rm -f "${CRONTAB_FILE_PATH}"
-cp -f "${CRONTAB_TEMPLATE}" "${CRONTAB_FILE_PATH}"
-# NOTE: owner of crontab-file is root only
-chown root "${CRONTAB_FILE_PATH}"
+        chown0 "${FLAG_DIR}"
+        touch "${INIT_FLAG_PATH}"
+    fi
 
-if [ -n "${NEXTCLOUD_BACKUP_TIME}" ]; then
-    echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> "${CRONTAB_FILE_PATH}"
-fi
-if [ -n "${GFARM_CHECK_ONLINE_TIME}" ]; then
-    echo "${GFARM_CHECK_ONLINE_TIME} ${GFARM_CHECK_ONLINE_SH}" >> "${CRONTAB_FILE_PATH}"
-fi
-if [ -n "${NEXTCLOUD_FILES_SCAN_TIME}" ]; then
-    echo "${NEXTCLOUD_FILES_SCAN_TIME} ${FILES_SCAN_SH}" >> "${CRONTAB_FILE_PATH}"
-fi
+    ### reset crontab
+    rm -f "${CRONTAB_FILE_PATH}"
+    cp -f "${CRONTAB_TEMPLATE}" "${CRONTAB_FILE_PATH}"
+    # NOTE: owner of crontab-file is root only
+    chown root "${CRONTAB_FILE_PATH}"
 
-INFO "checking availability to Gfarm (wait for a while ...)"
-num_gfsd=$(${SUDO_USER} gfsched -n 1 | wc -l)
-if [ $num_gfsd -le 0 ]; then
-    ERR "Not available to Gfarm"
-    exit 1
-fi
+    if [ -n "${NEXTCLOUD_BACKUP_TIME}" ]; then
+        echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> "${CRONTAB_FILE_PATH}"
+    fi
+    if [ -n "${GFARM_CHECK_ONLINE_TIME}" ]; then
+        echo "${GFARM_CHECK_ONLINE_TIME} ${GFARM_CHECK_ONLINE_SH}" >> "${CRONTAB_FILE_PATH}"
+    fi
+    if [ -n "${NEXTCLOUD_FILES_SCAN_TIME}" ]; then
+        echo "${NEXTCLOUD_FILES_SCAN_TIME} ${FILES_SCAN_SH}" >> "${CRONTAB_FILE_PATH}"
+    fi
 
-# backup GSI user proxy
-copy0 "${GSI_USER_PROXY_FILE}" "${GSI_USER_PROXY_BACKUP}"
+    INFO "checking availability to Gfarm (wait for a while ...)"
+    num_gfsd=$(${SUDO_USER} gfsched -n 1 | wc -l)
+    if [ $num_gfsd -le 0 ]; then
+        ERR "Not available to Gfarm"
+        exit 1
+    fi
 
-${SUDO_USER} gfmkdir -p "${GFARM_DATA_PATH}"
-${SUDO_USER} gfchmod 750 "${GFARM_DATA_PATH}"
+    # backup GSI user proxy
+    copy0 "${GSI_USER_PROXY_FILE}" "${GSI_USER_PROXY_BACKUP}"
+
+    ${SUDO_USER} gfmkdir -p "${GFARM_DATA_PATH}"
+    ${SUDO_USER} gfchmod 750 "${GFARM_DATA_PATH}"
+fi # end of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
+
 
 until mysqladmin --defaults-file="${MYSQL_CONF}" -h ${MYSQL_HOST} -u ${MYSQL_USER} ping; do
     INFO "waiting for starting mysql server (${MYSQL_HOST}) ..."
     sleep 1
 done
 
-FILE_NUM=$(ls -1a --ignore=. --ignore=.. "${HTML_DIR}/" | wc -l)
-if [ ${FILE_NUM} -eq 0 ]; then  # empty
-    if ${SUDO_USER} gftest -d "${GFARM_BACKUP_PATH}"; then
-        "${RESTORE_SH}"
+if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
+    FILE_NUM=$(count_dirent "${HTML_DIR}/")
+    if [ ${FILE_NUM} -eq 0 ]; then  # empty
+        if ${SUDO_USER} gftest -d "${GFARM_BACKUP_PATH}"; then
+            "${RESTORE_SH}"
+        fi
     fi
-else
-    touch "${VOLUME_REUSE_FLAG_PATH}"
 fi
 
-if [ -f "${MAIN_CONFIG}" ]; then
+if [ -f "${MAIN_CONFIG}" ]; then  # not initial startup
     # always override dbpassword
     cat <<EOF > "${DBPASSWORD_CONFIG}"
 <?php
@@ -228,6 +231,7 @@ fi
 if [ ${NEXTCLOUD_GFARM_DEBUG_SLEEP} -eq 1 ]; then
     exec sleep infinity
 fi
+ls -l "${LOCAL_DATA_DIR}"  #TODO
 
 # from: https://hub.docker.com/_/nextcloud/
 # The install and update script is only triggered when a default

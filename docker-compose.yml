@@ -71,6 +71,7 @@ services:
       - OVERWRITECONDADDR=${OVERWRITECONDADDR:-}
 
       ## for Nextcloud (defined by nextcloud-gfarm)
+      - NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR:-0}
       # empty means disabled
       - NEXTCLOUD_FILES_SCAN_TIME=${NEXTCLOUD_FILES_SCAN_TIME-0 5 * * *}
       - NEXTCLOUD_BACKUP_TIME=${NEXTCLOUD_BACKUP_TIME-0 2 * * *}
@@ -103,6 +104,7 @@ services:
       - nextcloud:/var/www/html
       - gsi_proxy:/gsi_proxy
       - log:/var/log
+      - data:/netcloud_data
       ### mandatory
       - ${GFARM_CONF_DIR:?GFARM_CONF_DIR}:/gfarm_conf:ro
 
@@ -174,6 +176,7 @@ volumes:
   gsi_proxy:
   log:
   db:
+  data:
 
 networks:
   mynet1:

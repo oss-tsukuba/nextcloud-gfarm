@@ -11,37 +11,60 @@ source ${CONFIG_LIB}
 nextcloud_version > ${NEXTCLOUD_GFARM_VERSION_FILE}
 nextcloud_gfarm_version >> ${NEXTCLOUD_GFARM_VERSION_FILE}
 
+${OCC} maintenance:mode --on
+
 create_mount_point()
 {
     if [ -d "${TMP_DATA_DIR}" ]; then
-        ${SUDO_USER} rm -rf "${DATA_DIR}"
-    else
-        ${SUDO_USER} mv "${DATA_DIR}" "${TMP_DATA_DIR}"
+        ${SUDO_USER} rm -rf "${TMP_DATA_DIR}"
     fi
+    ${SUDO_USER} mv "${DATA_DIR}" "${TMP_DATA_DIR}"
     ${SUDO_USER} mkdir -p "${DATA_DIR}"
     ${SUDO_USER} chmod 750 "${DATA_DIR}"
 }
 
-gfarm2fs_is_mounted && umount_gfarm2fs
-# before mount_gfarm2fs
-if [ ! -d "${DATA_DIR}" ]; then
-   ${SUDO_USER} mkdir -p "${DATA_DIR}"
-fi
-FILE_NUM=$(${SUDO_USER} ls -1a --ignore=. --ignore=.. "${DATA_DIR}" | wc -l)
-if [ ${FILE_NUM} -gt 0 ]; then  # not empty
-    # new container ==> initial data files exist
-    create_mount_point
-fi
-
-mount_gfarm2fs
-
-if [ ${FILE_NUM} -gt 0 ]; then  # not empty
-    GFARM_DIR_FILE_NUM=$(${SUDO_USER} ls -1a --ignore=. --ignore=.. "${DATA_DIR}" | wc -l)
-    if [ ${GFARM_DIR_FILE_NUM} -eq 0 ]; then
-        # empty GFARM_DATA_PATH ==> copy files
-        ${SUDO_USER} rsync -vrlpt "${TMP_DATA_DIR}/" "${DATA_DIR}/"
+if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
+    gfarm2fs_is_mounted && umount_gfarm2fs
+    # before mount_gfarm2fs
+    if [ ! -d "${DATA_DIR}" ]; then
+       ${SUDO_USER} mkdir -p "${DATA_DIR}"
     fi
-fi
+    FILE_NUM=$(count_dirent "${DATA_DIR}")
+    if [ ${FILE_NUM} -gt 0 ]; then  # not empty
+        # new container ==> initial data files exist
+        create_mount_point
+    fi
+
+    mount_gfarm2fs
+
+    if [ ${FILE_NUM} -gt 0 ]; then  # not empty
+        GFARM_DIR_FILE_NUM=$(count_dirent "${DATA_DIR}")
+        if [ ${GFARM_DIR_FILE_NUM} -eq 0 ]; then
+            # empty GFARM_DATA_PATH ==> copy files
+            ${SUDO_USER} rsync -vrlpt "${TMP_DATA_DIR}/" "${DATA_DIR}/"
+        fi
+    fi
+else # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
+    if [ ! -h "${DATA_DIR}" ]; then  # not symlink (before initial)
+        chown0 "${LOCAL_DATA_DIR}"
+        FILE_NUM=$(count_dirent "${DATA_DIR}")
+        FILE_NUM_LOCAL=$(count_dirent "${LOCAL_DATA_DIR}")
+        ls -l "${LOCAL_DATA_DIR}"  #TODO
+        if [ ${FILE_NUM} -gt 0 -a ${FILE_NUM_LOCAL} -eq 0 ]; then
+            if [ -d "${TMP_DATA_DIR}" ]; then
+                ${SUDO_USER} rm -rf "${TMP_DATA_DIR}"
+            fi
+            ${SUDO_USER} mv "${DATA_DIR}" "${TMP_DATA_DIR}"
+            ${SUDO_USER} rsync -vrlpt "${TMP_DATA_DIR}/" "${LOCAL_DATA_DIR}/"
+        else
+            echo 1>&2 "ERROR: ${LOCAL_DATA_DIR}: not empty"
+            exit 1
+        fi
+    fi
+    ln -f -s "${LOCAL_DATA_DIR}" "${DATA_DIR}"
+fi # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
+
+cat "${MAIN_CONFIG}"  #TODO
 
 # rsync before calling occ
 rsync -av --delete "${APP_GFARM_SRC_MAIN}/" "${APP_GFARM_DEST}/"
@@ -50,8 +73,6 @@ chown0 "${APP_GFARM_DEST}/"
 # initialization after creating new (or renew) container
 # (The following parameters are not changed when restarting container)
 if [ ! -f "${POST_FLAG_PATH}" ]; then
-    ${OCC} maintenance:mode --on || true
-
     # NOTE: Cannot change the NEXTCLOUD_DATA_DIR
     #${OCC} config:system:set datadirectory --value="${DATA_DIR}"
 
@@ -77,16 +98,22 @@ if [ ! -f "${POST_FLAG_PATH}" ]; then
     touch "${POST_FLAG_PATH}"
 fi
 
-APPS="
+APPS_ENABLE="
 files_external
 files_external_gfarm
 oidc_login
 "
+APPS_DISABLE="
+firstrunwizard
+"
 
 # TODO ??? to enable background job
-${OCC} app:disable files_external_gfarm
-for APP in ${APPS}; do
+${OCC} app:disable files_external_gfarm || true
+for APP in ${APPS_ENABLE}; do
     ${OCC} app:enable ${APP}
+done
+for APP in ${APPS_DISABLE}; do
+    ${OCC} app:disable ${APP}
 done
 
 ### oidc_login
