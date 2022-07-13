@@ -34,7 +34,8 @@ $CONFIG = array (
     'oidc_login_button_text' => 'Log in with OpenID',
 
     // Hide the NextCloud password change form.
-    'oidc_login_hide_password_form' => false,
+    'oidc_login_hide_password_form' => true,
+    // !!! changed
 
     // Use ID Token instead of UserInfo
     'oidc_login_use_id_token' => false,
@@ -102,6 +103,7 @@ $CONFIG = array (
     'oidc_login_attributes' => array (
        'id' => 'preferred_username',
        'mail' => 'email',
+       'name' => 'given_name',
      ),
 
     // Default group to add users to (optional, defaults to nothing)
@@ -126,12 +128,12 @@ $CONFIG = array (
 
     // Disable creation of new users from OIDC login
     'oidc_login_disable_registration' => false,
-    // changed
+    // !!! changed
 
     // Fallback to direct login if login from OIDC fails
     // Note that no error message will be displayed if enabled
     'oidc_login_redir_fallback' => true,
-    // changed
+    // !!! changed
 
     // Use an alternative login page
     // This page will be php-included instead of a redirect if specified
@@ -140,7 +142,9 @@ $CONFIG = array (
     // Note: the PHP variable $OIDC_LOGIN_URL is available for redirect URI
     // Note: you may want to try setting `oidc_login_logout_url` to your
     // base URL if you face issues regarding re-login after logout
-    'oidc_login_alt_login_page' => 'assets/login.php',
+    //'oidc_login_alt_login_page' => 'assets/login.php',
+    'oidc_login_alt_login_page' => '',
+    // !!! changed
 
     // For development, you may disable TLS verification. Default value is `true`
     // which should be kept in production
