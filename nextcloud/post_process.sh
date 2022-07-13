@@ -45,22 +45,7 @@ if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
         fi
     fi
 else # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
-    if [ ! -h "${DATA_DIR}" ]; then  # not symlink (before initial)
-        chown0 "${LOCAL_DATA_DIR}"
-        FILE_NUM=$(count_dirent "${DATA_DIR}")
-        FILE_NUM_LOCAL=$(count_dirent "${LOCAL_DATA_DIR}")
-        ls -l "${LOCAL_DATA_DIR}"  #TODO
-        if [ ${FILE_NUM} -gt 0 -a ${FILE_NUM_LOCAL} -eq 0 ]; then
-            if [ -d "${TMP_DATA_DIR}" ]; then
-                ${SUDO_USER} rm -rf "${TMP_DATA_DIR}"
-            fi
-            ${SUDO_USER} mv "${DATA_DIR}" "${TMP_DATA_DIR}"
-            ${SUDO_USER} rsync -vrlpt "${TMP_DATA_DIR}/" "${LOCAL_DATA_DIR}/"
-        else
-            echo 1>&2 "ERROR: ${LOCAL_DATA_DIR}: not empty"
-            exit 1
-        fi
-    fi
+    # for compatibility, but not necessary
     ln -f -s "${LOCAL_DATA_DIR}" "${DATA_DIR}"
 fi # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
 

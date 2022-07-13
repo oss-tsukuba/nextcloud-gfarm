@@ -231,7 +231,6 @@ fi
 if [ ${NEXTCLOUD_GFARM_DEBUG_SLEEP} -eq 1 ]; then
     exec sleep infinity
 fi
-ls -l "${LOCAL_DATA_DIR}"  #TODO
 
 # from: https://hub.docker.com/_/nextcloud/
 # The install and update script is only triggered when a default
@@ -241,5 +240,14 @@ ls -l "${LOCAL_DATA_DIR}"  #TODO
 # (default on nextcloud-gfarm: 1)
 export NEXTCLOUD_UPDATE=${NEXTCLOUD_UPDATE:-1}
 
-export NEXTCLOUD_DATA_DIR="${DATA_DIR}"
+if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
+    # not change for mountpoint
+    export NEXTCLOUD_DATA_DIR="${DATA_DIR}"
+else
+    export NEXTCLOUD_DATA_DIR="${LOCAL_DATA_DIR}"
+    if [ ! -f ${INIT_FLAG_PATH} ]; then
+        chown0 "${LOCAL_DATA_DIR}"
+        touch "${INIT_FLAG_PATH}"
+    fi
+fi
 exec "$@"
