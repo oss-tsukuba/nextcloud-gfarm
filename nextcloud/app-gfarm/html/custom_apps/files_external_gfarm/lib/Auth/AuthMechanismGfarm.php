@@ -15,9 +15,14 @@ class AuthMechanismGfarm extends AuthMechanism {
 	public const ADMIN_NAME = "__ADMIN__";
 
 	// StorageModifierTrait
-	public function manipulateStorageConfig(StorageConfig &$storage, IUser $iuser = null) {
-		// $iuser (session user) is not used
+	// public function wrapStorage(StorageConfig &$storage) {
+	// }
 
+	// StorageModifierTrait
+	public function manipulateStorageConfig(StorageConfig &$storage, IUser $iuser = null) {
+		$storage->setBackendOption('manipulated', true);
+
+		// $iuser (session user) is not used
 		$storage->setBackendOption('auth_scheme', $this->getScheme());
 
 		$type = $storage->getType();
@@ -40,6 +45,7 @@ class AuthMechanismGfarm extends AuthMechanism {
 		}
 		$storage->setBackendOption('storage_owner', $owner);
 
+		// TODO move to Gfarm.php<Storage>
 		$username = $storage->getBackendOption('user');
 		if ($username === '__USER__') {
 			if ($type === StorageConfig::MOUNT_TYPE_ADMIN) {

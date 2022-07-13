@@ -18,8 +18,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 	const GFARM_MOUNT = "/nc-gfarm/app-gfarm/bin/gfarm-mount";
 	const GFARM_UMOUNT = "fusermount -u";
 
-	const GFARM_MOUNTPOINT_POOL = "/tmp/gf/";
-	//const GFARM_MOUNTPOINT_POOL = "/dev/shm/gf/";
+	public const GFARM_MOUNTPOINT_POOL = "/tmp/gf/";
+	//public const GFARM_MOUNTPOINT_POOL = "/dev/shm/gf/";
 
 	private $debug_traceid = NULL;
 	private $enable_debug = true;
@@ -88,12 +88,9 @@ class Gfarm extends \OC\Files\Storage\Local {
 	public function __construct($arguments) {
 		if ($this->enable_debug) {
 			//syslog(LOG_DEBUG, __CLASS__ . ": __construct()");
-			//syslog(LOG_DEBUG, "__construct: arguments: " . print_r($arguments, true));
+			syslog(LOG_DEBUG, "__construct: arguments: " . print_r($arguments, true));
 		}
 
-		if (! self::is_valid_param($arguments['storage_owner'])) {
-			throw $this->invalid_arg_exception('no storage owner username');
-		}
 		if (! self::is_valid_param($arguments['user'])) {
 			throw $this->invalid_arg_exception('no Gfarm username');
 		}
@@ -104,43 +101,51 @@ class Gfarm extends \OC\Files\Storage\Local {
 			throw $this->invalid_arg_exception('no password');
 		}
 
+		// false: not mount, to get informations only, to umount
+		$mount = true;
+		if (isset($arguments['manipulated']) && $arguments['manipulated']) {
+			$this->storage_owner = $arguments['storage_owner'];
+			$this->auth_scheme = $arguments['auth_scheme'];
+			$this->mount_type = $arguments['mount_type'];
+			$this->encryption = $arguments['encryption'];
+		} else {
+			$mount = false;
+		}
+
 		$this->debug_traceid = bin2hex(random_bytes(4));
-
-		$this->storage_owner = $arguments['storage_owner'];
-
 		$this->gfarm_dir = $arguments['gfarm_dir'];
 		$this->user = $arguments['user']; // Gfarm username
 		$this->password = $arguments['password'];
-
-		$this->auth_scheme = $arguments['auth_scheme'];
-
 		$this->nextcloud_user = $this->getAccessUser();
-
-		if (isset($arguments['encryption'])) {
-			$this->encryption = $arguments['encryption'];
-		} else {
-			$this->encryption = true;  // default
-		}
-		$this->mountpoint = $this->mountpoint_init();
-		if ($this->mountpoint === null) {
-			throw $this->invalid_arg_exception('cannot create mountpoint');
-		}
-
-		if (isset($arguments['mount'])) {
-			$mount = $arguments['mount'];
-		} else {
-			$mount = "true"; // default
-		}
-		if($mount !== "false") {  // not bool type
-			$mount = "true"; // default
-		}
 
 		$this->arguments = $arguments;
 
+		if ($mount === true) {
+			if (isset($arguments['mount'])) {
+				$mount = $arguments['mount'];
+			}
+		}
+		if ($mount) {
+			$this->mountpoint = $this->mountpoint_init();
+			if ($this->mountpoint === null) {
+				throw $this->invalid_arg_exception('cannot create mountpoint');
+			}
+		} else {
+			$this->mountpoint = /
+		}
 		$this->debug("all parameters initialized");
 
-		// ----------------------------------------
+		if ($mount) {
+			$this->mount_start();
+		}
 
+		# for Local.php
+		$arguments['datadir'] = $this->mountpoint;
+		parent::__construct($arguments);
+		//$this->debug("__construct() done");
+	}
+
+	private function mount_start() {
 		if ($this->auth_scheme
 			=== AuthMechanismGfarm::SCHEME_GFARM_SHARED_KEY) {
 			$this->auth = new GfarmAuthGfarmSharedKey($this);
@@ -179,17 +184,9 @@ class Gfarm extends \OC\Files\Storage\Local {
 			}
 		}
 
-		// "false" to umount
-		if ($mount === "true"
-			&& ! $this->gfarm_mount($remount)) {
+		if (! $this->gfarm_mount($remount)) {
 			throw $this->auth_exception("gfarm mount failed");
 		}
-
-		//$this->debug("__construct() done");
-
-		# for Local.php
-		$arguments['datadir'] = $this->mountpoint;
-		parent::__construct($arguments);
 	}
 
 	public function __destruct() {
@@ -267,11 +264,21 @@ class Gfarm extends \OC\Files\Storage\Local {
 		return $this->mount_common($mode);
 	}
 
-	public function gfarm_umount() {
-		$command = self::GFARM_UMOUNT . " " . escapeshellarg($this->mountpoint);
+	public static function umount_static($mountpoint) {
+		$command = self::GFARM_UMOUNT . " " . escapeshellarg($mountpoint);
 		$output = null;
 		$retval = null;
 		exec($command, $output, $retval);
+		try {
+			rmdir($mountpoint);
+		} catch (Exception $e) {
+			// ignore
+		}
+		return $retval;
+	}
+
+	public function gfarm_umount() {
+		$retval = self::umount_static($this->mountpoint);
 		if ($retval === 0) {
 				$this->debug("gfarm_umount done");
 		} else {
