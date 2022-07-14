@@ -88,7 +88,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	public function __construct($arguments) {
 		if ($this->enable_debug) {
 			//syslog(LOG_DEBUG, __CLASS__ . ": __construct()");
-			syslog(LOG_DEBUG, "__construct: arguments: " . print_r($arguments, true));
+			//syslog(LOG_DEBUG, "!!!DANGER: Must be commented out!!! __construct: arguments: " . print_r($arguments, true));
 		}
 
 		if (! self::is_valid_param($arguments['gfarm_dir'])) {
@@ -194,8 +194,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 			$sec_str = "INSEC";
 		}
 
-		// "/tmp/gf/METHOD_USER_BASENAME_HASH(base64)
-		// (HASH = method+user+password+gfarm_dir+secureconn)"
+		// "/tmp/gf/METHOD_USER_BASENAME_HASH(base64)"
+		// (HASH = method+user+password+gfarm_dir+secureconn)
 		$hash_src = $method . '_' . $user_orig . '_' . $password . '_' . $gfarm_dir . '_' . $sec_str;
 		$hash_dir = base64_encode(hash('sha512/224', $hash_src, true));
 		$hash_dir = str_replace('/', '-', $hash_dir);
