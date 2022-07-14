@@ -8,18 +8,21 @@ use Exception;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\IConfig;
+
 use OCA\Files_external_gfarm\Backend;
 use OCA\Files_external_gfarm\Storage;
 
+// clean unused mountpoints
 class MountpointsCleanup extends TimedJob {
 
 	public function __construct(ITimeFactory $time) {
 		parent::__construct($time);
+		$this->config = \OC::$server->get(IConfig::class);
+		$this->enable_debug = $this->config->getSystemValue('debug', false);
 
 		// sec.
-		//$this->setInterval(60);
-		//$this->setInterval(60*60*24);
-		$this->setInterval(1);  //TODO
+		$this->setInterval(60);
 		$this->setTimeSensitivity(IJob::TIME_INSENSITIVE);
 	}
 
@@ -40,8 +43,14 @@ class MountpointsCleanup extends TimedJob {
 		}
 	}
 
+	private function debug($msg) {
+		if ($this->enable_debug) {
+			syslog(LOG_DEBUG, $msg);
+		}
+	}
+
 	protected function run($arguments) {
-		syslog(LOG_INFO, "MountpointsCleanup(for Gfarm) start");
+		$this->debug("MountpointsCleanup(for Gfarm) start");
 		$service = \OC::$server->getGlobalStoragesService();
 		// OCA\Files_External\Lib\StorageConfig
 		$configs = $service->getStorageForAllUsers();
@@ -54,7 +63,7 @@ class MountpointsCleanup extends TimedJob {
 			if ($back['identifier'] !== Backend\Gfarm::ID) {
 				continue;
 			}
-			//syslog(LOG_DEBUG, "backend=" . print_r($back, true));
+			//$this->debug("backend=" . print_r($back, true));
 
 			// OCA\Files_External\Lib\Auth\AuthMechanism;
 			$auth = $config->getAuthMechanism();
@@ -80,20 +89,20 @@ class MountpointsCleanup extends TimedJob {
 				$mountpoint = $storage->mountpoint;
 			}
 			$mountpoint_list[] = $mountpoint;
-			syslog(LOG_DEBUG, "mountpoint from setting: " . $mountpoint);
+			$this->debug("mountpoint from settings: " . $mountpoint);
 		}
 
-		// umount unknown mountpoints
+		// umount
 		$pool = realpath(Storage\Gfarm::GFARM_MOUNTPOINT_POOL);
 		$mounted_list = $this->get_mounted();
 		foreach ($mounted_list as $mounted) {
-			syslog(LOG_DEBUG, "mountpoint from mount command: " . $mounted);
+			$this->debug("mountpoint from mount command: " . $mounted);
 			if ($this->is_subdir($pool, $mounted)
 				&& ! in_array($mounted, $mountpoint_list, true)) {
 				// umount unknown mp (removed or changed from settings)
 				try {
 					Storage\Gfarm::umount_static($mounted);
-					syslog(LOG_INFO, "auto umount: " . $mounted);
+					$this->debug("auto umount: " . $mounted);
 				} catch (Exception $e) {
 					// ignore
 				}

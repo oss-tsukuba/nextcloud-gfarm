@@ -88,7 +88,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 	public function __construct($arguments) {
 		$this->config = \OC::$server->get(IConfig::class);
-		$this->enable_debug = $this->config->getSystemValue('debug');
+		$this->enable_debug = $this->config->getSystemValue('debug', false);
 		if ($this->enable_debug) {
 			//syslog(LOG_DEBUG, __CLASS__ . ": __construct()");
 			//syslog(LOG_DEBUG, "!!!DANGER: Must be commented out!!! __construct: arguments: " . print_r($arguments, true));
