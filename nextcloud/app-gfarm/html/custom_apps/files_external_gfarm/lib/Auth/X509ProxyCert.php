@@ -27,16 +27,22 @@ class X509ProxyCert extends AuthMechanismGfarm {
 					(new DefinitionParameter('private_key', $l->t('Private key')))
 					->setType(DefinitionParameter::VALUE_TEXT)
 					->setTooltip($l->t('X.509 PEM string for grid-proxy-init')),
-					]);
+
+					(new DefinitionParameter('user', 'user'))
+					->setType(DefinitionParameter::VALUE_HIDDEN)
+					->setFlag(DefinitionParameter::FLAG_OPTIONAL)
+					])
+			->finish();  // AuthMechanismGfarm
 	}
 
 	// StorageModifierTrait
-	public function manipulateStorageConfig(StorageConfig &$storage, IUser $user = null) {
-		parent::manipulateStorageConfig($storage, $user);
+	// public function manipulateStorageConfig(StorageConfig &$storage, IUser $user = null) {
+	// 	parent::manipulateStorageConfig($storage, $user);
 
-		// use hash of private key as username
-		$private_key = $storage->getBackendOption('private_key');
-		$private_key_hash = substr(sha1($private_key), 0, 8);
-		$storage->setBackendOption('user', $private_key_hash);
-	}
+	// 	// TODO unnecessary
+	// 	// use hash of private key as username
+	// 	$private_key = $storage->getBackendOption('private_key');
+	// 	$private_key_hash = substr(sha1($private_key), 0, 8);
+	// 	$storage->setBackendOption('user', $private_key_hash);
+	// }
 }

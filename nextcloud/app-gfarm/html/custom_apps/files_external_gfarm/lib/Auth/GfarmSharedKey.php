@@ -21,17 +21,18 @@ class GfarmSharedKey extends AuthMechanismGfarm {
 			->addParameters(
 				[
 					(new DefinitionParameter('user', $l->t('Username')))
-					->setTooltip($l->t('Gfarm username (__USER__ is equal to the owner name(Personal use only))')),
+					->setTooltip($l->t('Gfarm username')),
 
 					(new DefinitionParameter('password', $l->t('Shared key string')))
 					->setType(DefinitionParameter::VALUE_PASSWORD)
 					->setTooltip($l->t('"gfkey -l" or "cat ~/.gfarm_shared_key"')),
 
-					]);
+					])
+			->finish();  // AuthMechanismGfarm
 	}
 
 	// StorageModifierTrait
-	public function manipulateStorageConfig(StorageConfig &$storage, IUser $user = null) {
-		parent::manipulateStorageConfig($storage, $user);
-	}
+	// public function manipulateStorageConfig(StorageConfig &$storage, IUser $user = null) {
+	// 	parent::manipulateStorageConfig($storage, $user);
+	//}
 }

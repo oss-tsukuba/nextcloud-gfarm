@@ -21,17 +21,18 @@ class MyProxy extends AuthMechanismGfarm {
 			->addParameters(
 				[
 					(new DefinitionParameter('user', $l->t('Username')))
-					->setTooltip($l->t('MyProxy username (__USER__ is equal to the owner name (Personal use only))')),
+					->setTooltip($l->t('MyProxy username')),
 
 					(new DefinitionParameter('password', $l->t('Passphrase')))
 					->setType(DefinitionParameter::VALUE_PASSWORD)
 					->setTooltip($l->t('for myproxy-logon')),
 
-					]);
+					])
+			->finish();  // AuthMechanismGfarm
 	}
 
 	// StorageModifierTrait
-	public function manipulateStorageConfig(StorageConfig &$storage, IUser $user = null) {
-		parent::manipulateStorageConfig($storage, $user);
-	}
+	// public function manipulateStorageConfig(StorageConfig &$storage, IUser $user = null) {
+	// 	parent::manipulateStorageConfig($storage, $user);
+	//}
 }

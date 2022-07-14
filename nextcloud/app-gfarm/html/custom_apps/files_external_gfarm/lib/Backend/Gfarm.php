@@ -24,9 +24,9 @@ class BackendGfarm extends Backend {
 				new DefinitionParameter('gfarm_dir',
 										$l->t('Gfarm directory')),
 
-				(new DefinitionParameter('encryption', $l->t('Secure connection')))
+				(new DefinitionParameter('secureconn', $l->t('Secure connection')))
 				->setType(DefinitionParameter::VALUE_BOOLEAN)
-				->setTooltip($l->t('enable transport encryption if available')),
+				->setTooltip($l->t('enable secure connection if available')),
 
 			])
 			->addAuthScheme(AuthMechanismGfarm::SCHEME_GFARM_SHARED_KEY)

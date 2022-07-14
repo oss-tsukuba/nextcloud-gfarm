@@ -74,8 +74,13 @@ class MountpointsCleanup extends TimedJob {
 			//   continue;
 			// }
 
-			$mountpoint_list[] = realpath($storage->mountpoint);
-			syslog(LOG_DEBUG, "mountpoint from setting: " . $storage->mountpoint);
+			try {
+				$mountpoint = realpath($storage->mountpoint);
+			} catch (Exception $e) {
+				$mountpoint = $storage->mountpoint;
+			}
+			$mountpoint_list[] = $mountpoint;
+			syslog(LOG_DEBUG, "mountpoint from setting: " . $mountpoint);
 		}
 
 		// umount unknown mountpoints

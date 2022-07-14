@@ -32,7 +32,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 			. ", storage_owner=" . $this->storage_owner
 			. ", gfarm_user=" . $this->user
 			. ", gfarm_dir=" . $this->gfarm_dir
-			. ", encryption=" . print_r($this->encryption, true)
+			. ", secureconn=" . print_r($this->secureconn, true)
 			. ", mountpoint=" . $this->mountpoint
 			. ", auth_scheme=" . $this->auth_scheme
 			. ") ";
@@ -91,9 +91,6 @@ class Gfarm extends \OC\Files\Storage\Local {
 			syslog(LOG_DEBUG, "__construct: arguments: " . print_r($arguments, true));
 		}
 
-		if (! self::is_valid_param($arguments['user'])) {
-			throw $this->invalid_arg_exception('no Gfarm username');
-		}
 		if (! self::is_valid_param($arguments['gfarm_dir'])) {
 			throw $this->invalid_arg_exception('no Gfarm directory');
 		}
@@ -101,67 +98,124 @@ class Gfarm extends \OC\Files\Storage\Local {
 			throw $this->invalid_arg_exception('no password');
 		}
 
+		$this->debug_traceid = bin2hex(random_bytes(4));
+
 		// false: not mount, to get informations only, to umount
-		$mount = true;
 		if (isset($arguments['manipulated']) && $arguments['manipulated']) {
-			$this->storage_owner = $arguments['storage_owner'];
-			$this->auth_scheme = $arguments['auth_scheme'];
+			// NOTE: These values cannot be used for datadir.
 			$this->mount_type = $arguments['mount_type'];
-			$this->encryption = $arguments['encryption'];
+			$this->storage_owner = $arguments['storage_owner'];
+			$mount = true;
 		} else {
+			$this->mount_type = null;
+			$this->storage_owner = null;
 			$mount = false;
 		}
 
-		$this->debug_traceid = bin2hex(random_bytes(4));
+		$this->secureconn = $arguments['secureconn'];
+		if ($this->secureconn === 1 || $this->secureconn === true) {
+			$this->secureconn = true;
+		} else {
+			$this->secureconn = false;
+		}
+
 		$this->gfarm_dir = $arguments['gfarm_dir'];
-		$this->user = $arguments['user']; // Gfarm username
+		$this->user = $arguments['user']; // Gfarm user or Myproxy user
 		$this->password = $arguments['password'];
 		$this->nextcloud_user = $this->getAccessUser();
 
 		$this->arguments = $arguments;
+
+		$this->auth_scheme = AuthMechanismGfarm::get_scheme($arguments);
+		if ($this->auth_scheme === null) {
+			throw $this->invalid_exception("no auth_scheme");
+		} elseif ($this->auth_scheme === AuthMechanismGfarm::SCHEME_GFARM_X509_PROXY) { // TODO
+			throw $this->invalid_exception("not implemented yet");
+		}
+
+		// required by GfarmAuth::create
+		if (! file_exists(self::GFARM_MOUNTPOINT_POOL)) {
+			mkdir(self::GFARM_MOUNTPOINT_POOL, 0700, true);
+		}
+
+		// mountpoint is not ready here
+		$this->auth = GfarmAuth::create($this);
+
+		// parameters are ready for mountpoint path
+		$this->mountpoint = $this->mountpoint_init();
+		if ($this->mountpoint === null) {
+			throw $this->invalid_arg_exception('cannot create mountpoint');
+		}
 
 		if ($mount === true) {
 			if (isset($arguments['mount'])) {
 				$mount = $arguments['mount'];
 			}
 		}
-		if ($mount) {
-			$this->mountpoint = $this->mountpoint_init();
-			if ($this->mountpoint === null) {
-				throw $this->invalid_arg_exception('cannot create mountpoint');
-			}
-		} else {
-			$this->mountpoint = /
-		}
-		$this->debug("all parameters initialized");
+
+		$this->debug("Gfarm storage parameters are ready");
 
 		if ($mount) {
 			$this->mount_start();
 		}
 
 		# for Local.php
+		# NOTE: datadir must be unique
 		$arguments['datadir'] = $this->mountpoint;
 		parent::__construct($arguments);
 		//$this->debug("__construct() done");
 	}
 
-	private function mount_start() {
-		if ($this->auth_scheme
-			=== AuthMechanismGfarm::SCHEME_GFARM_SHARED_KEY) {
-			$this->auth = new GfarmAuthGfarmSharedKey($this);
-		} elseif ($this->auth_scheme
-				  === AuthMechanismGfarm::SCHEME_GFARM_MYPROXY) {
-			$this->auth = new GfarmAuthMyProxy($this);
-		} elseif ($this->auth_scheme
-				  === AuthMechanismGfarm::SCHEME_GFARM_X509_PROXY) {
-			//$this->auth = new GfarmAuthX509Proxy($this); //TODO
-			throw $this->auth_exception("not implemented yet");
+	public function __destruct() {
+	}
+
+	private function getAccessUser() {
+		return \OC_User::getUser();
+	}
+
+	private function mountpoint_init() {
+		$method = $this->auth->auth_method();
+		$user_orig = $this->auth->username();
+		$password = $this->password;
+		$gfarm_dir = $this->gfarm_dir;
+		$secureconn = $this->secureconn;
+		$allowed_chars = str_split('_ ');
+
+		$pattern = '/[^\w\d]+/';
+		$replacement = '';
+		$user = preg_replace($pattern, $replacement, $user_orig);
+
+		$bn = basename($gfarm_dir);
+		$bn = preg_replace($pattern, $replacement, $bn);
+
+		if ($secureconn) {
+			$sec_str = "SEC";
 		} else {
-			throw $this->auth_exception("unknown auth_scheme");
+			$sec_str = "INSEC";
 		}
 
-		if ($this->encryption && ! $this->auth->encryption_supported()) {
-			throw $this->auth_exception("encryption unsupported");
+		// "/tmp/gf/METHOD_USER_BASENAME_HASH(base64)
+		// (HASH = method+user+password+gfarm_dir+secureconn)"
+		$hash_src = $method . '_' . $user_orig . '_' . $password . '_' . $gfarm_dir . '_' . $sec_str;
+		$hash_dir = base64_encode(hash('sha512/224', $hash_src, true));
+		$hash_dir = str_replace('/', '-', $hash_dir);
+		$hash_dir = str_replace('=', '', $hash_dir);
+
+		$mountpoint = self::GFARM_MOUNTPOINT_POOL . '/' . $method . '_' . $user . '_' .  $bn . '_' . $hash_dir;
+		$mountpoint = str_replace('//', '/', $mountpoint);
+		$recursive = false;
+		if (! file_exists($mountpoint)) {
+			mkdir($mountpoint, 0700, $recursive); // may race
+			if (! file_exists($mountpoint)) {
+				return null;
+			}
+		}
+		return $mountpoint;
+	}
+
+	private function mount_start() {
+		if ($this->secureconn && ! $this->auth->secureconn_supported()) {
+			throw $this->auth_exception("secureconn unsupported");
 		}
 
 		$remount = false;
@@ -189,44 +243,6 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 	}
 
-	public function __destruct() {
-	}
-
-	private function getAccessUser() {
-		return \OC_User::getUser();
-	}
-
-	private function mountpoint_init() {
-		$owner_dir = $this->storage_owner;
-		$user = $this->user;
-		$gfarm_dir = $this->gfarm_dir;
-		$encryption = $this->encryption;
-		$length = 8;
-		$allowed_chars = str_split('_ ');
-
-		$owner_dir_tmp = str_replace($allowed_chars, '', $owner_dir);
-		if (! ctype_alnum($owner_dir_tmp)) {
-			$owner_dir = 'H:' . substr(sha1($owner_dir), 0, $length);
-		}
-
-		if ($encryption) {
-			$enc_str = "ENC:";
-		} else {
-			$enc_str = "NOENC:";
-		}
-		$hashed_path = substr(sha1($enc_str . $gfarm_dir), 0, $length);
-		$mountpoint = self::GFARM_MOUNTPOINT_POOL . "/" . $owner_dir . "/" . $user . "/" . $hashed_path;
-		$mountpoint = str_replace('//', '/', $mountpoint);
-		$recursive = true;
-		if (! file_exists($mountpoint)) {
-			mkdir($mountpoint, 0700, $recursive); // may race
-			if (! file_exists($mountpoint)) {
-				return null;
-			}
-		}
-		return $mountpoint;
-	}
-
 	private function mount_common($mode) {
 		$command = self::GFARM_MOUNT
 				   . " "
@@ -238,9 +254,9 @@ class Gfarm extends \OC\Files\Storage\Local {
 				   . " "
 				   . escapeshellarg($this->auth->type)
 				   . " "
-				   . escapeshellarg($this->auth->gfarm_conf)
+				   . escapeshellarg($this->auth->gfarm_conf())
 				   . " "
-				   . escapeshellarg($this->auth->x509_proxy_cert)
+				   . escapeshellarg($this->auth->x509_proxy_cert())
 				   . " "
 				   . escapeshellarg($this->debug_traceid)
 				   ;
@@ -344,20 +360,68 @@ class Gfarm extends \OC\Files\Storage\Local {
 abstract class GfarmAuth {
 	public const LOCAL_USER = "www-data";
 
-	public function __construct(Gfarm $gf, $type) {
-		$this->type = $type;
-		$this->gf = $gf;
-		$this->mp = $gf->mountpoint;
-		$this->gfarm_conf =  $this->mp . ".gfarm2.conf";
-		$this->x509_proxy_cert = $this->mp . ".x509_proxy_cert";
+	public static function create($gfarm) {
+		$auth_scheme = $gfarm->auth_scheme;
+		if ($auth_scheme
+			=== AuthMechanismGfarm::SCHEME_GFARM_SHARED_KEY) {
+			return new GfarmAuthGfarmSharedKey($gfarm);
+		} elseif ($auth_scheme
+				  === AuthMechanismGfarm::SCHEME_GFARM_MYPROXY) {
+			return new GfarmAuthMyProxy($gfarm);
+		} elseif ($auth_scheme
+				  === AuthMechanismGfarm::SCHEME_GFARM_X509_PROXY) {
+			//$this->auth = new GfarmAuthX509Proxy($this); //TODO
+			throw $gfarm->invalid_exception("not implemented yet");
+		}
+		throw $gfarm->invalid_exception("unknown auth_scheme: " . $auth_scheme);
 	}
 
-	abstract public function encryption_supported();
+	protected function init(Gfarm $gf, $type) {
+		$this->type = $type;
+		$this->gf = $gf;
+	}
+
+	protected function secureconn_info_set($enabled_func, $secure, $insecure) {
+		$this->sec = $this->$enabled_func();
+		if ($this->gf->secureconn && $this->sec) {
+			$this->method = $secure;
+		} else {
+			$this->method = $insecure;
+		}
+	}
+
+	// return array(funcname, secure, insecure)
 	abstract public function conf_init();
 	abstract public function conf_ready();
 	abstract public function conf_clear();
 	abstract public function authenticated();
 	abstract public function logon();
+
+	public function gfarm_conf() {
+		if (!isset($this->gfconf)) {
+			$this->gfconf = $this->gf->mountpoint . ".gfarm2.conf";
+		}
+		return $this->gfconf;
+	}
+
+	public function x509_proxy_cert() {
+		if (!isset($this->x509proxy)) {
+			$this->x509proxy = $this->gf->mountpoint . ".x509_proxy_cert";
+		}
+		return $this->x509proxy;
+	}
+
+	public function username() {
+		return $this->gf->user;
+	}
+
+	public function auth_method() {
+		return $this->method;
+	}
+
+	public function secureconn_supported() {
+		return $this->sec;
+	}
 
 	protected function file_put($filename, $content) {
 		if (! file_exists($filename)) {
@@ -445,26 +509,27 @@ EOF;
 		return $this->support_auth_common(self::SUPPORT_AUTH_TYPE_KERBEROS);
 	}
 
-	public const METHOD_SHARED     = 0x01;
-	public const METHOD_TLS_SHARED = 0x02;
-	public const METHOD_TLS_CLIENT = 0x04;
-	public const METHOD_GSI_AUTH   = 0x08;
-	public const METHOD_GSI        = 0x10;
-	public const METHOD_KRB_AUTH   = 0x20;
-	public const METHOD_KRB        = 0x40;
+	public const METHOD_SHARED     = 's';
+	public const METHOD_TLS_SHARED = 'S';
+	public const METHOD_TLS_CLIENT = 'T';
+	public const METHOD_GSI_AUTH   = 'g';
+	public const METHOD_GSI        = 'G';
+	public const METHOD_KRB_AUTH   = 'k';
+	public const METHOD_KRB        = 'K';
 
 	private function enabled($a, $b) {
-		return ($a & $b) ? "enable" : "disable";
+		return ($a === $b) ? "enable" : "disable";
 	}
 
-	protected function auth_conf($methods) {
-		$enable_sharedsecret = $this->enabled($methods, self::METHOD_SHARED);
-		$enable_tls = $this->enabled($methods, self::METHOD_TLS_SHARED);
-		$enable_tls_client = $this->enabled($methods, self::METHOD_TLS_CLIENT);
-		$enable_gsi_auth = $this->enabled($methods, self::METHOD_GSI_AUTH);
-		$enable_gsi = $this->enabled($methods, self::METHOD_GSI);
-		$enable_kerberos_auth = $this->enabled($methods, self::METHOD_KRB_AUTH);
-		$enable_kerberos = $this->enabled($methods, self::METHOD_KRB);
+	protected function auth_conf() {
+		$method = $this->method;
+		$enable_s = $this->enabled($method, self::METHOD_SHARED);
+		$enable_S = $this->enabled($method, self::METHOD_TLS_SHARED);
+		$enable_T = $this->enabled($method, self::METHOD_TLS_CLIENT);
+		$enable_g = $this->enabled($method, self::METHOD_GSI_AUTH);
+		$enable_G = $this->enabled($method, self::METHOD_GSI);
+		$enable_k = $this->enabled($method, self::METHOD_KRB_AUTH);
+		$enable_K = $this->enabled($method, self::METHOD_KRB);
 
 		$delete_tls = "";
 		$delete_gsi = "";
@@ -481,13 +546,13 @@ EOF;
 		}
 
 		$conf_str = <<<EOF
-auth {$enable_sharedsecret} sharedsecret *
-{$delete_tls}auth {$enable_tls} tls_sharedsecret *
-{$delete_tls}auth {$enable_tls_client} tls_client_certificate *
-{$delete_gsi}auth {$enable_gsi_auth} gsi_auth *
-{$delete_gsi}auth {$enable_gsi} gsi *
-{$delete_kerberos}auth {$enable_kerberos_auth} kerberos_auth *
-{$delete_kerberos}auth {$enable_kerberos} kerberos *
+auth {$enable_s} sharedsecret *
+{$delete_tls}auth {$enable_S} tls_sharedsecret *
+{$delete_tls}auth {$enable_T} tls_client_certificate *
+{$delete_gsi}auth {$enable_g} gsi_auth *
+{$delete_gsi}auth {$enable_G} gsi *
+{$delete_kerberos}auth {$enable_k} kerberos_auth *
+{$delete_kerberos}auth {$enable_K} kerberos *
 
 EOF;
 		return $conf_str;
@@ -498,30 +563,31 @@ class GfarmAuthGfarmSharedKey extends GfarmAuth {
 	public const TYPE = "sharedsecret";
 
 	public function __construct(Gfarm $gf) {
-		parent::__construct($gf, self::TYPE);
-
-		$this->gfarm_usermap = $this->mp . ".gfarm_usermap";
-		$this->gfarm_shared_key = $this->mp . ".gfarm_shared_key";
-
-		//$this->private_key_str = $this->gf->arguments['private_key'];
-		//$this->gx509_private_key = $mp . ".x509_private_key";
+		$this->init($gf, self::TYPE);
+		$this->secureconn_info_set('support_auth_tls', self::METHOD_TLS_SHARED, self::METHOD_SHARED);
 	}
 
-	public function encryption_supported() {
-		return $this->support_auth_tls();
+	private function gfarm_usermap() {
+		if (!isset($this->usermap)) {
+			$this->usermap = $this->gf->mountpoint . ".gfarm_usermap";
+		}
+		return $this->usermap;
+	}
+
+	private function gfarm_shared_key() {
+		if (!isset($this->shared_key)) {
+			$this->shared_key = $this->gf->mountpoint . ".gfarm_shared_key";
+		}
+		return $this->shared_key;
 	}
 
 	public function conf_init() {
 		$conf_str = <<<EOF
-shared_key_file   "{$this->gfarm_shared_key}"
-local_user_map    "{$this->gfarm_usermap}"
+shared_key_file   "{$this->gfarm_shared_key()}"
+local_user_map    "{$this->gfarm_usermap()}"
 
 EOF;
-		if ($this->gf->encryption && $this->support_auth_tls()) {
-			$conf_str = $conf_str . $this->auth_conf(self::METHOD_TLS_SHARED);
-		} else {
-			$conf_str = $conf_str . $this->auth_conf(self::METHOD_SHARED);
-		}
+		$conf_str = $conf_str . $this->auth_conf();
 		$gfarm_user = $this->gf->user;
 		$local_user = self::LOCAL_USER;
 		$usermap_str = <<<EOF
@@ -530,28 +596,28 @@ $gfarm_user $local_user
 EOF;
 
 		// overwrite
-		if (! $this->file_put($this->gfarm_conf, $conf_str)) {
+		if (! $this->file_put($this->gfarm_conf(), $conf_str)) {
 			return false;
 		}
-		if (! $this->file_put($this->gfarm_usermap, $usermap_str)) {
+		if (! $this->file_put($this->gfarm_usermap(), $usermap_str)) {
 			return false;
 		}
-		if (! $this->file_put($this->gfarm_shared_key, $this->gf->password . "\n")) {
+		if (! $this->file_put($this->gfarm_shared_key(), $this->gf->password . "\n")) {
 			return false;
 		}
 		return true;
 	}
 
 	public function conf_ready() {
-		return (file_exists($this->gfarm_conf)
-				&& file_exists($this->gfarm_usermap)
-				&& !file_exists($this->gfarm_shared_key));
+		return (file_exists($this->gfarm_conf())
+				&& file_exists($this->gfarm_usermap())
+				&& !file_exists($this->gfarm_shared_key()));
 	}
 
 	public function conf_clear() {
-		unlink($this->gfarm_conf);
-		unlink($this->gfarm_usermap);
-		unlink($this->gfarm_shared_key);
+		unlink($this->gfarm_conf());
+		unlink($this->gfarm_usermap());
+		unlink($this->gfarm_shared_key());
 	}
 
 	public function authenticated() {
@@ -567,38 +633,23 @@ class GfarmAuthMyProxy extends GfarmAuth {
 	public const TYPE = "myproxy";
 
 	public function __construct(Gfarm $gf) {
-		parent::__construct($gf, self::TYPE);
-	}
-
-	public function encryption_supported() {
-		return true;
+		$this->init($gf, self::TYPE);
+		$this->secureconn_info_set('support_auth_gsi', self::METHOD_GSI, self::METHOD_GSI_AUTH);
 	}
 
 	public function conf_init() {
-		if ($this->gf->encryption) {
-			$conf_str = $this->auth_conf(self::METHOD_GSI);
-		} else {
-			$conf_str = $this->auth_conf(self::METHOD_GSI_AUTH);
-		}
-
-		$usermap_str = <<<EOF
-$gfarm_user $local_user
-
-EOF;
+		$conf_str = $this->auth_conf();
 
 		// overwrite
-		if (! $this->file_put($this->gfarm_conf, $conf_str)) {
-			return false;
-		}
-		return true;
+		return $this->file_put($this->gfarm_conf(), $conf_str);
 	}
 
 	public function conf_ready() {
-		return (file_exists($this->gfarm_conf));
+		return (file_exists($this->gfarm_conf()));
 	}
 
 	public function conf_clear() {
-		unlink($this->gfarm_conf);
+		unlink($this->gfarm_conf());
 	}
 
 	public function authenticated() {
@@ -609,5 +660,8 @@ EOF;
 		// TODO myproxy-logon
 		return true;
 	}
-
 }
+
+// TODO GfarmAuthX509Proxy
+	//$this->gf->arguments['private_key'];
+	//$mp . ".x509_private_key";

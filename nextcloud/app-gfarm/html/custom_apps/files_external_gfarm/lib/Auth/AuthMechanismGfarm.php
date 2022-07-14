@@ -4,26 +4,54 @@ declare(strict_types=1);
 namespace OCA\Files_external_gfarm\Auth;
 
 use OCA\Files_External\Lib\Auth\AuthMechanism;
+use OCA\Files_External\Lib\DefinitionParameter;
 use OCA\Files_External\Lib\StorageConfig;
 use OCP\IUser;
 
 class AuthMechanismGfarm extends AuthMechanism {
-	public const SCHEME_GFARM_SHARED_KEY = 'gfarm::shared_key';
-	public const SCHEME_GFARM_MYPROXY = 'gfarm::myproxy';
-	public const SCHEME_GFARM_X509_PROXY = 'gfarm::x509proxy';
+	public const SCHEME_GFARM_SHARED_KEY = 'gfarm_shared_key';
+	public const SCHEME_GFARM_MYPROXY = 'gfarm_myproxy';
+	public const SCHEME_GFARM_X509_PROXY = 'gfarm_x509proxy';
+
+	public const SCHEME_KEY_PREFIX = 'scheme_';
 
 	public const ADMIN_NAME = "__ADMIN__";
 
+	private static function has_scheme($args, $scheme) {
+		return isset($args[self::SCHEME_KEY_PREFIX . $scheme]);
+	}
+
+	public static function get_scheme($args) {
+		if (self::has_scheme($args, self::SCHEME_GFARM_SHARED_KEY)) {
+			return self::SCHEME_GFARM_SHARED_KEY;
+		} elseif (self::has_scheme($args, self::SCHEME_GFARM_MYPROXY)) {
+			return self::SCHEME_GFARM_MYPROXY;
+		} elseif (self::has_scheme($args, self::SCHEME_GFARM_X509_PROXY)) {
+			return self::SCHEME_GFARM_X509_PROXY;
+		}
+		return null;
+	}
+
+	protected function finish() {
+		// to recognize AuthMechanism scheme type (value is not used)
+		$scheme = $this->getScheme();
+		$this->addParameter(
+			(new DefinitionParameter('scheme_' . $scheme, 'scheme'))
+			->setType(DefinitionParameter::VALUE_HIDDEN)
+			->setFlag(DefinitionParameter::FLAG_OPTIONAL)
+			);
+		// NOTE: effective for all after FLAG_OPTIONAL
+	}
+
 	// StorageModifierTrait
-	// public function wrapStorage(StorageConfig &$storage) {
+	// public function wrapStorage(Storage $storage) {
 	// }
 
 	// StorageModifierTrait
 	public function manipulateStorageConfig(StorageConfig &$storage, IUser $iuser = null) {
-		$storage->setBackendOption('manipulated', true);
-
 		// $iuser (session user) is not used
-		$storage->setBackendOption('auth_scheme', $this->getScheme());
+
+		$storage->setBackendOption('manipulated', true);
 
 		$type = $storage->getType();
 		// StorageConfig::MOUNT_TYPE_*
@@ -45,21 +73,5 @@ class AuthMechanismGfarm extends AuthMechanism {
 		}
 		$storage->setBackendOption('storage_owner', $owner);
 
-		// TODO move to Gfarm.php<Storage>
-		$username = $storage->getBackendOption('user');
-		if ($username === '__USER__') {
-			if ($type === StorageConfig::MOUNT_TYPE_ADMIN) {
-				throw new \UnexpectedValueException("username required");
-			}
-			$storage->setBackendOption('user', $owner);
-		}
-
-		$encryption = $storage->getBackendOption('encryption');
-		if ($encryption === 1 || $encryption === true) {
-			$encryption = true;
-		} else {
-			$encryption = false;
-		}
-		$storage->setBackendOption('encryption', $encryption);
 	}
 }
