@@ -32,6 +32,7 @@ RUN echo ${NEXTCLOUD_VERSION} \
   vim \
   less \
   libmagickcore-*-extra \
+  smbclient \
   iproute2 \
   pbzip2 \
   && apt-get clean \
