@@ -86,6 +86,22 @@ cp "${GFARM2_CONF_ORIG}" "${GFARM_CONF}"
 echo "attr_cache_timeout ${GFARM_ATTR_CACHE_TIMEOUT}" >> "${GFARM_CONF}"
 chown0 "${GFARM_CONF}"
 
+# NOTE: gsi.conf is installed from GCT package
+GSI_CONF="/etc/grid-security/gsi.conf"
+if [ -f ${GSI_CONF} ]; then
+    sed -i -e 's/^NAME_COMPATIBILITY=STRICT_RFC2818$/NAME_COMPATIBILITY=HYBRID/' ${GSI_CONF}
+fi
+
+mkdir -p "${CRONTAB_DIR_PATH}"
+### reset crontab everytime
+rm -f "${CRONTAB_FILE_PATH}"
+cp -f "${CRONTAB_TEMPLATE}" "${CRONTAB_FILE_PATH}"
+# NOTE: owner of crontab-file is root only
+chown root "${CRONTAB_FILE_PATH}"
+if [ -n "${NEXTCLOUD_FILES_SCAN_TIME}" ]; then
+    echo "${NEXTCLOUD_FILES_SCAN_TIME} ${FILES_SCAN_SH}" >> "${CRONTAB_FILE_PATH}"
+fi
+
 if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
     GFARM_USERMAP="${HOMEDIR}/.gfarm_usermap"
     echo "${GFARM_USER} ${NEXTCLOUD_USER}" > "${GFARM_USERMAP}"
@@ -161,28 +177,16 @@ if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
     gfarm_cred_status_set "${USE_GFARM_SHARED_KEY}" "${USE_GSI}"
 
     if [ ! -f ${INIT_FLAG_PATH} ]; then
-        sed -i -e 's/^NAME_COMPATIBILITY=STRICT_RFC2818$/NAME_COMPATIBILITY=HYBRID/' /etc/grid-security/gsi.conf
-
-        mkdir -p "${CRONTAB_DIR_PATH}"
 
         chown0 "${FLAG_DIR}"
         touch "${INIT_FLAG_PATH}"
     fi
-
-    ### reset crontab
-    rm -f "${CRONTAB_FILE_PATH}"
-    cp -f "${CRONTAB_TEMPLATE}" "${CRONTAB_FILE_PATH}"
-    # NOTE: owner of crontab-file is root only
-    chown root "${CRONTAB_FILE_PATH}"
 
     if [ -n "${NEXTCLOUD_BACKUP_TIME}" ]; then
         echo "${NEXTCLOUD_BACKUP_TIME} ${BACKUP_SH}" >> "${CRONTAB_FILE_PATH}"
     fi
     if [ -n "${GFARM_CHECK_ONLINE_TIME}" ]; then
         echo "${GFARM_CHECK_ONLINE_TIME} ${GFARM_CHECK_ONLINE_SH}" >> "${CRONTAB_FILE_PATH}"
-    fi
-    if [ -n "${NEXTCLOUD_FILES_SCAN_TIME}" ]; then
-        echo "${NEXTCLOUD_FILES_SCAN_TIME} ${FILES_SCAN_SH}" >> "${CRONTAB_FILE_PATH}"
     fi
 
     INFO "checking availability to Gfarm (wait for a while ...)"
@@ -205,6 +209,7 @@ until mysqladmin --defaults-file="${MYSQL_CONF}" -h ${MYSQL_HOST} -u ${MYSQL_USE
     sleep 1
 done
 
+# restore if necessary
 if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
     FILE_NUM=$(count_dirent "${HTML_DIR}/")
     if [ ${FILE_NUM} -eq 0 ]; then  # empty
@@ -226,6 +231,8 @@ EOF
     cat <<EOF | sed -e "s;@PASSWORD@;${MYSQL_PASSWORD};" | "${MYSQL_ROOT_SH}"
 SET PASSWORD FOR ${MYSQL_USER}@"%"=password('@PASSWORD@');
 EOF
+else  # initial startup
+    chown0 "${LOCAL_DATA_DIR}"
 fi
 
 if [ ${NEXTCLOUD_GFARM_DEBUG_SLEEP} -eq 1 ]; then
@@ -245,9 +252,5 @@ if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
     export NEXTCLOUD_DATA_DIR="${DATA_DIR}"
 else
     export NEXTCLOUD_DATA_DIR="${LOCAL_DATA_DIR}"
-    if [ ! -f ${INIT_FLAG_PATH} ]; then
-        chown0 "${LOCAL_DATA_DIR}"
-        touch "${INIT_FLAG_PATH}"
-    fi
 fi
 exec "$@"

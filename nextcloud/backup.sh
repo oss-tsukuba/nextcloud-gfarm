@@ -8,6 +8,11 @@ set -o pipefail
 source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
 
+if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -ne 1 ]; then
+    echo >&2 "not available when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR != 1"
+    exit 0
+fi
+
 BACKUP_FLAG="/tmp/nc-gfarm-backup"
 TMP_SUFFIX=".tmp"
 
