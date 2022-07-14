@@ -45,6 +45,13 @@ if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
         fi
     fi
 else # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
+    # ${DATA_DIR} is not used.
+    if [ ! -h "${DATA_DIR}" -a -d "${DATA_DIR}" ]; then
+        if [ -d "${TMP_DATA_DIR}" ]; then
+            ${SUDO_USER} rm -rf "${TMP_DATA_DIR}"
+        fi
+        ${SUDO_USER} mv "${DATA_DIR}" "${TMP_DATA_DIR}"
+    fi
     # for compatibility, but not necessary
     ln -f -s "${LOCAL_DATA_DIR}" "${DATA_DIR}"
 fi # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
@@ -82,6 +89,13 @@ if [ ! -f "${POST_FLAG_PATH}" ]; then
 
     touch "${POST_FLAG_PATH}"
 fi
+
+if [ ${NEXTCLOUD_GFARM_DEBUG} -eq 1 ]; then
+    DEBUG_MODE=true
+else
+    DEBUG_MODE=false
+fi
+${OCC} config:system:set --type=boolean --value=${DEBUG_MODE} debug
 
 APPS_ENABLE="
 files_external

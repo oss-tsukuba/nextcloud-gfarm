@@ -6,6 +6,7 @@ namespace OCA\Files_external_gfarm\Storage;
 use OC\Files\Storage\Flysystem;
 use OC\Files\Storage\Flysystem\Common;
 use OCP\Files\StorageAuthException;
+use OCP\IConfig;
 use OCA\Files_External\Lib\StorageConfig;
 
 use OCA\Files_external_gfarm\Auth\AuthMechanismGfarm;
@@ -86,6 +87,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	public function __construct($arguments) {
+		$this->config = \OC::$server->get(IConfig::class);
+		$this->enable_debug = $this->config->getSystemValue('debug');
 		if ($this->enable_debug) {
 			//syslog(LOG_DEBUG, __CLASS__ . ": __construct()");
 			//syslog(LOG_DEBUG, "!!!DANGER: Must be commented out!!! __construct: arguments: " . print_r($arguments, true));
