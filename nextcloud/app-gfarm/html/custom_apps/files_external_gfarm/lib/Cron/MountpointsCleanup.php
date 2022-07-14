@@ -78,11 +78,6 @@ class MountpointsCleanup extends TimedJob {
 				continue;
 			}
 
-			// TODO
-			// if ($this->umount_if_recently_unused()) {
-			//   continue;
-			// }
-
 			try {
 				$mountpoint = realpath($storage->mountpoint);
 			} catch (Exception $e) {
