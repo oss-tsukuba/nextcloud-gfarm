@@ -16,7 +16,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 	const MYPROXY_LOGON = "/nc-gfarm/app-gfarm/bin/dummy-myproxy-logon";
 	const GRID_PROXY_INFO = "/nc-gfarm/app-gfarm/bin/dummy-grid-proxy-info";
-	const GFARM_MOUNT = "/nc-gfarm/app-gfarm/bin/gfarm-mount";
+	const GFARM_MOUNT = "/nc-gfarm/gfarm-mount";
 	const GFARM_UMOUNT = "fusermount -u";
 
 	public const GFARM_MOUNTPOINT_POOL = "/tmp/gf/";
@@ -97,7 +97,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 		$this->enable_debug = $this->config->getSystemValue('debug', false);
 		if ($this->enable_debug) {
 			//syslog(LOG_DEBUG, __CLASS__ . ": __construct()");
-			syslog(LOG_DEBUG, "!!!DANGER: Must be commented out!!! __construct: arguments: " . print_r($arguments, true));
+			//syslog(LOG_DEBUG, "!!!DANGER: Must be commented out!!! __construct: arguments: " . print_r($arguments, true));
 		}
 
 		if (! self::is_valid_param($arguments['gfarm_dir'])) {

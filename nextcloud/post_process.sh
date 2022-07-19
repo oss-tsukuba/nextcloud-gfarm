@@ -24,7 +24,7 @@ create_mount_point()
 }
 
 if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
-    gfarm2fs_is_mounted && umount_gfarm2fs
+    gfarm2fs_is_mounted && umount_gfarm2fs "${DATA_DIR}"
     # before mount_gfarm2fs
     if [ ! -d "${DATA_DIR}" ]; then
        ${SUDO_USER} mkdir -p "${DATA_DIR}"
@@ -35,7 +35,7 @@ if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
         create_mount_point
     fi
 
-    mount_gfarm2fs
+    mount_gfarm2fs "${DATA_DIR}" "${GFARM_DATA_PATH}"
 
     if [ ${FILE_NUM} -gt 0 ]; then  # not empty
         GFARM_DIR_FILE_NUM=$(count_dirent "${DATA_DIR}")
@@ -162,7 +162,9 @@ stop()
         echo "STOP: $ARGS" 1>&2
         kill $pid
     fi
-    umount_gfarm2fs || true
+    if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
+        umount_gfarm2fs "${DATA_DIR}" || true
+    fi
 }
 
 trap stop 1 2 15

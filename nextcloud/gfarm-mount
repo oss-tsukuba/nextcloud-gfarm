@@ -10,17 +10,10 @@ gfarm_conf="$5"
 x509proxy="$6"
 trace_id="$7"
 
+source /nc-gfarm/config.sh
+source ${CONFIG_LIB}
+
 lockfile="${mountpoint}.lock"
-
-facility="local7"
-
-: ${GFARM_ATTR_CACHE_TIMEOUT:="60"}
-: ${FUSE_ENTRY_TIMEOUT:="60"}
-: ${FUSE_NEGATIVE_TIMEOUT:="5"}
-: ${FUSE_ATTR_TIMEOUT:="60"}
-: ${GFARM2FS_LOGLEVEL:="info"}
-
-MNT_OPT="-o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
 
 [ -z "${gfarm_conf}" ] && exit 1
 
@@ -34,12 +27,13 @@ fi
 
 LOG_DEBUG()
 {
-    logger -p ${facility}.debug "$0" "[${trace_id}]DEBUG: $@"
+    #DEBUG "[${trace_id}] $@"
+    INFO "[${trace_id}] $@"
 }
 
 LOG_ERR()
 {
-    logger -p ${facility}.err "$0" "[${trace_id}]ERR: $@"
+    ERR "[${trace_id}] $@"
 }
 
 LOG_DEBUG "$@"
@@ -143,9 +137,9 @@ check_mount
 
 if [ $remount -eq 1 ]; then
     LOG_DEBUG "umount when remount=1"
-    fusermount -u "${mountpoint}"
+    umount_gfarm2fs "${mountpoint}"
 fi
-gfarm2fs ${MNT_OPT} -o subdir="${gfarm_path}" "${mountpoint}"
+mount_gfarm2fs "${mountpoint}" "${gfarm_path}"
 retval=$?
 if [ $retval -ne 0 ]; then
     LOG_ERR "gfarm2fs mount failed: mountpoint=${mountpoint}"

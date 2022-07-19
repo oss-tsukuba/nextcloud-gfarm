@@ -10,7 +10,14 @@ WARN()
 
 INFO()
 {
-    echo "INFO: $@"
+    echo >&2 "INFO: $@"
+}
+
+DEBUG()
+{
+    if [ ${NEXTCLOUD_GFARM_DEBUG} -eq 1 ]; then
+        echo >&2 "DEBUG: $@"
+    fi
 }
 
 chown0()
@@ -32,13 +39,16 @@ copy0()
 
 mount_gfarm2fs()
 {
-    ${SUDO_USER} gfarm2fs ${MNT_OPT} "${DATA_DIR}"
+    MOUNTPOINT="$1"
+    SUBDIR="$2"
+    gfarm2fs ${MNT_OPT} -o subdir="${SUBDIR}" "${MOUNTPOINT}"
 }
 
 umount_gfarm2fs()
 {
-    echo "umount ${DATA_DIR}"
-    ${SUDO_USER} fusermount -u "${DATA_DIR}"
+    MOUNTPOINT="$1"
+    #echo "umount ${MOUNTPOINT}"
+    ${SUDO_USER} fusermount -u "${MOUNTPOINT}"
 }
 
 gfarm2fs_is_mounted()

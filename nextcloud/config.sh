@@ -4,10 +4,6 @@ NCGFARM_DIR="/nc-gfarm"
 CONFIG_LIB="${NCGFARM_DIR}/common-lib.sh"
 CONFIG_ENV="${NCGFARM_DIR}/config-env.sh"
 
-if [ ${NEXTCLOUD_GFARM_DEBUG:-0} -ne 0 ]; then
-    set -x
-fi
-
 if [ -f "$CONFIG_ENV" ]; then
     source "$CONFIG_ENV"
 fi
@@ -121,7 +117,7 @@ NEXTCLOUD_LOG_PATH="${HTML_DIR}/nextcloud.log"
 
 #GFARM2FS_DISABLE_MT="-s"
 GFARM2FS_DISABLE_MT=""
-MNT_OPT="${GFARM2FS_DISABLE_MT} -o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,subdir=${GFARM_DATA_PATH},entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
+MNT_OPT="${GFARM2FS_DISABLE_MT} -o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
 
 NEXTCLOUD_USER="www-data"
 NEXTCLOUD_USER_ID=$(id -u ${NEXTCLOUD_USER})
@@ -221,3 +217,8 @@ OIDC_LOGIN_URL=${OIDC_LOGIN_URL:-${KEYCLOAK_URL}/auth/realms/${KEYCLOAK_REALM}}
 : ${OIDC_LOGIN_CLIENT_SECRET:=dummy}
 
 : ${OIDC_LOGIN_LOGOUT_URL:=${OIDC_LOGIN_URL}/protocol/openid-connect/logout?redirect_uri=${OVERWRITEPROTOCOL}%3A%2F%2F${OVERWRITEHOST}}
+
+##########################################################
+if [ ${NEXTCLOUD_GFARM_DEBUG:-0} -ne 0 ]; then
+    set -x
+fi
