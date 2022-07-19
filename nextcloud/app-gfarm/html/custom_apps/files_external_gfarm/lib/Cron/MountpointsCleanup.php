@@ -74,6 +74,7 @@ class MountpointsCleanup extends TimedJob {
 			try {
 				$storage = new Storage\Gfarm($opts);
 			} catch (Exception $e) {
+				$this->debug($e->__toString());
 				// next entry
 				continue;
 			}

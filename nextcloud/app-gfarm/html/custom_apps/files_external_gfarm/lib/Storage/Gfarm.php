@@ -20,11 +20,17 @@ class Gfarm extends \OC\Files\Storage\Local {
 	const GFARM_UMOUNT = "fusermount -u";
 
 	public const GFARM_MOUNTPOINT_POOL = "/tmp/gf/";
-	//public const GFARM_MOUNTPOINT_POOL = "/dev/shm/gf/";
 
-	private $debug_traceid = NULL;
-	private $enable_debug = true;
-	//private $enable_debug = false;
+	private $enable_debug = false;
+
+	public $debug_traceid = NULL;
+	public $nextcloud_user = NULL;
+	public $storage_owner = NULL;
+	public $user = NULL;
+	public $gfarm_dir = NULL;
+	public $secureconn = NULL;
+	public $mountpoint = NULL;
+	public $auth_scheme = NULL;
 
 	private function log_prefix() {
 		return "[" . $this->debug_traceid . "]("
@@ -91,7 +97,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 		$this->enable_debug = $this->config->getSystemValue('debug', false);
 		if ($this->enable_debug) {
 			//syslog(LOG_DEBUG, __CLASS__ . ": __construct()");
-			//syslog(LOG_DEBUG, "!!!DANGER: Must be commented out!!! __construct: arguments: " . print_r($arguments, true));
+			syslog(LOG_DEBUG, "!!!DANGER: Must be commented out!!! __construct: arguments: " . print_r($arguments, true));
 		}
 
 		if (! self::is_valid_param($arguments['gfarm_dir'])) {
@@ -114,6 +120,12 @@ class Gfarm extends \OC\Files\Storage\Local {
 			$this->storage_owner = null;
 			$mount = false;
 		}
+		if ($mount === true) {
+			if (isset($arguments['mount'])) {
+				$mount = $arguments['mount'];
+			}
+		}
+		$this->mount = $mount;
 
 		$this->secureconn = $arguments['secureconn'];
 		if ($this->secureconn === 1 || $this->secureconn === true) {
@@ -141,19 +153,23 @@ class Gfarm extends \OC\Files\Storage\Local {
 			mkdir(self::GFARM_MOUNTPOINT_POOL, 0700, true);
 		}
 
-		// mountpoint is not ready here
 		$this->auth = GfarmAuth::create($this);
+		// mountpoint is not ready here
+		$this->id_init();
 
-		// parameters are ready for mountpoint path
-		$this->mountpoint = $this->mountpoint_init();
-		if ($this->mountpoint === null) {
-			throw $this->invalid_arg_exception('cannot create mountpoint');
-		}
-
-		if ($mount === true) {
-			if (isset($arguments['mount'])) {
-				$mount = $arguments['mount'];
+		# NOTE: datadir is not used for getId() (overrided),
+		# because getId() must be unique among all users.
+		# To make mountpoint unique, mountpoint includes password as hash,
+		# but password may not be passed to Storage\Gfarm.
+		if (isset($this->password)) {
+			$this->mountpoint = $this->mountpoint_init();
+			if ($this->mountpoint === null) {
+				throw $this->invalid_arg_exception('cannot create mountpoint');
 			}
+		} elseif ($mount) {
+				throw $this->invalid_arg_exception('unexpected condition');
+		} else {
+			$this->mountpoint = "__DUMMY__";
 		}
 
 		$this->debug("Gfarm storage parameters are ready");
@@ -163,7 +179,6 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 
 		# for Local.php
-		# NOTE: datadir must be unique
 		$arguments['datadir'] = $this->mountpoint;
 		parent::__construct($arguments);
 		//$this->debug("__construct() done");
@@ -176,39 +191,61 @@ class Gfarm extends \OC\Files\Storage\Local {
 		return \OC_User::getUser();
 	}
 
-	private function mountpoint_init() {
+	private function secureconn_str() {
+		if ($this->secureconn) {
+			return "SEC";
+		} else {
+			return "INSEC";
+		}
+	}
+
+	private function id_init() {
+		// NOTE: password is not available for Id
 		$method = $this->auth->auth_method();
-		$user_orig = $this->auth->username();
-		$password = $this->password;
+		$user = $this->auth->username();
 		$gfarm_dir = $this->gfarm_dir;
-		$secureconn = $this->secureconn;
-		$allowed_chars = str_split('_ ');
+		$secure = $this->secureconn_str();
+
+		// DO NOT CHANGE
+		$this->id = 'gfarm::' . sha1($method . $user . $gfarm_dir . $secure);
+	}
+
+	// override
+	public function getId() {
+		return $this->id;
+	}
+
+	private function mountpoint_init() {
+		// return "/tmp/gf/METHOD_USER_BASENAME_HASH(base64)"
+		// HASH = base64_encode(hash(id+password))
+		$method = $this->auth->auth_method();
+		$user = $this->auth->username();
+		$gfarm_dir = $this->gfarm_dir;
+		//$secure = $this->secureconn_str();
+		$password = $this->password;
+		$id = $this->id;
+		$hash_algo = 'sha512/224';
 
 		$pattern = '/[^\w\d]+/';
 		$replacement = '';
-		$user = preg_replace($pattern, $replacement, $user_orig);
-
+		$user_mod = preg_replace($pattern, $replacement, $user);
 		$bn = basename($gfarm_dir);
 		$bn = preg_replace($pattern, $replacement, $bn);
 
-		if ($secureconn) {
-			$sec_str = "SEC";
-		} else {
-			$sec_str = "INSEC";
-		}
+		$hash_src =  $id . $password;
+		//$this->debug($hash_src);
+		$hash_str = base64_encode(hash($hash_algo, $hash_src, true));
+		$hash_str = str_replace('/', '-', $hash_str);
+		$hash_str = str_replace('=', '', $hash_str);
 
-		// "/tmp/gf/METHOD_USER_BASENAME_HASH(base64)"
-		// (HASH = method+user+password+gfarm_dir+secureconn)
-		$hash_src = $method . '_' . $user_orig . '_' . $password . '_' . $gfarm_dir . '_' . $sec_str;
-		$hash_dir = base64_encode(hash('sha512/224', $hash_src, true));
-		$hash_dir = str_replace('/', '-', $hash_dir);
-		$hash_dir = str_replace('=', '', $hash_dir);
-
-		$mountpoint = self::GFARM_MOUNTPOINT_POOL . '/' . $method . '_' . $user . '_' .  $bn . '_' . $hash_dir;
+		$mountpoint = self::GFARM_MOUNTPOINT_POOL . '/' . $method . '_' . $user_mod . '_' .  $bn . '_' . $hash_str;
 		$mountpoint = str_replace('//', '/', $mountpoint);
 		$recursive = false;
-		if (! file_exists($mountpoint)) {
-			mkdir($mountpoint, 0700, $recursive); // may race
+		if ($this->mount && !file_exists($mountpoint)) {
+			try {
+				mkdir($mountpoint, 0700, $recursive); // may race
+			} catch (Exception $e) {
+			}
 			if (! file_exists($mountpoint)) {
 				return null;
 			}
@@ -288,10 +325,21 @@ class Gfarm extends \OC\Files\Storage\Local {
 		$output = null;
 		$retval = null;
 		exec($command, $output, $retval);
-		try {
-			rmdir($mountpoint);
-		} catch (Exception $e) {
-			// ignore
+		foreach (glob($mountpoint . '.*') as $filename) {
+			try {
+				unlink($filename);
+			} catch (Exception $e) {
+				// ignore
+			}
+		}
+		$retry_max = 10;
+		for ($i = 0; $i < $retry_max; $i++) {
+			try {
+				rmdir($mountpoint);
+			} catch (Exception $e) {
+				// ignore
+			}
+			sleep(1);
 		}
 		return $retval;
 	}
@@ -303,7 +351,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 		} else {
 				$this->error("gfarm_umount failed");
 		}
-		$this->auth->conf_clear();
+		try {
+			$this->auth->conf_clear();
+		} catch (Exception $e) {
+			// ignore
+		}
 	}
 
 // 	private function logon() {
@@ -363,6 +415,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 abstract class GfarmAuth {
 	public const LOCAL_USER = "www-data";
 
+	// NOTE: $this->gf->mountpoint is not used yet
 	public static function create($gfarm) {
 		$auth_scheme = $gfarm->auth_scheme;
 		if ($auth_scheme
@@ -393,8 +446,22 @@ abstract class GfarmAuth {
 		}
 	}
 
+	public function secureconn_supported() {
+		return $this->sec;
+	}
+
+	public function username() {
+		return $this->gf->user;
+	}
+
+	public function auth_method() {
+		return $this->method;
+	}
+
+	// The followings MUST be called after $gf->mountpoint_init()
 	// return array(funcname, secure, insecure)
 	abstract public function conf_init();
+
 	abstract public function conf_ready();
 	abstract public function conf_clear();
 	abstract public function authenticated();
@@ -412,18 +479,6 @@ abstract class GfarmAuth {
 			$this->x509proxy = $this->gf->mountpoint . ".x509_proxy_cert";
 		}
 		return $this->x509proxy;
-	}
-
-	public function username() {
-		return $this->gf->user;
-	}
-
-	public function auth_method() {
-		return $this->method;
-	}
-
-	public function secureconn_supported() {
-		return $this->sec;
 	}
 
 	protected function file_put($filename, $content) {
