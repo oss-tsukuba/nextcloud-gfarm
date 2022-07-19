@@ -1,0 +1,11 @@
+#! /bin/bash
+
+set -x
+
+USER="$1"
+PROXY="$2"
+
+CERT=~/.globus/usercert.pem
+KEY=~/.globus/userkey.pem
+
+grid-proxy-init -pwstdin -cert ${CERT} -key ${KEY} -out "${PROXY}"

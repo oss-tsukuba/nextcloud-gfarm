@@ -21,14 +21,13 @@ GFARM_CONFIG_FILE="${gfarm_conf}"
 export GFARM_CONFIG_FILE
 
 if [ -n "${x509proxy}" ]; then
-    X509_PROXY_CERT="${x509proxy}"
-    export X509_PROXY_CERT
+    X509_USER_PROXY="${x509proxy}"
+    export X509_USER_PROXY
 fi
 
 LOG_DEBUG()
 {
-    #DEBUG "[${trace_id}] $@"
-    INFO "[${trace_id}] $@"
+    DEBUG "[${trace_id}] $@"
 }
 
 LOG_ERR()

@@ -201,6 +201,12 @@ if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
 
     ${SUDO_USER} gfmkdir -p "${GFARM_DATA_PATH}"
     ${SUDO_USER} gfchmod 750 "${GFARM_DATA_PATH}"
+else # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
+    # for dummy-myproxy-logon
+    if [ -d "${GSI_USER_DIR_ORIG}" ]; then
+        copy0 "${GSI_USER_DIR_ORIG}" "${GSI_USER_DIR}"
+    fi
+
 fi # end of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
 
 

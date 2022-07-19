@@ -14,7 +14,6 @@ use OCA\Files_external_gfarm\Auth\AuthMechanismGfarm;
 class Gfarm extends \OC\Files\Storage\Local {
 	//const APP_NAME = 'files_external_gfarm';
 
-	const MYPROXY_LOGON = "/nc-gfarm/app-gfarm/bin/dummy-myproxy-logon";
 	const GRID_PROXY_INFO = "/nc-gfarm/app-gfarm/bin/dummy-grid-proxy-info";
 	const GFARM_MOUNT = "/nc-gfarm/gfarm-mount";
 	const GFARM_UMOUNT = "fusermount -u";
@@ -689,6 +688,8 @@ EOF;
 
 class GfarmAuthMyProxy extends GfarmAuth {
 	public const TYPE = "myproxy";
+	public const MYPROXY_LOGON = "/nc-gfarm/dummy-myproxy-logon"; //TODO
+	//public const MYPROXY_LOGON = "myproxy-logon"; //TODO
 
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
@@ -703,11 +704,13 @@ class GfarmAuthMyProxy extends GfarmAuth {
 	}
 
 	public function conf_ready() {
-		return (file_exists($this->gfarm_conf()));
+		return (file_exists($this->gfarm_conf())
+				&& file_exists($this->x509_proxy_cert()));
 	}
 
 	public function conf_clear() {
 		unlink($this->gfarm_conf());
+		unlink($this->x509_proxy_cert());
 	}
 
 	public function authenticated() {
@@ -715,8 +718,45 @@ class GfarmAuthMyProxy extends GfarmAuth {
 	}
 
 	public function logon() {
-		// TODO myproxy-logon
-		return true;
+		// myproxy-logon
+		$user = $this->gf->user;
+		$proxy = $this->x509_proxy_cert();
+		$password = $this->gf->password;
+
+		$command = self::MYPROXY_LOGON
+				   . " " . escapeshellarg($user)
+				   . " " . escapeshellarg($proxy);
+		$this->gf->debug($command);
+
+		$descriptorspec = array(
+			0 => array("pipe", "r"),
+			1 => array("pipe", "w"),
+			2 => array("file", "/tmp/nextcloud-gfarm-debug.txt", "a") );
+
+		$cwd = '/';
+		$env = array();
+
+		$process = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
+
+		$output = null;
+		$retval = null;
+		if (is_resource($process)) {
+			fwrite($pipes[0], "$password\n");
+			fclose($pipes[0]);
+			$output = stream_get_contents($pipes[1]);
+			fclose($pipes[1]);
+			fclose($pipes[2]);
+
+			$retval = proc_close($process);
+			$this->gf->debug("retval=$retval");
+		}
+		if ($retval === 0) {
+			$this->gf->debug("true");
+			return true;
+		} else {
+			$this->gf->debug("false");
+			return false;
+		}
 	}
 }
 
