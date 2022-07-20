@@ -125,19 +125,24 @@ check_mount()
     # not mounted
 }
 
-# shortcut
-check_mount_quick
+if [ $remount -eq 0 ]; then
+    # shortcut
+    check_mount_quick
+fi
 
 trap unlock EXIT
 
 lock_and_wait
+
+if [ $remount -eq 1 ]; then
+    if umount_gfarm2fs "${mountpoint}"; then
+        LOG_DEBUG "umount when remount=1"
+    fi
+fi
+
 # recheck in lock
 check_mount
 
-if [ $remount -eq 1 ]; then
-    LOG_DEBUG "umount when remount=1"
-    umount_gfarm2fs "${mountpoint}"
-fi
 mount_gfarm2fs "${mountpoint}" "${gfarm_path}"
 retval=$?
 if [ $retval -ne 0 ]; then

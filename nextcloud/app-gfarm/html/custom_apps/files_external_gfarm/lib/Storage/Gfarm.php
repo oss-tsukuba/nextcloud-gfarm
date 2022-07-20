@@ -357,58 +357,6 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 	}
 
-// 	private function logon() {
-// 		return $this->myproxy_logon($password);
-// 	}
-
-// 	private function myproxy_logon($password) {
-// 		$gfarm_dir = $this->gfarm_dir;
-// 		$mountpoint = $this->mountpoint;
-// 		$user = $this->user;
-
-// 		$command = self::MYPROXY_LOGON . " " . $mountpoint . " " . $user . " " . $gfarm_dir;
-
-// 		$descriptorspec = array(
-// 			0 => array("pipe", "r"),
-// 			1 => array("pipe", "w"),
-// 			2 => array("pipe", "w") );
-
-// 		$cwd = '/';
-// 		$env = array();
-
-// 		$process = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
-
-// 		$output = null;
-// 		$retval = null;
-// 		if (is_resource($process)) {
-// 			fwrite($pipes[0], "$password\n");
-// 			fclose($pipes[0]);
-// 			$output = stream_get_contents($pipes[1]);
-// 			fclose($pipes[1]);
-// 			fclose($pipes[2]);
-
-// 			$retval = proc_close($process);
-// 		}
-// //syslog(LOG_DEBUG, "command: [" . print_r($command, true) . "]");
-// //syslog(LOG_DEBUG, "output: [" . print_r($output, true) . "]");
-// //syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
-// 	}
-
-// 	private function grid_proxy_info() {
-// 		$gfarm_dir = $this->gfarm_dir;
-// 		$mountpoint = $this->mountpoint;
-// 		$user = $this->user;
-
-// 		$command = self::GRID_PROXY_INFO . " " . escapeshellarg($mountpoint);
-// 		$output = null;
-// 		$retval = null;
-// 		exec($command, $output, $retval);
-// //syslog(LOG_DEBUG, "command: [" . print_r($command, true) . "]");
-// //syslog(LOG_DEBUG, "output: [" . print_r($output, true) . "]");
-// //syslog(LOG_DEBUG, "retval: [" . print_r($retval, true) . "]");
-// 		return $retval;
-// 	}
-
 }
 
 abstract class GfarmAuth {
@@ -511,24 +459,22 @@ abstract class GfarmAuth {
 
 		// initializing
 
-		// TODO : not work because gfstatus call gfarm_initialize()
-		// before preparing configuration files.
-
-		// $command = "gfstatus";
-		// exec($command, $lines, $retval);
-		// if ($retval !== 0) {
-		// 	return false;
-		// }
-
-		$output_str = <<<EOF
+		$command = 'gfstatus -S';
+		exec($command, $lines, $retval);
+		if ($retval === 0) {
+			// Gfarm version 2.8 or later
+		} else {
+			// Gfarm version 2.7
+			$output_str = <<<EOF
 client auth gsi     : available
-client auth tls     : available
+client auth tls     : not available
 client auth kerberos: not available
 
 EOF;
-		$lines = explode("\n",
-						  str_replace(array("\r\n", "\r", "\n"), "\n",
-									  $output_str));
+			$lines = explode("\n",
+					 str_replace(array("\r\n", "\r", "\n"), "\n",
+								 $output_str));
+		}
 
 		$result = false;
 		foreach (array_keys(self::SUPPORT_AUTH) as $t) {
@@ -688,8 +634,8 @@ EOF;
 
 class GfarmAuthMyProxy extends GfarmAuth {
 	public const TYPE = "myproxy";
-	public const MYPROXY_LOGON = "/nc-gfarm/dummy-myproxy-logon"; //TODO
-	//public const MYPROXY_LOGON = "myproxy-logon"; //TODO
+	//public const MYPROXY_LOGON = "/nc-gfarm/dummy-myproxy-logon";
+	public const MYPROXY_LOGON = "/nc-gfarm/myproxy-logon";
 
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
@@ -745,7 +691,9 @@ class GfarmAuthMyProxy extends GfarmAuth {
 			fclose($pipes[0]);
 			$output = stream_get_contents($pipes[1]);
 			fclose($pipes[1]);
-			fclose($pipes[2]);
+			if (isset($pipes[2])) {
+				fclose($pipes[2]);
+			}
 
 			$retval = proc_close($process);
 			$this->gf->debug("retval=$retval");

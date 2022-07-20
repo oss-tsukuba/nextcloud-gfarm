@@ -1,0 +1,13 @@
+#!/bin/bash
+
+source /nc-gfarm/config.sh
+#source ${CONFIG_LIB}
+
+USER="$1"
+PROXY="$2"
+
+myproxy-logon --quiet --stdin_pass \
+--pshost "${MYPROXY_SERVER}" \
+--username "${USER}" \
+--proxy_lifetime "${GSI_PROXY_HOURS}" \
+--out "${PROXY}"
