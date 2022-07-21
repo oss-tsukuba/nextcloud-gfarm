@@ -2,7 +2,7 @@
 
 # -*- mode: shell-script; indent-tabs-mode: nil; sh-basic-offset: 4; -*-
 
-set -eux
+set -eu
 set -o pipefail
 
 source /nc-gfarm/config.sh
@@ -11,7 +11,8 @@ source ${CONFIG_LIB}
 nextcloud_version > ${NEXTCLOUD_GFARM_VERSION_FILE}
 nextcloud_gfarm_version >> ${NEXTCLOUD_GFARM_VERSION_FILE}
 
-${OCC} maintenance:mode --on
+# force online
+${OCC} maintenance:mode --off || true
 
 create_mount_point()
 {
@@ -56,10 +57,10 @@ else # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
     ln -f -s "${LOCAL_DATA_DIR}" "${DATA_DIR}"
 fi # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
 
-cat "${MAIN_CONFIG}"  #TODO
+#cat "${MAIN_CONFIG}"  # for debug
 
 # rsync before calling occ
-rsync -av --delete "${APP_GFARM_SRC_MAIN}/" "${APP_GFARM_DEST}/"
+rsync -a --delete "${APP_GFARM_SRC_MAIN}/" "${APP_GFARM_DEST}/"
 chown0 "${APP_GFARM_DEST}/"
 
 # initialization after creating new (or renew) container
@@ -108,10 +109,10 @@ firstrunwizard
 # TODO ??? to enable background job
 ${OCC} app:disable files_external_gfarm || true
 for APP in ${APPS_ENABLE}; do
-    ${OCC} app:enable ${APP}
+    ${OCC} app:enable ${APP} || true
 done
 for APP in ${APPS_DISABLE}; do
-    ${OCC} app:disable ${APP}
+    ${OCC} app:disable ${APP} || true
 done
 
 ### oidc_login
@@ -150,9 +151,6 @@ chown0 "${BACKUP_DIR}"
 LINK_DATA="${HOMEDIR}/data"
 [ -d "${LINK_DATA}" ] && rmdir "${LINK_DATA}"
 [ -h "${LINK_DATA}" ] || ${SUDO_USER} ln -s "${DATA_DIR}" "${LINK_DATA}"
-
-# force online
-${OCC} maintenance:mode --off || true
 
 ARGS="$@"
 pid=0

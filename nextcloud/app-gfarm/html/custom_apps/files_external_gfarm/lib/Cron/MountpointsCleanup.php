@@ -77,11 +77,20 @@ class MountpointsCleanup extends TimedJob {
 				$this->debug($e->__toString());
 				// next entry
 				continue;
+			} catch (Error $e) {
+				$this->debug($e->__toString());
+				// next entry
+				continue;
 			}
 
 			try {
 				$mountpoint = realpath($storage->mountpoint);
+				if (! $mountpoint) {
+					$mountpoint = $storage->mountpoint;
+				}
 			} catch (Exception $e) {
+				$mountpoint = $storage->mountpoint;
+			} catch (Error $e) {
 				$mountpoint = $storage->mountpoint;
 			}
 			$mountpoint_list[] = $mountpoint;
@@ -100,6 +109,8 @@ class MountpointsCleanup extends TimedJob {
 					Storage\Gfarm::umount_static($mounted);
 					$this->debug("auto umount: " . $mounted);
 				} catch (Exception $e) {
+					// ignore
+				} catch (Error $e) {
 					// ignore
 				}
 			}

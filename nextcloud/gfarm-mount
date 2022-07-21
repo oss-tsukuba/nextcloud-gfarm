@@ -27,15 +27,50 @@ fi
 
 LOG_DEBUG()
 {
+    #echo >&2 DEBUG "[${trace_id}] $@"
     DEBUG "[${trace_id}] $@"
 }
 
 LOG_ERR()
 {
+    #echo >&2 ERR "[${trace_id}] $@"
     ERR "[${trace_id}] $@"
 }
 
 LOG_DEBUG "$@"
+
+check_auth()
+{
+    case "$auth_type" in
+        sharedsecret)
+            LOG_DEBUG "gfkey -e"
+            gfkey -e > /dev/null 2>&1
+            return $?
+            ;;
+        gsi|myproxy)
+            LOG_DEBUG "grid-proxy-info"
+            grid-proxy-info > /dev/null 2>&1
+            return $?
+            ;;
+        *)
+            LOG_ERR "unknown auth_type: $auth_type"
+            return 1
+            ;;
+    esac
+    return 1
+}
+
+check_mount_quick()
+{
+    # check quickly
+    for mp in $(mount -t fuse.gfarm2fs | cut -d " " -f 3- | awk -F" type fuse" '{print $1}'); do
+        if [ "$mountpoint" = "$mp" ]; then
+            LOG_DEBUG "already mounted: $mountpoint"
+            return 0
+        fi
+    done
+    return 1
+}
 
 remount=0
 case "$mode" in
@@ -44,23 +79,14 @@ case "$mode" in
     REMOUNT)
         remount=1
         ;;
+    CHECK_MOUNT)
+        check_auth || exit $?
+        check_mount_quick
+        exit $?
+        ;;
     CHECK_AUTH)
-        case "$auth_type" in
-            sharedsecret)
-                LOG_DEBUG "gfkey -e"
-                gfkey -e > /dev/null 2>&1
-                exit $?
-                ;;
-            gsi|myproxy)
-                LOG_DEBUG "grid-proxy-info"
-                grid-proxy-info > /dev/null 2>&1
-                exit $?
-                ;;
-            *)
-                LOG_ERR "unknown auth_type: $auth_type"
-                exit 1
-                ;;
-        esac
+        check_auth
+        exit $?
         ;;
     *)
         LOG_ERR "unknown mode: $mode"
@@ -68,6 +94,12 @@ case "$mode" in
         ;;
 esac
 
+if [ $remount -eq 0 ]; then
+    # shortcut
+    if check_mount_quick; then
+        exit 0
+    fi
+fi
 
 lock_expired()
 {
@@ -96,17 +128,6 @@ unlock()
     rmdir "$lockfile" || :
 }
 
-check_mount_quick()
-{
-    # check quickly
-    for mp in $(mount -t fuse.gfarm2fs | cut -d " " -f 3- | awk -F" type fuse" '{print $1}'); do
-        if [ "$mountpoint" = "$mp" ]; then
-            LOG_DEBUG "already mounted: $mountpoint"
-            exit 0
-        fi
-    done
-}
-
 check_mount()
 {
     # check carefully
@@ -116,32 +137,30 @@ check_mount()
     if [ "$fstype" = "gfarm2fs" ]; then
         if [ "$mountpoint" = "$mp" ]; then
             LOG_DEBUG "already mounted: $mountpoint"
-            exit 0
+            return 0
         else
             LOG_ERR "unexpected: mountpoint=${mountpoint} != $mp"
-            exit 1
+            exit 1  # EXIT
         fi
     fi
     # not mounted
+    return 1
 }
-
-if [ $remount -eq 0 ]; then
-    # shortcut
-    check_mount_quick
-fi
 
 trap unlock EXIT
 
 lock_and_wait
 
 if [ $remount -eq 1 ]; then
-    if umount_gfarm2fs "${mountpoint}"; then
+    if umount_gfarm2fs "${mountpoint}" 2> /dev/null; then
         LOG_DEBUG "umount when remount=1"
     fi
 fi
 
 # recheck in lock
-check_mount
+if check_mount; then
+    exit 0
+fi
 
 mount_gfarm2fs "${mountpoint}" "${gfarm_path}"
 retval=$?

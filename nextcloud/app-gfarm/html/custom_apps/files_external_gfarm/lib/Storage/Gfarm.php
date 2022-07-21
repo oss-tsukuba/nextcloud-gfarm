@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace OCA\Files_external_gfarm\Storage;
 
-use OC\Files\Storage\Flysystem;
-use OC\Files\Storage\Flysystem\Common;
+use OC\Files\Storage\Common;
 use OCP\Files\StorageAuthException;
+use OCP\Files\Storage\IStorage;
 use OCP\IConfig;
 use OCA\Files_External\Lib\StorageConfig;
 
@@ -149,7 +149,13 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 		// required by GfarmAuth::create
 		if (! file_exists(self::GFARM_MOUNTPOINT_POOL)) {
-			mkdir(self::GFARM_MOUNTPOINT_POOL, 0700, true);
+			try {
+				mkdir(self::GFARM_MOUNTPOINT_POOL, 0700, true);
+			} catch (Error $e) {
+			}
+			if (! file_exists(self::GFARM_MOUNTPOINT_POOL)) {
+				throw $this->invalid_exception("cannot create directory: " . self::GFARM_MOUNTPOINT_POOL);
+			}
 		}
 
 		$this->auth = GfarmAuth::create($this);
@@ -183,8 +189,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 		//$this->debug("__construct() done");
 	}
 
-	public function __destruct() {
-	}
+	// public function __destruct() {
+	// }
 
 	private function getAccessUser() {
 		return \OC_User::getUser();
@@ -210,8 +216,23 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	// override
+	public function isLocal() {
+		return false;
+	}
+
+	// override
 	public function getId() {
 		return $this->id;
+	}
+
+	// override
+	public function instanceOfStorage($class) {
+		if (ltrim($class, '\\') === 'OC\Files\Storage\Local') {
+			// to avoid calling rename() in moveFromStorage()
+			// when a file is deleted.
+			return false;
+		}
+		return parent::instanceOfStorage($class);
 	}
 
 	private function mountpoint_init() {
@@ -243,7 +264,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 		if ($this->mount && !file_exists($mountpoint)) {
 			try {
 				mkdir($mountpoint, 0700, $recursive); // may race
-			} catch (Exception $e) {
+			} catch (Error $e) {
 			}
 			if (! file_exists($mountpoint)) {
 				return null;
@@ -253,6 +274,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	private function mount_start() {
+		if ($this->gfarm_check_mount()) { // shortcut
+			// already mounted
+			return;
+		}
+
 		if ($this->secureconn && ! $this->auth->secureconn_supported()) {
 			throw $this->auth_exception("secureconn unsupported");
 		}
@@ -309,6 +335,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 	}
 
+	public function gfarm_check_mount() {
+		//$this->debug("gfarm_check_mount");
+		return $this->mount_common("CHECK_MOUNT");
+	}
+
 	public function gfarm_check_auth() {
 		//$this->debug("gfarm_check_auth");
 		return $this->mount_common("CHECK_AUTH");
@@ -326,16 +357,18 @@ class Gfarm extends \OC\Files\Storage\Local {
 		exec($command, $output, $retval);
 		foreach (glob($mountpoint . '.*') as $filename) {
 			try {
-				unlink($filename);
-			} catch (Exception $e) {
+				$ret = unlink($filename);
+			} catch (Error $e) {
 				// ignore
 			}
 		}
 		$retry_max = 10;
 		for ($i = 0; $i < $retry_max; $i++) {
 			try {
-				rmdir($mountpoint);
-			} catch (Exception $e) {
+				if (rmdir($mountpoint)) {
+					break;
+				}
+			} catch (Error $e) {
 				// ignore
 			}
 			sleep(1);
@@ -459,7 +492,7 @@ abstract class GfarmAuth {
 
 		// initializing
 
-		$command = 'gfstatus -S';
+		$command = 'gfstatus -S 2> /dev/null';
 		exec($command, $lines, $retval);
 		if ($retval === 0) {
 			// Gfarm version 2.8 or later
