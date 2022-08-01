@@ -296,11 +296,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 			if (! $this->auth->logon()) {
 				throw $this->auth_exception("logon failed");
 			}
-			$remount = true;
 			if (! $this->auth->authenticated()) {
 				$this->gfarm_umount();
 				throw $this->auth_exception("authentication failed");
 			}
+			$remount = true;
 		}
 
 		if (! $this->gfarm_mount($remount)) {
