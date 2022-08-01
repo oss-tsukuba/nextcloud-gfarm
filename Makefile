@@ -65,6 +65,7 @@ prune:
 
 selfsigned-cert-generate:
 	$(SSC_COMPOSE) up
+	$(SSC_COMPOSE) down
 
 selfsigned-cert-ps:
 	$(SSC_COMPOSE) ps
