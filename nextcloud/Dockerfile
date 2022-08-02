@@ -71,6 +71,22 @@ RUN echo ${NEXTCLOUD_VERSION} \
   && ldconfig \
   && mkdir -p /var/spool/cron/crontabs
 
+### for debug
+# RUN apt-get update \
+#   && apt-get install -y \
+#   lsb-release \
+#   && CODENAME=$(lsb_release -cs) \
+#   && LIST="/etc/apt/sources.list.d/debug.list" \
+#   && echo "deb http://debug.mirrors.debian.org/debian-debug/ ${CODENAME}-debug main" >> ${LIST} \
+#   && echo "deb http://debug.mirrors.debian.org/debian-debug/ ${CODENAME}-backports-debug main" >> ${LIST} \
+#   && echo "deb http://debug.mirrors.debian.org/debian-debug/ ${CODENAME}-proposed-updates-debug main" >> ${LIST} \
+#   && apt-get update \
+#   && apt-get install -y \
+#   valgrind \
+#   libc6-dbg \
+#   libfuse2-dbgsym \
+#   valgrind-dbg
+
 COPY . /nc-gfarm
 
 # Run in the following order:
