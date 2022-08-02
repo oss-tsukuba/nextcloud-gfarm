@@ -129,6 +129,7 @@ For details of Nextcloud parameters, please refer to
     - NOTE: Do not share GFARM_DATA_PATH with other nextcloud-gfarm.
 - GFARM_BACKUP_PATH: Gfarm backup directory
     - NOTE: Do not share GFARM_BACKUP_PATH with other nextcloud-gfarm.
+- MYPROXY_USER: username for myproxy server (optional)
 
 ### Gfarm parameters
 Default is specified by `docker-compose.yml`.
@@ -139,7 +140,6 @@ Default is specified by `docker-compose.yml`.
     - `user_proxy_cert` (optional) (copy from `/tmp/x509up_u<UID>`)
 - GSI_USER_DIR: path to `~/.globus` on host OS
 - MYPROXY_SERVER: myproxy server (hostname:port) (optional)
-- MYPROXY_USER: username for myproxy server (when using MYPROXY_SERVER)
 
 ### Optional parameters
 Default is specified by `docker-compose.yml`.
