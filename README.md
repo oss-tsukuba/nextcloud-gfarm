@@ -111,11 +111,6 @@ For details of Nextcloud parameters, please refer to
 - NEXTCLOUD_VERSION: Nextcloud version
 - SERVER_NAME: server name for this Nextcloud
 - PROTOCOL: https or http
-- GFARM_USER: Gfarm user name
-- GFARM_DATA_PATH: Gfarm data directory
-    - NOTE: Do not share GFARM_DATA_PATH with other nextcloud-gfarm.
-- GFARM_BACKUP_PATH: Gfarm backup directory
-    - NOTE: Do not share GFARM_BACKUP_PATH with other nextcloud-gfarm.
 - GFARM_CONF_DIR: path to parent directory on host OS for the following files
      - gfarm2.conf: Gfarm configuration file
 
@@ -128,8 +123,16 @@ For details of Nextcloud parameters, please refer to
 - HTTP_PORT: http port (redirect to https port)
 - HTTPS_PORT: https port
 
+### Gfarm parameters only when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
+- GFARM_USER: Gfarm user name to access GFARM_DATA_PATH and GFARM_BACKUP_PATH
+- GFARM_DATA_PATH: Gfarm data directory
+    - NOTE: Do not share GFARM_DATA_PATH with other nextcloud-gfarm.
+- GFARM_BACKUP_PATH: Gfarm backup directory
+    - NOTE: Do not share GFARM_BACKUP_PATH with other nextcloud-gfarm.
+
 ### Gfarm parameters
 Default is specified by `docker-compose.yml`.
+- NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR: use Gfarm directory as Nextcloud datadir instead of local volume. (1: enable, 0: disable)
 - GFARM_CONF_USER_DIR: path to parent directory on host OS for the following files (Please make a special directory and copy the files)
     - `gfarm2rc` (optional) (copy from `~/.gfarm2rc`)
     - `gfarm_shared_key` (optional) (copy from `~/.gfarm_shared_key`)

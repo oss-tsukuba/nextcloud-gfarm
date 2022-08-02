@@ -90,6 +90,8 @@ if [ -f "${ENV_FILE_OVERRIDE}" ]; then
     ENV_FILE_TEMPLATE="${ENV_FILE_OVERRIDE}"
 fi
 
+NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=0
+
 IFS='
 '
 for kv in $(cat "${ENV_FILE_COMMON}" "${ENV_FILE_TEMPLATE}"); do
@@ -97,6 +99,16 @@ for kv in $(cat "${ENV_FILE_COMMON}" "${ENV_FILE_TEMPLATE}"); do
     echo "$kv" | grep -q "^\s*#.*$" && continue
     k=${kv%=*}
     v=${kv#*=}
+
+    if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} = "0" ]; then
+        # skip unnecessary keys
+        case "${k}" in
+            MYPROXY_USER) continue;;
+            GFARM_USER) continue;;
+            GFARM_DATA_PATH) continue;;
+            GFARM_BACKUP_PATH) continue;;
+        esac
+    fi
 
     if VAL=$(read_input "$k" "$v"); then
         :
@@ -107,6 +119,8 @@ for kv in $(cat "${ENV_FILE_COMMON}" "${ENV_FILE_TEMPLATE}"); do
     echo "${k}=${VAL}" >> "${TMPFILE}"
     if [ "${k}" = "PROTOCOL" ]; then
         PROTOCOL="${VAL}"
+    elif [ "${k}" = "NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR" ]; then
+        NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR="${VAL}"
     fi
 done
 
