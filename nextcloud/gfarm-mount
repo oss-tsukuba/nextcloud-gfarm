@@ -33,6 +33,8 @@ LOG_DEBUG()
 
 LOG_ERR()
 {
+    # stdout for Exception
+    echo "$@"
     #echo >&2 ERR "[${trace_id}] $@"
     ERR "[${trace_id}] $@"
 }
@@ -44,12 +46,16 @@ check_auth()
     case "$auth_type" in
         sharedsecret)
             LOG_DEBUG "gfkey -e"
-            gfkey -e > /dev/null 2>&1
+            # swap stdout and stderr
+            # return stderr
+            gfkey -e 3>&2 2>&1 1>&3
             return $?
             ;;
         gsi|myproxy)
             LOG_DEBUG "grid-proxy-info"
-            grid-proxy-info > /dev/null 2>&1
+            # swap stdout and stderr
+            # return stderr
+            grid-proxy-info 3>&2 2>&1 1>&3
             return $?
             ;;
         *)
@@ -139,7 +145,7 @@ check_mount()
             LOG_DEBUG "already mounted: $mountpoint"
             return 0
         else
-            LOG_ERR "unexpected: mountpoint=${mountpoint} != $mp"
+            LOG_ERR "unexpected mountpoint: mountpoint=${mountpoint} != $mp"
             exit 1  # EXIT
         fi
     fi
@@ -162,7 +168,13 @@ if check_mount; then
     exit 0
 fi
 
-mount_gfarm2fs "${mountpoint}" "${gfarm_path}"
+# check UDP connection for gfsd
+if ! gfhost  $(gfhost -M | head -5 | awk '{ print $3 }') > /dev/null; then
+    LOG_ERR "No available gfsd (UDP connection may not be available)"
+    exit 1
+fi
+
+mount_gfarm2fs "${mountpoint}" "${gfarm_path}" 3>&2 2>&1 1>&3
 retval=$?
 if [ $retval -ne 0 ]; then
     LOG_ERR "gfarm2fs mount failed: mountpoint=${mountpoint}"

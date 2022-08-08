@@ -32,7 +32,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	public $auth_scheme = NULL;
 
 	private function log_prefix() {
-		return "[" . $this->debug_traceid . "]("
+		return "[" . $this->debug_traceid . "]{"
 			. __CLASS__
 			. ": access nextcloud_user=" . $this->nextcloud_user
 			. ", storage_owner=" . $this->storage_owner
@@ -41,7 +41,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 			. ", secureconn=" . print_r($this->secureconn, true)
 			. ", mountpoint=" . $this->mountpoint
 			. ", auth_scheme=" . $this->auth_scheme
-			. ") ";
+			. "} ";
 	}
 
 	public function debug($message) {
@@ -55,12 +55,12 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	private function exception_params() {
-		return " (access nextcloud_user=" . $this->nextcloud_user
+		return " {access nextcloud_user=" . $this->nextcloud_user
 			. ", storage_owner=" . $this->storage_owner
 			. ". gfarm_user=" . $this->user
 			. ", gfarm_dir=" . $this->gfarm_dir
 			. ", auth_scheme=" . $this->auth_scheme
-			. ")";
+			. "}";
 	}
 
 	public function invalid_arg_exception($message) {
@@ -274,7 +274,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	private function mount_start() {
-		if ($this->gfarm_check_mount()) { // shortcut
+		$output = '';
+		if ($this->gfarm_check_mount($output)) { // shortcut
 			// already mounted
 			return;
 		}
@@ -289,26 +290,26 @@ class Gfarm extends \OC\Files\Storage\Local {
 				throw $this->auth_exception("cannot create files for authentication");
 			}
 		}
-		if (! $this->auth->authenticated()) {
+		if (! $this->auth->authenticated($output)) {
 			if (! $this->auth->conf_init()) { // reset
-				throw $this->auth_exception("cannot recreate files for authentication");
+				throw $this->auth_exception("cannot recreate files for authentication: " . $output);
 			}
-			if (! $this->auth->logon()) {
-				throw $this->auth_exception("logon failed");
+			if (! $this->auth->logon($output)) {
+				throw $this->auth_exception("logon failed: " . $output);
 			}
-			if (! $this->auth->authenticated()) {
+			if (! $this->auth->authenticated($output)) {
 				$this->gfarm_umount();
-				throw $this->auth_exception("authentication failed");
+				throw $this->auth_exception("authentication failed: " . $output);
 			}
 			$remount = true;
 		}
 
-		if (! $this->gfarm_mount($remount)) {
-			throw $this->auth_exception("gfarm mount failed");
+		if (! $this->gfarm_mount($remount, $output)) {
+			throw $this->auth_exception("gfarm mount failed: " . $output);
 		}
 	}
 
-	private function mount_common($mode) {
+	private function mount_common($mode, &$output) {
 		$command = self::GFARM_MOUNT
 				   . " "
 				   . $mode
@@ -327,7 +328,10 @@ class Gfarm extends \OC\Files\Storage\Local {
 				   ;
 		$output = null;
 		$retval = null;
-		exec($command, $output, $retval);
+		$lines = null;
+		exec($command, $lines, $retval);
+		$output = implode($lines);
+		#$this->debug("command output=" . $output);
 		if ($retval === 0) {
 			return true;
 		} else {
@@ -335,19 +339,19 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 	}
 
-	public function gfarm_check_mount() {
+	public function gfarm_check_mount(&$output) {
 		//$this->debug("gfarm_check_mount");
-		return $this->mount_common("CHECK_MOUNT");
+		return $this->mount_common("CHECK_MOUNT", $output);
 	}
 
-	public function gfarm_check_auth() {
+	public function gfarm_check_auth(&$output) {
 		//$this->debug("gfarm_check_auth");
-		return $this->mount_common("CHECK_AUTH");
+		return $this->mount_common("CHECK_AUTH", $output);
 	}
 
-	public function gfarm_mount($remount) {
+	public function gfarm_mount($remount, &$output) {
 		$mode = $remount ? "REMOUNT" : "MOUNT";
-		return $this->mount_common($mode);
+		return $this->mount_common($mode, $output);
 	}
 
 	public static function umount_static($mountpoint) {
@@ -444,8 +448,8 @@ abstract class GfarmAuth {
 
 	abstract public function conf_ready();
 	abstract public function conf_clear();
-	abstract public function authenticated();
-	abstract public function logon();
+	abstract public function authenticated(&$output);
+	abstract public function logon(&$output);
 
 	public function gfarm_conf() {
 		if (!isset($this->gfconf)) {
@@ -656,11 +660,11 @@ EOF;
 		unlink($this->gfarm_shared_key());
 	}
 
-	public function authenticated() {
-		return $this->gf->gfarm_check_auth();
+	public function authenticated(&$output) {
+		return $this->gf->gfarm_check_auth($output);
 	}
 
-	public function logon() {
+	public function logon(&$output) {
 		return true;
 	}
 }
@@ -692,11 +696,11 @@ class GfarmAuthMyProxy extends GfarmAuth {
 		unlink($this->x509_proxy_cert());
 	}
 
-	public function authenticated() {
-		return $this->gf->gfarm_check_auth();
+	public function authenticated(&$output) {
+		return $this->gf->gfarm_check_auth($output);
 	}
 
-	public function logon() {
+	public function logon(&$output) {
 		// myproxy-logon
 		$user = $this->gf->user;
 		$proxy = $this->x509_proxy_cert();
@@ -709,8 +713,11 @@ class GfarmAuthMyProxy extends GfarmAuth {
 
 		$descriptorspec = array(
 			0 => array("pipe", "r"),
-			1 => array("pipe", "w"),
-			2 => array("file", "/tmp/nextcloud-gfarm-debug.txt", "a") );
+			#1 => array("pipe", "w"),
+			#2 => array("file", "/tmp/nextcloud-gfarm-debug.txt", "a"),
+			1 => array("file", "/dev/null", "w"),
+			2 => array("pipe", "w"),
+			);
 
 		$cwd = '/';
 		$env = array();
@@ -722,8 +729,12 @@ class GfarmAuthMyProxy extends GfarmAuth {
 		if (is_resource($process)) {
 			fwrite($pipes[0], "$password\n");
 			fclose($pipes[0]);
-			$output = stream_get_contents($pipes[1]);
-			fclose($pipes[1]);
+			#$output = stream_get_contents($pipes[1]);
+			$output = stream_get_contents($pipes[2]);
+
+			if (isset($pipes[1])) {
+				fclose($pipes[1]);
+			}
 			if (isset($pipes[2])) {
 				fclose($pipes[2]);
 			}
