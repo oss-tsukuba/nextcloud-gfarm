@@ -149,7 +149,7 @@ mkdir -p "${BACKUP_DIR}"
 chown0 "${BACKUP_DIR}"
 
 LINK_DATA="${HOMEDIR}/data"
-[ -d "${LINK_DATA}" ] && rmdir "${LINK_DATA}"
+[ -d "${LINK_DATA}" -a ! -h "${LINK_DATA}" ] && rmdir "${LINK_DATA}"
 [ -h "${LINK_DATA}" ] || ${SUDO_USER} ln -s "${DATA_DIR}" "${LINK_DATA}"
 
 ARGS="$@"
