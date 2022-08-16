@@ -142,9 +142,9 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 		$this->auth_scheme = AuthMechanismGfarm::get_scheme($arguments);
 		if ($this->auth_scheme === null) {
-			throw $this->invalid_exception("no auth_scheme");
-		} elseif ($this->auth_scheme === AuthMechanismGfarm::SCHEME_GFARM_X509_PROXY) { // TODO
-			throw $this->invalid_exception("not implemented yet");
+			throw $this->invalid_arg_exception("no auth_scheme");
+		} elseif ($this->auth_scheme === AuthMechanismGfarm::SCHEME_GFARM_GSI_X509_PROXY) { // TODO
+			throw $this->invalid_arg_exception("not implemented yet");
 		}
 
 		// required by GfarmAuth::create
@@ -154,7 +154,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 			} catch (Error $e) {
 			}
 			if (! file_exists(self::GFARM_MOUNTPOINT_POOL)) {
-				throw $this->invalid_exception("cannot create directory: " . self::GFARM_MOUNTPOINT_POOL);
+				throw $this->invalid_arg_exception("cannot create directory: " . self::GFARM_MOUNTPOINT_POOL);
 			}
 		}
 
@@ -406,14 +406,14 @@ abstract class GfarmAuth {
 			=== AuthMechanismGfarm::SCHEME_GFARM_SHARED_KEY) {
 			return new GfarmAuthGfarmSharedKey($gfarm);
 		} elseif ($auth_scheme
-				  === AuthMechanismGfarm::SCHEME_GFARM_MYPROXY) {
-			return new GfarmAuthMyProxy($gfarm);
+				  === AuthMechanismGfarm::SCHEME_GFARM_GSI_MYPROXY) {
+			return new GfarmAuthGsiMyProxy($gfarm);
 		} elseif ($auth_scheme
-				  === AuthMechanismGfarm::SCHEME_GFARM_X509_PROXY) {
-			//$this->auth = new GfarmAuthX509Proxy($this); //TODO
-			throw $gfarm->invalid_exception("not implemented yet");
+				  === AuthMechanismGfarm::SCHEME_GFARM_GSI_X509_PROXY) {
+			//$this->auth = new GfarmAuthGsiX509PrivateKey($this); //TODO
+			throw $gfarm->invalid_arg_exception("not implemented yet");
 		}
-		throw $gfarm->invalid_exception("unknown auth_scheme: " . $auth_scheme);
+		throw $gfarm->invalid_arg_exception("unknown auth_scheme: " . $auth_scheme);
 	}
 
 	protected function init(Gfarm $gf, $type) {
@@ -669,7 +669,7 @@ EOF;
 	}
 }
 
-class GfarmAuthMyProxy extends GfarmAuth {
+class GfarmAuthGsiMyProxy extends GfarmAuth {
 	public const TYPE = "myproxy";
 	//public const MYPROXY_LOGON = "/nc-gfarm/dummy-myproxy-logon";
 	public const MYPROXY_LOGON = "/nc-gfarm/myproxy-logon";
@@ -752,6 +752,6 @@ class GfarmAuthMyProxy extends GfarmAuth {
 	}
 }
 
-// TODO GfarmAuthX509Proxy
+// TODO GfarmAuthGsiX509PrivateKey
 	//$this->gf->arguments['private_key'];
 	//$mp . ".x509_private_key";

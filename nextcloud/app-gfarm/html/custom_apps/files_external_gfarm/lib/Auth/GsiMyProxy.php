@@ -12,12 +12,12 @@ use OCP\IL10N;
 /**
  * for myproxy-logon
  */
-class MyProxy extends AuthMechanismGfarm {
+class GsiMyProxy extends AuthMechanismGfarm {
 	public function __construct(IL10N $l) {
 		$this
-			->setIdentifier(self::SCHEME_GFARM_MYPROXY)
-			->setScheme(self::SCHEME_GFARM_MYPROXY)
-			->setText($l->t('myproxy-logon'))
+			->setIdentifier(self::SCHEME_GFARM_GSI_MYPROXY)
+			->setScheme(self::SCHEME_GFARM_GSI_MYPROXY)
+			->setText($l->t('GSI:myproxy-logon'))
 			->addParameters(
 				[
 					(new DefinitionParameter('user', $l->t('Username')))

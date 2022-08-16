@@ -9,9 +9,11 @@ use OCA\Files_External\Lib\StorageConfig;
 use OCP\IUser;
 
 class AuthMechanismGfarm extends AuthMechanism {
+	// NOTE: cannot be changed later
 	public const SCHEME_GFARM_SHARED_KEY = 'gfarm_shared_key';
-	public const SCHEME_GFARM_MYPROXY = 'gfarm_myproxy';
-	public const SCHEME_GFARM_X509_PROXY = 'gfarm_x509proxy';
+	public const SCHEME_GFARM_GSI_MYPROXY = 'gfarm_gsi_myproxy';
+	public const SCHEME_GFARM_GSI_X509_PROXY = 'gfarm_gsi_x509proxy';
+	//public const SCHEME_GFARM_GSI_X509_PRIV_KEY = 'gfarm_gsi_x509privkey';
 
 	public const SCHEME_KEY_PREFIX = 'scheme_';
 
@@ -24,10 +26,10 @@ class AuthMechanismGfarm extends AuthMechanism {
 	public static function get_scheme($args) {
 		if (self::has_scheme($args, self::SCHEME_GFARM_SHARED_KEY)) {
 			return self::SCHEME_GFARM_SHARED_KEY;
-		} elseif (self::has_scheme($args, self::SCHEME_GFARM_MYPROXY)) {
-			return self::SCHEME_GFARM_MYPROXY;
-		} elseif (self::has_scheme($args, self::SCHEME_GFARM_X509_PROXY)) {
-			return self::SCHEME_GFARM_X509_PROXY;
+		} elseif (self::has_scheme($args, self::SCHEME_GFARM_GSI_MYPROXY)) {
+			return self::SCHEME_GFARM_GSI_MYPROXY;
+		} elseif (self::has_scheme($args, self::SCHEME_GFARM_GSI_X509_PROXY)) {
+			return self::SCHEME_GFARM_GSI_X509_PROXY;
 		}
 		return null;
 	}

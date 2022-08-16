@@ -17,7 +17,7 @@ class GfarmSharedKey extends AuthMechanismGfarm {
 		$this
 			->setIdentifier(self::SCHEME_GFARM_SHARED_KEY)
 			->setScheme(self::SCHEME_GFARM_SHARED_KEY)
-			->setText($l->t('Shared key'))
+			->setText($l->t('Gfarm shared key'))
 			->addParameters(
 				[
 					(new DefinitionParameter('user', $l->t('Username')))

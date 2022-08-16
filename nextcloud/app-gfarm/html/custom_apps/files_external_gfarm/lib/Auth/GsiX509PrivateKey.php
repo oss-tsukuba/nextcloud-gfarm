@@ -12,13 +12,12 @@ use OCP\IL10N;
 /**
  * for grid-proxy-init
  */
-# TODO rename: GsiX509PrivateKey
-class X509ProxyCert extends AuthMechanismGfarm {
+class GsiX509PrivateKey extends AuthMechanismGfarm {
 	public function __construct(IL10N $l) {
 		$this
-			->setIdentifier(self::SCHEME_GFARM_X509_PROXY)
-			->setScheme(self::SCHEME_GFARM_X509_PROXY)
-			->setText($l->t('grid-proxy-init'))
+			->setIdentifier(self::SCHEME_GFARM_GSI_X509_PROXY)
+			->setScheme(self::SCHEME_GFARM_GSI_X509_PROXY)
+			->setText($l->t('GSI:private key'))
 			->addParameters(
 				[
 					(new DefinitionParameter('password', $l->t('Passphrase')))
@@ -39,11 +38,5 @@ class X509ProxyCert extends AuthMechanismGfarm {
 	// StorageModifierTrait
 	// public function manipulateStorageConfig(StorageConfig &$storage, IUser $user = null) {
 	// 	parent::manipulateStorageConfig($storage, $user);
-
-	// 	// TODO unnecessary
-	// 	// use hash of private key as username
-	// 	$private_key = $storage->getBackendOption('private_key');
-	// 	$private_key_hash = substr(sha1($private_key), 0, 8);
-	// 	$storage->setBackendOption('user', $private_key_hash);
 	// }
 }
