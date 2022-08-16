@@ -44,7 +44,7 @@ class Application extends App implements IBackendProvider, IAuthMechanismProvide
 
 		return [
 			$container->get(Auth\MyProxy::class),
-			$container->get(Auth\X509ProxyCert::class),
+			#TODO $container->get(Auth\X509ProxyCert::class),
 			$container->get(Auth\GfarmSharedKey::class),
 			];
 	}

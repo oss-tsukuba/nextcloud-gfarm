@@ -12,6 +12,7 @@ use OCP\IL10N;
 /**
  * for grid-proxy-init
  */
+# TODO rename: GsiX509PrivateKey
 class X509ProxyCert extends AuthMechanismGfarm {
 	public function __construct(IL10N $l) {
 		$this

@@ -31,7 +31,7 @@ class BackendGfarm extends Backend {
 			])
 			->addAuthScheme(AuthMechanismGfarm::SCHEME_GFARM_SHARED_KEY)
 			->addAuthScheme(AuthMechanismGfarm::SCHEME_GFARM_MYPROXY)
-			->addAuthScheme(AuthMechanismGfarm::SCHEME_GFARM_X509_PROXY)
+			#TODO ->addAuthScheme(AuthMechanismGfarm::SCHEME_GFARM_X509_PROXY)
 			->setLegacyAuthMechanism($legacyAuth)
 		;
 	}
