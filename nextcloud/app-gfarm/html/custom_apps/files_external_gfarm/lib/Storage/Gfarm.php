@@ -126,11 +126,12 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 		$this->mount = $mount;
 
-		$this->secureconn = $arguments['secureconn'];
-		if ($this->secureconn === 1 || $this->secureconn === true) {
-			$this->secureconn = true;
-		} else {
-			$this->secureconn = false;
+		$this->secureconn = true; // default
+		if (isset($arguments['insecureconn'])) {
+			$insecureconn = $arguments['insecureconn'];
+			if ($insecureconn === 1 || $insecureconn === true) {
+				$this->secureconn = false;
+			}
 		}
 
 		$this->gfarm_dir = $arguments['gfarm_dir'];
