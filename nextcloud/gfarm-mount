@@ -169,7 +169,8 @@ if check_mount; then
 fi
 
 # check UDP connection for gfsd
-if ! gfhost  $(gfhost -M | head -5 | awk '{ print $3 }') > /dev/null; then
+num=$(gfhost $(gfhost -M | head -10 | awk '{ print $3 }') | wc -l)
+if [ $num -le 0 ]; then
     LOG_ERR "No available gfsd (UDP connection may not be available)"
     exit 1
 fi
