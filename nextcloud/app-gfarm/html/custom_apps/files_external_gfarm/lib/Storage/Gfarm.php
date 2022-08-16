@@ -245,7 +245,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 		//$secure = $this->secureconn_str();
 		$password = $this->password;
 		$id = $this->id;
-		$hash_algo = 'sha512/224';
+		#$hash_algo = 'sha512/224';
+		$hash_algo = 'sha1';
 
 		$pattern = '/[^\w\d]+/';
 		$replacement = '';
