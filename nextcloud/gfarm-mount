@@ -55,7 +55,7 @@ check_auth()
             LOG_DEBUG "grid-proxy-info"
             # swap stdout and stderr
             # return stderr
-            grid-proxy-info 3>&2 2>&1 1>&3
+            grid-proxy-info -exists 3>&2 2>&1 1>&3
             return $?
             ;;
         *)
