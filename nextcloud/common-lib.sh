@@ -45,7 +45,7 @@ mount_gfarm2fs()
     # for debug
     #VALGRIND="valgrind --log-file=/tmp/valgrind-$$.log --leak-check=full --show-possibly-lost=no"
     VALGRIND=
-    ${VALGRIND} gfarm2fs ${MNT_OPT} -o subdir="${SUBDIR}" "${MOUNTPOINT}"
+    ${SUDO_USER} ${VALGRIND} gfarm2fs ${MNT_OPT} -o subdir="${SUBDIR}" "${MOUNTPOINT}"
 }
 
 umount_gfarm2fs()
