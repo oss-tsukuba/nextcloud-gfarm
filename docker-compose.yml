@@ -20,7 +20,7 @@ services:
         - GFARM2FS_SRC_GIT_BRANCH=${GFARM2FS_SRC_GIT_BRANCH:-master}
 
         ### mandatory
-        - NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION:-23}
+        - NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION:-24}
         ### optional
         - http_proxy=${http_proxy:-}
         - https_proxy=${https_proxy:-}
