@@ -118,7 +118,7 @@ down-REMOVE_VOLUMES:
 COMMIT_HASH := nextcloud/commit_hash.sh
 commit_hash:
 	echo -n "NEXTCLOUD_GFARM_COMMIT_HASH=" > $(COMMIT_HASH)
-	git rev-parse HEAD >> $(COMMIT_HASH)
+	git rev-parse HEAD >> $(COMMIT_HASH) || true
 
 reborn-nowait:
 	$(MAKE) build

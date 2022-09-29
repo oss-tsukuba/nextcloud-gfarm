@@ -132,8 +132,8 @@ nextcloud_gfarm_version()
     if [ -z "${NEXTCLOUD_GFARM_COMMIT_HASH:-}" ]; then
         source "${NCGFARM_DIR}/commit_hash.sh"
     fi
-    echo "NEXTCLOUD_GFARM_VERSION=${NEXTCLOUD_GFARM_VERSION}"
-    echo "NEXTCLOUD_GFARM_COMMIT_HASH=${NEXTCLOUD_GFARM_COMMIT_HASH}"
+    echo "NEXTCLOUD_GFARM_VERSION=${NEXTCLOUD_GFARM_VERSION:-}"
+    echo "NEXTCLOUD_GFARM_COMMIT_HASH=${NEXTCLOUD_GFARM_COMMIT_HASH:-}"
 }
 
 count_dirent()
