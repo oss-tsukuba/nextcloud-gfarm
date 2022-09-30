@@ -430,6 +430,47 @@ SEE ALSO:
 
 https://docs.nextcloud.com/server/latest/admin_manual/configuration_user/reset_admin_password.html
 
+## Using Keycloak to login (nextcloud-oidc-login app)
+
+### Keycloak configurations
+
+(SEE ALSO: https://github.com/pulsejet/nextcloud-oidc-login)
+
+- Summary
+    - Create new realm
+    - Create new client
+        - `Valid Redirect URI`:` https://<Nextcloud name>/*`
+        - `ID Token Signature Algorithm`: `RS256`
+        - Please check and copy (and paste): `Credentials` -> 'Secret'
+    - Set quota attributes (`Mapper Type`) (optional)
+        - Add `User Attribute`
+            - `Name`,`User Attribute`, and `Token Claim Name` : `ownCloudQuota`
+            - `Claim JSON Type` : `String`
+        - Add `User Client Role`
+            - `Name` and `Token Claim Name` : `ownCloudGroups`
+            - select your Client ID
+            - `Claim JSON Type` : `String`
+        - Edit `Attributes` for each users
+          - `Key` : `ownCloudQuota`
+          - `Value` : your preferred limit (in bytes)
+
+
+### nextcloud-gfarm configrations
+
+- config.env (additional parameters)
+```
+KEYCLOAK_PROTOCOL=<http or https>
+KEYCLOAK_PORT=...
+KEYCLOAK_REALM=...
+# or OIDC_LOGIN_URL=...  (when using non Keycloak)
+OIDC_LOGIN_ENABLE=1
+OIDC_LOGIN_CLIENT_ID=...
+OIDC_LOGIN_CLIENT_SECRET=...
+OIDC_LOGIN_DEFAULT_QUOTA=1000000000
+```
+
+- other parameters: `nextcloud/oidc.config.php.tmpl`
+- and `make reborn`
 
 ## For developers
 
