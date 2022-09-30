@@ -97,6 +97,9 @@ services:
       - OIDC_LOGIN_CLIENT_SECRET=${OIDC_LOGIN_CLIENT_SECRET:-dummy}
       # empty means default Keycloak URL (see config.sh)
       - OIDC_LOGIN_LOGOUT_URL=${OIDC_LOGIN_LOGOUT_URL:-}
+      # empty means default Keycloak URL (see config.sh)
+      - OIDC_LOGIN_DEFAULT_QUOTA=${OIDC_LOGIN_DEFAULT_QUOTA:-}
+
       # default: ${KEYCLOAK_PROTOCOL}://${SERVER_NAME}:${KEYCLOAK_PORT}
       - KEYCLOAK_URL=${KEYCLOAK_URL-}
       - KEYCLOAK_PORT=${KEYCLOAK_PORT:-51080}

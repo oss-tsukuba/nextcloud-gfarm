@@ -119,13 +119,18 @@ done
 if [ ${OIDC_LOGIN_ENABLE} -eq 1 ]; then
     ${OCC} app:enable oidc_login
 
+    # overwrite
     sed -e "s;@OIDC_LOGIN_URL@;${OIDC_LOGIN_URL};" \
 	-e "s;@OIDC_LOGIN_CLIENT_ID@;${OIDC_LOGIN_CLIENT_ID};" \
 	-e "s;@OIDC_LOGIN_CLIENT_SECRET@;${OIDC_LOGIN_CLIENT_SECRET};" \
 	-e "s;@OIDC_LOGIN_LOGOUT_URL@;${OIDC_LOGIN_LOGOUT_URL};" \
+	-e "s;@OIDC_LOGIN_DEFAULT_QUOTA@;${OIDC_LOGIN_DEFAULT_QUOTA};" \
 	"${OIDC_LOGIN_CONFIG_TEMPLATE}" \
 	| dd of=${OIDC_LOGIN_CONFIG}
     chown0 ${OIDC_LOGIN_CONFIG}
+else
+    rm -f ${OIDC_LOGIN_CONFIG}
+    ${OCC} app:disable oidc_login || true
 fi
 
 if [ -z "${TRUSTED_PROXIES:-}" ]; then

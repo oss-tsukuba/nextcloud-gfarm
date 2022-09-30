@@ -218,6 +218,8 @@ OIDC_LOGIN_URL=${OIDC_LOGIN_URL:-${KEYCLOAK_URL}/auth/realms/${KEYCLOAK_REALM}}
 
 : ${OIDC_LOGIN_LOGOUT_URL:=${OIDC_LOGIN_URL}/protocol/openid-connect/logout?redirect_uri=${OVERWRITEPROTOCOL}%3A%2F%2F${OVERWRITEHOST}}
 
+: ${OIDC_LOGIN_DEFAULT_QUOTA:-1000000000}
+
 ##########################################################
 if [ ${NEXTCLOUD_GFARM_DEBUG:-0} -ne 0 ]; then
     set -x
