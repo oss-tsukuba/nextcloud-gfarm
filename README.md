@@ -186,6 +186,7 @@ Default is specified by `docker-compose.yml`.
 - NEXTCLOUD_GFARM_DEBUG: debug mode (0: disable)
 - http_proxy: http_proxy environment variable
 - https_proxy: http_proxy environment variable
+- no_proxy: comma-separated list of host names should not go through the proxy
 - HTTP_ACCESS_LOG: access log (1=enable)
 - TZ: TZ environment variable
 - NEXTCLOUD_UPDATE: 0 is required in case of version mismatch after restore.
