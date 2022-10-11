@@ -451,7 +451,7 @@ https://docs.nextcloud.com/server/latest/admin_manual/configuration_user/reset_a
             - `Name` and `Token Claim Name` : `ownCloudGroups`
             - select your Client ID
             - `Claim JSON Type` : `String`
-        - Edit `Attributes` for each users
+        - Edit `Attributes` for each user
           - `Key` : `ownCloudQuota`
           - `Value` : your preferred limit (in bytes)
 
