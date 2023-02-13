@@ -209,8 +209,7 @@ else # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
 
 fi # end of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
 
-
-until mysqladmin --defaults-file="${MYSQL_CONF}" -h ${MYSQL_HOST} -u ${MYSQL_USER} ping; do
+until mysqladmin --defaults-file="${MYSQL_CONF}" -h ${MYSQL_HOST} -u ${MYSQL_USER} ping | grep " alive"; do
     INFO "waiting for starting mysql server (${MYSQL_HOST}) ..."
     sleep 1
 done
