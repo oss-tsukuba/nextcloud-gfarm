@@ -201,13 +201,65 @@ if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -eq 1 ]; then
 
     ${SUDO_USER} gfmkdir -p "${GFARM_DATA_PATH}"
     ${SUDO_USER} gfchmod 750 "${GFARM_DATA_PATH}"
-else # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
+
+else  # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR == 0
     # for dummy-myproxy-logon
     if [ -d "${GSI_USER_DIR_ORIG}" ]; then
         copy0 "${GSI_USER_DIR_ORIG}" "${GSI_USER_DIR}"
     fi
-
 fi # end of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
+
+if [ -n "${XOAUTH2_USER_CLAIM}" ]; then
+    sasl_libdir=$(pkg-config --variable=libdir libsasl2)
+    cat <<EOF > ${sasl_libdir}/sasl2/gfarm.conf
+xoauth2_user_claim: ${XOAUTH2_USER_CLAIM}
+EOF
+fi
+if [ -n "${SASL_USER}" ]; then
+    cat <<EOF >> "${GFARM2RC}"
+#log_level debug
+#log_auth_verbose enable
+
+auth disable gsi_auth *
+auth disable gsi *
+auth enable sasl *
+
+sasl_mechanisms XOAUTH2
+sasl_user "${SASL_USER}"
+EOF
+fi
+chown0 "${GFARM2RC}"
+
+if [ ${IMPORT_CA_FROM_TLS_CERTIFICATES_DIR} -eq 1 ]; then
+    for entry in $(ls -1 ${TLS_CERTIFICATES_DIR}/*.[0-9]); do
+        bname=$(basename "$entry")
+        ln -s "$entry" /usr/local/share/ca-certificates/${bname}.crt
+    done
+    update-ca-certificates
+fi
+
+cat <<EOF > ${UNSET_HTTP_PROXY}
+#!/bin/sh
+
+unset http_proxy
+unset https_proxy
+unset HTTP_PROXY
+unset HTTPS_PROXY
+exec "\$@"
+EOF
+chmod +x ${UNSET_HTTP_PROXY}
+chown0 ${UNSET_HTTP_PROXY}
+
+cat <<EOF > ${JWT_AGENT_FOR_DEV}
+#!/bin/sh
+set -eux
+TOKEN="\$1"
+JWT_AGENT_URL=https://jwt-server
+echo -n "\${TOKEN}" | ${UNSET_HTTP_PROXY} jwt-agent -s \${JWT_AGENT_URL} -l ${SASL_USER}
+gfhost -lv
+EOF
+chmod +x ${JWT_AGENT_FOR_DEV}
+chown0 ${JWT_AGENT_FOR_DEV}
 
 until mysqladmin --defaults-file="${MYSQL_CONF}" -h ${MYSQL_HOST} -u ${MYSQL_USER} ping | grep " alive"; do
     INFO "waiting for starting mysql server (${MYSQL_HOST}) ..."

@@ -4,7 +4,7 @@
     <name>External Storage: Gfarm</name>
     <summary>Integrate Gfarm as an external storage</summary>
     <description><![CDATA[Gfarm Backend for External storage support.]]></description>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <licence>agpl</licence>
     <author>oss-tsukuba</author>
     <namespace>Files_external_gfarm</namespace>

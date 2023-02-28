@@ -43,6 +43,9 @@ RUN echo ${NEXTCLOUD_VERSION} \
   smbclient \
   iproute2 \
   pbzip2 \
+  # for SASL authentication
+  && apt-get -y install sasl2-bin libsasl2-modules-db libsasl2-dev \
+ libsasl2-modules libsasl2-modules-gssapi-mit \
   \
   # Gfarm \
   && WORKDIR=/root \
@@ -61,6 +64,9 @@ RUN echo ${NEXTCLOUD_VERSION} \
   && ./configure --with-globus --without-openldap --without-postgresql \
   && make -j 4 \
   && make install \
+  \
+  # jwt-parse
+  && apt-get -y install jq \
   && install -t /usr/local/bin -m 755 util/jwt-parse/jwt-parse  \
   \
   # gfarm2fs \
@@ -103,13 +109,10 @@ RUN echo ${NEXTCLOUD_VERSION} \
        && make PREFIX=/usr/local install \
    ; fi \
   \
-  # for SASL authentication
   # scitokens-cpp \
   && cd ${WORKDIR} \
   && if [ -n "${SCITOKENS_CPP_SRC_GIT_URL}" ]; then \
        DIRNAME=scitokens-cpp \
-       && apt-get -y install sasl2-bin libsasl2-modules-db libsasl2-dev \
-       libsasl2-modules libsasl2-modules-gssapi-mit \
        && apt-get -y install g++ cmake libsqlite3-dev \
        libcurl4-openssl-dev uuid-dev \
        && git clone -b ${SCITOKENS_CPP_SRC_GIT_BRANCH} --depth 1 ${SCITOKENS_CPP_SRC_GIT_URL} ${DIRNAME} \

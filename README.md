@@ -150,6 +150,7 @@ For details of Nextcloud parameters, please refer to
 - PROTOCOL: https or http
 - GFARM_CONF_DIR: path to parent directory on host OS for the following files
      - gfarm2.conf: Gfarm configuration file
+- NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR: use Gfarm directory as Nextcloud datadir instead of local volume. (1: enable, 0: disable)
 
 ### Required parameters when using http
 - PROTOCOL: `http` is required
@@ -160,6 +161,14 @@ For details of Nextcloud parameters, please refer to
 - HTTP_PORT: http port (redirect to https port)
 - HTTPS_PORT: https port
 
+### Gfarm parameters
+Default is specified by `docker-compose.yml`.
+- MYPROXY_SERVER: myproxy server (hostname:port) (optional)
+- GSI_CERTIFICATES_DIR: CA files for GSI (a directory for public keys for trusted certificate authorities on the host OS)
+- TLS_CERTIFICATES_DIR: CA files for TLS (for Gfarm 2.8 or later)
+- GSI_PROXY_HOUR: expiration hours of the certificate for grid-proxy-init or myproxy-logon
+- XOAUTH2_USER_CLAIM: xoauth2_user_claim for sasl.xoauth2 authentication
+
 ### Gfarm parameters only when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
 - GFARM_USER: Gfarm user name to access GFARM_DATA_PATH and GFARM_BACKUP_PATH
 - GFARM_DATA_PATH: Gfarm data directory
@@ -167,22 +176,15 @@ For details of Nextcloud parameters, please refer to
 - GFARM_BACKUP_PATH: Gfarm backup directory
     - NOTE: Do not share GFARM_BACKUP_PATH with other nextcloud-gfarm.
 - MYPROXY_USER: username for myproxy server (optional)
-
-### Gfarm parameters
-Default is specified by `docker-compose.yml`.
-- NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR: use Gfarm directory as Nextcloud datadir instead of local volume. (1: enable, 0: disable)
+- GSI_USER_DIR: path to `~/.globus` on host OS
 - GFARM_CONF_USER_DIR: path to parent directory on host OS for the following files (Please make a special directory and copy the files)
     - `gfarm2rc` (optional) (copy from `~/.gfarm2rc`)
     - `gfarm_shared_key` (optional) (copy from `~/.gfarm_shared_key`)
     - `user_proxy_cert` (optional) (copy from `/tmp/x509up_u<UID>`)
-- GSI_USER_DIR: path to `~/.globus` on host OS
-- MYPROXY_SERVER: myproxy server (hostname:port) (optional)
-- GSI_CERTIFICATES_DIR: CA files for GSI (a directory for public keys for trusted certificate authorities on the host OS)
-- TLS_CERTIFICATES_DIR: CA files for TLS (for Gfarm 2.8 or later)
+- SASL_USER: sasl_user of gfarm2.conf
 
 ### Optional parameters
 Default is specified by `docker-compose.yml`.
-- GSI_PROXY_HOUR: expiration hours of the certificate for grid-proxy-init or myproxy-logon
 - NEXTCLOUD_GFARM_DEBUG: debug mode (0: disable)
 - http_proxy: http_proxy environment variable
 - https_proxy: http_proxy environment variable

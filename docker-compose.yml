@@ -28,7 +28,7 @@ services:
         - SASL_XOAUTH2_SRC_GIT_URL=https://github.com/oss-tsukuba/cyrus-sasl-xoauth2-idp.git
         - SASL_XOAUTH2_SRC_GIT_BRANCH=feature/keycloak
         ### mandatory
-        - NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION:-24}
+        - NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION:?NEXTCLOUD_VERSION}
         ### optional
         - http_proxy=${http_proxy:-}
         - https_proxy=${https_proxy:-}
@@ -40,16 +40,22 @@ services:
       ### mandatory ##################################################
       - SERVER_NAME=${SERVER_NAME:?SERVER_NAME}
       - PROTOCOL=${PROTOCOL:?PROTOCOL}
+      - NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR:-0}
 
       ### Gfarm parameters (if necessary) ############################
       - MYPROXY_SERVER=${MYPROXY_SERVER:-}
       - GSI_PROXY_HOURS=${GSI_PROXY_HOURS:-168}
+      - XOAUTH2_USER_CLAIM=${XOAUTH2_USER_CLAIM:-}
 
       ### Gfarm parameters only when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
       - MYPROXY_USER=${MYPROXY_USER:-}
       - GFARM_USER=${GFARM_USER:-}
       - GFARM_DATA_PATH=${GFARM_DATA_PATH:-}
       - GFARM_BACKUP_PATH=${GFARM_BACKUP_PATH:-}
+      - SASL_USER=${SASL_USER:-}
+
+      ### for developer
+      - IMPORT_CA_FROM_TLS_CERTIFICATES_DIR=${IMPORT_CA_FROM_TLS_CERTIFICATES_DIR:-0}
 
       ### optional ###################################################
       ## for general
@@ -81,7 +87,6 @@ services:
       - OVERWRITECONDADDR=${OVERWRITECONDADDR:-}
 
       ## for Nextcloud (defined by nextcloud-gfarm)
-      - NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR:-0}
       # empty means disabled
       - NEXTCLOUD_FILES_SCAN_TIME=${NEXTCLOUD_FILES_SCAN_TIME-0 5 * * *}
       - NEXTCLOUD_BACKUP_TIME=${NEXTCLOUD_BACKUP_TIME-0 2 * * *}
@@ -126,6 +131,7 @@ services:
       - ${GSI_USER_DIR:-/dev/null}:/gsi_user:ro
       - ${GSI_CERTIFICATES_DIR:-/dev/null}:/etc/grid-security/certificates:ro
       - ${TLS_CERTIFICATES_DIR:-/dev/null}:/etc/pki/tls/certs/gfarm:ro
+
     depends_on:
       - mariadb
       - redis
