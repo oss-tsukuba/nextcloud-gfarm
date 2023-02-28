@@ -19,6 +19,14 @@ services:
         - GFARM2FS_SRC_GIT_URL=${GFARM2FS_SRC_GIT_URL:-https://github.com/oss-tsukuba/gfarm2fs.git}
         - GFARM2FS_SRC_GIT_BRANCH=${GFARM2FS_SRC_GIT_BRANCH:-master}
 
+        - JWT_AGENT_SRC_GIT_URL=https://github.com/oss-tsukuba/jwt-agent.git
+        - JWT_AGENT_SRC_GIT_BRANCH=main
+        - JWT_LOGON_SRC_GIT_URL=https://github.com/oss-tsukuba/jwt-logon.git
+        - JWT_LOGON_SRC_GIT_BRANCH=main
+        - SCITOKENS_CPP_SRC_GIT_URL=https://github.com/scitokens/scitokens-cpp.git
+        - SCITOKENS_CPP_SRC_GIT_BRANCH=master
+        - SASL_XOAUTH2_SRC_GIT_URL=https://github.com/oss-tsukuba/cyrus-sasl-xoauth2-idp.git
+        - SASL_XOAUTH2_SRC_GIT_BRANCH=feature/keycloak
         ### mandatory
         - NEXTCLOUD_VERSION=${NEXTCLOUD_VERSION:-24}
         ### optional

@@ -7,6 +7,14 @@ ARG GFARM_SRC_GIT_BRANCH
 ARG GFARM2FS_SRC_URL
 ARG GFARM2FS_SRC_GIT_URL
 ARG GFARM2FS_SRC_GIT_BRANCH
+ARG JWT_AGENT_SRC_GIT_URL
+ARG JWT_AGENT_SRC_GIT_BRANCH
+ARG JWT_LOGON_SRC_GIT_URL
+ARG JWT_LOGON_SRC_GIT_BRANCH
+ARG SCITOKENS_CPP_SRC_GIT_URL
+ARG SCITOKENS_CPP_SRC_GIT_BRANCH
+ARG SASL_XOAUTH2_SRC_GIT_URL
+ARG SASL_XOAUTH2_SRC_GIT_BRANCH
 
 RUN echo ${NEXTCLOUD_VERSION} \
   && apt-get update && apt-get install -y \
@@ -35,9 +43,8 @@ RUN echo ${NEXTCLOUD_VERSION} \
   smbclient \
   iproute2 \
   pbzip2 \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
   \
+  # Gfarm \
   && WORKDIR=/root \
   && cd ${WORKDIR} \
   && if [ -n "${GFARM_SRC_URL}" ]; then \
@@ -45,31 +52,90 @@ RUN echo ${NEXTCLOUD_VERSION} \
        && ARCH=`ls -1 gfarm-*.tar.gz` \
        && tar xf ${ARCH} \
        && DIRNAME=`echo ${ARCH} | sed 's/\.tar\.gz$//g'` \
-     ; else \
+   ; else \
        DIRNAME=gfarm \
        && git clone -b ${GFARM_SRC_GIT_BRANCH} --depth 1 ${GFARM_SRC_GIT_URL} ${DIRNAME} \
-     ; fi \
+   ; fi \
   && echo DIRNAME=${DIRNAME} \
   && cd ${DIRNAME} \
   && ./configure --with-globus --without-openldap --without-postgresql \
-  && make -j \
-  && make -j install \
+  && make -j 4 \
+  && make install \
+  && install -t /usr/local/bin -m 755 util/jwt-parse/jwt-parse  \
+  \
+  # gfarm2fs \
   && cd ${WORKDIR} \
   && if [ -n "${GFARM2FS_SRC_URL}" ]; then \
        curl -sLJO ${GFARM2FS_SRC_URL} \
        && ARCH=`ls -1 gfarm2fs-*.tar.gz` \
        && tar xf ${ARCH} \
        && DIRNAME=`echo ${ARCH} | sed 's/\.tar\.gz$//g'` \
-     ; else \
+   ; else \
        DIRNAME=gfarm2fs \
        && git clone -b ${GFARM2FS_SRC_GIT_BRANCH} --depth 1 ${GFARM2FS_SRC_GIT_URL} ${DIRNAME} \
-     ; fi \
+   ; fi \
   && cd ${DIRNAME} \
   && ./configure \
-  && make -j \
-  && make -j install \
+  && make -j 4 \
+  && make install \
   && ldconfig \
-  && mkdir -p /var/spool/cron/crontabs
+  \
+  # jwt-agent \
+  && cd ${WORKDIR} \
+  && if [ -n "${JWT_AGENT_SRC_GIT_URL}" ]; then \
+       GO_TAR=go1.20.linux-amd64.tar.gz \
+       && curl -sLJO https://go.dev/dl/${GO_TAR} \
+       && tar -C /usr/local -xzf ${GO_TAR} \
+       && ln -s /usr/local/go/bin/go /usr/local/bin \
+       && DIRNAME=jwt-agent \
+       && git clone -b ${JWT_AGENT_SRC_GIT_BRANCH} --depth 1 ${JWT_AGENT_SRC_GIT_URL} ${DIRNAME} \
+       && cd ${DIRNAME} \
+       && make \
+       && make PREFIX=/usr/local install \
+   ; fi \
+  \
+  # jwt-logon \
+  && cd ${WORKDIR} \
+  && if [ -n "${JWT_LOGON_SRC_GIT_URL}" ]; then \
+       DIRNAME=jwt-logon \
+       && git clone -b ${JWT_LOGON_SRC_GIT_BRANCH} --depth 1 ${JWT_LOGON_SRC_GIT_URL} ${DIRNAME} \
+       && cd ${DIRNAME} \
+       && make PREFIX=/usr/local install \
+   ; fi \
+  \
+  # for SASL authentication
+  # scitokens-cpp \
+  && cd ${WORKDIR} \
+  && if [ -n "${SCITOKENS_CPP_SRC_GIT_URL}" ]; then \
+       DIRNAME=scitokens-cpp \
+       && apt-get -y install sasl2-bin libsasl2-modules-db libsasl2-dev \
+       libsasl2-modules libsasl2-modules-gssapi-mit \
+       && apt-get -y install g++ cmake libsqlite3-dev \
+       libcurl4-openssl-dev uuid-dev \
+       && git clone -b ${SCITOKENS_CPP_SRC_GIT_BRANCH} --depth 1 ${SCITOKENS_CPP_SRC_GIT_URL} ${DIRNAME} \
+       && cd ${DIRNAME} \
+       && mkdir -p build \
+       && cd build \
+       && cmake -DCMAKE_INSTALL_PREFIX=/usr .. \
+       && make -j 4 \
+       && make install \
+   ; fi \
+  \
+  # cyrus-sasl-xoauth2-idp
+  && cd ${WORKDIR} \
+  && if [ -n "${SASL_XOAUTH2_SRC_GIT_URL}" ]; then \
+       DIRNAME=cyrus-sasl-xoauth2-idp \
+       && git clone -b ${SASL_XOAUTH2_SRC_GIT_BRANCH} --depth 1 ${SASL_XOAUTH2_SRC_GIT_URL} ${DIRNAME} \
+       && cd ${DIRNAME} \
+       && ./autogen.sh \
+       && sasl_libdir=$(pkg-config --variable=libdir libsasl2) \
+       && ./configure --libdir="${sasl_libdir}" \
+       && make install \
+   ; fi \
+  \
+  && mkdir -p /var/spool/cron/crontabs \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 ### for debug
 # RUN apt-get update \
