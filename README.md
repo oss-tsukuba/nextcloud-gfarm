@@ -15,7 +15,7 @@
    - Example of Docker Compose configuration file to use https is included.
 
 For other details, please refer to
-[nextcloud (DOCKER OFFICAL IMAGE)](https://github.com/docker-library/docs/blob/master/nextcloud/README.md).
+[nextcloud (DOCKER OFFICIAL IMAGE)](https://github.com/docker-library/docs/blob/master/nextcloud/README.md).
 
 ## Requirements
 
@@ -87,10 +87,10 @@ Optional requirements only for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
 - run `make selfsigned-cert-generate` to activate HTTPS when using HTTPS.
 - run `make reborn` to create and start containers.
     - If containers exist, these will be recreated.
-    - Persistent data (DB, coniguration files, and etc.) is not removed.
+    - Persistent data (DB, configuration files, and etc.) is not removed.
 - If NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1,
    - input password of myproxy-logon or grid-proxy-init for Gfarm authentication method (when not using .gfarm_shared_key)
-- copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume when using HTTPS and not using selfsigned certificate.
+- copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume when using HTTPS and not using self-signed certificate.
     - NOTE: HTTPS port is disabled when certificate files do not exist.
     - prepare the following files
         - ${SERVER_NAME}.key (SSL_KEY)
@@ -100,7 +100,7 @@ Optional requirements only for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
         - and run `make restart@revproxy`
     - or run `make selfsigned-cert-generate` to generate and copy self-signed certificate
         - and run `make selfsigned-cert-fingerprint` to show fingerprint
-    - or (unsurveyed:) write new docker-compose.override.yml and use acme-companion for nginx-proxy to use Let's Encrypt certificate
+    - or (not surveyed:) write new docker-compose.override.yml and use acme-companion for nginx-proxy to use Let's Encrypt certificate
         - https://github.com/nginx-proxy/acme-companion
         - https://github.com/nginx-proxy/acme-companion/blob/main/docs/Docker-Compose.md
         - https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/with-nginx-proxy/mariadb/fpm/docker-compose.yml
@@ -117,7 +117,7 @@ Optional requirements only for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
     - To mount a Gfarm directory:
         - select `Add storage` (External storage): Gfarm
         - select Authentication type
-        - specifiy Configuration parameters
+        - specify Configuration parameters
         - select `Available for` to allow users or groups. (Administration settings only)
         - press the right button to check and save configurations.
 
@@ -301,27 +301,33 @@ make shell-root
 
 Two types are available:
 
-- Backup to a local file
-    - include `config.env` and `secrets/*`
-- Backup to Gfarm
-    - available only when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
-    - not include `config.env` and `secrets/*`
-    - with periodic automatic backup
+- LOCAL-BACKUP (Backup to a local file)
+    - manually backup required
+    - include: `config.env`, `secrets/*`
+    - include data, db, nextcloud files, certs, log(/var/log of nextcloud only)
+      (backup docker volumes from `make volume-list`)
 
-### Backup to a local file
+- GFARM-BACKUP (Backup to files on Gfarm filesystem)
+    - available only when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
+    - periodic automatic backup
+    - include: data, db. nextcloud files
+    - not include:  certs, /var/log of nextcloud, other logs
+    - not include: `config.env`, `secrets/*`
+
+### Backup of LOCAL-BACKUP
 
 - run `./volume-backup.sh OUTPUT_DIRECTORY`
 
 OUTPUT_DIRECTORY/nextcloud-gfarm-backup-YYYYmmdd-HHMM.tar will be created.
 
-### Restore from a local file
+### Restore of LOCAL-BACKUP
 
 - run `make down-REMOVE_VOLUMES` if needed.
     - WARNING: Local database will be removed.
 - remove `./secrets/*` files and `config.env` if needed.
 - run `./volume-restore.sh INPUT_FILE`
 
-### Backup to Gfarm (for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1)
+### Backup of GFARM-BACKUP
 
 Nextcloud database will be automatically backed up to Gfarm filesystem
 according to NEXTCLOUD_BACKUP_TIME.
@@ -336,35 +342,33 @@ To back up configuration files.
 
 NOTE: `./secrets/nextcloud_admin_password` is also used to encrypt the backup data.  So the same password is required when restoring.  However, `./secrets/nextcloud_admin_password` is not backed up by this function.
 
-### Restore from Gfarm (for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1)
+### Restore of GFARM-BACKUP
 
 Even if Nextcloud database is broken or lost, you can restore from backup:
 
 - run `make down-REMOVE_VOLUMES` if needed.
     - WARNING: Local database will be removed.
-- deploy `./secrets/*` files and `config.env`
+- deploy `./secrets/*` files and `config.env` manually.
 - edit `config.env` and set `NEXTCLOUD_UPDATE=0`
 - run `make reborn`
 
 ## Logging
 
 - Nextcloud log: Nextcloud UI -> Logging
-    - or /var/www/html/nextcloud.log in container.
+    - or /var/log/nextcloud/nextcloud.log in nextcloud container.
     - or `make nextcloud.log` to show logs on the host OS.
     - This is included in the backup.
 
+- run `make logs` to show logs of the nextcloud container.
+- run `make logs@<container name>` to show logs of non-nextcloud containers.
+- run `make logs-follow` or `make logs-follow@<container name>` to follow logs.
+
 - NOTE: The following logs are not included in the backup.
   (These logs are removed after `make reborn` or `make down`.)
-    - /var/log/* (except /var/log/syslog) in Nextcloud container
-    - run `make logs` to show logs of nextcloud (main container).
-        - Includes:
-            - /var/log/syslog
-            - Apache error log
-            - Apache access log if HTTP_ACCESS_LOG=1
-    - run `make logs@<container name>` to show logs of the other container.
-    - run `make logs-follow` or `make logs-follow@<container name>` to follow logs.
+  - logs of non-nextcloud containers.
 
 You can describe docker-compose.override.yml to change logging driver.
+(not yet confirmed)
 
 - https://docs.docker.com/compose/compose-file/compose-file-v3/#logging
 - https://docs.docker.com/config/containers/logging/configure/
@@ -385,6 +389,7 @@ You can describe docker-compose.override.yml to change logging driver.
     - increase `NEXTCLOUD_VERSION` by exactly 1 more than current major version
        - run `show-nextcloud-version` to show current version
 - run `make reborn`
+- edit `config.env` and set `NEXTCLOUD_UPDATE=0`
 
 SEE ALSO:
 
@@ -460,7 +465,7 @@ https://docs.nextcloud.com/server/latest/admin_manual/configuration_user/reset_a
           - `Value` : your preferred limit (in bytes)
 
 
-### nextcloud-gfarm configrations
+### nextcloud-gfarm configurations
 
 - config.env (additional parameters)
 ```

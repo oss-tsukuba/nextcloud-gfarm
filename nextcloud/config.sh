@@ -113,7 +113,9 @@ DBPASSWORD_CONFIG="${CONFIG_DIR}/nc-gfarm-dbpassword.config.php"
 
 LOCAL_DATA_DIR="/netcloud_data"
 TMP_DATA_DIR="${DATA_DIR}.bak"
-NEXTCLOUD_LOG_PATH="${HTML_DIR}/nextcloud.log"
+
+LOGDIR="/var/log/nextcloud"
+NEXTCLOUD_LOG_PATH="${LOGDIR}/nextcloud.log"
 
 GFARM2FS_DISABLE_MT="-s"
 MNT_OPT="${GFARM2FS_DISABLE_MT} -o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"

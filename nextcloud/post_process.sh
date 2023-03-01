@@ -63,20 +63,24 @@ fi # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
 rsync -a --delete "${APP_GFARM_SRC_MAIN}/" "${APP_GFARM_DEST}/"
 chown0 "${APP_GFARM_DEST}/"
 
+mkdir -p ${LOGDIR}
+chown0 ${LOGDIR}
+
+# may fail
+CURRENT_LOG_PATH=`${OCC} log:file | grep 'Log file:' | awk '{ print $3 }'` || true
+if [ "${CURRENT_LOG_PATH}" != "${NEXTCLOUD_LOG_PATH}" ]; then
+    # change the path of nextcloud.log
+    ${OCC} log:file --file "${NEXTCLOUD_LOG_PATH}"
+    if [ -f "${CURRENT_LOG_PATH}" ]; then
+        ${SUDO_USER} mv "${CURRENT_LOG_PATH}" "${NEXTCLOUD_LOG_PATH}"
+    fi
+fi
+
 # initialization after creating new (or renew) container
 # (The following parameters are not changed when restarting container)
 if [ ! -f "${POST_FLAG_PATH}" ]; then
     # NOTE: Cannot change the NEXTCLOUD_DATA_DIR
     #${OCC} config:system:set datadirectory --value="${DATA_DIR}"
-
-    # may fail
-    CURRENT_LOG_PATH=`${OCC} log:file | grep 'Log file:' | awk '{ print $3 }'` || true
-    if [ "${CURRENT_LOG_PATH}" != "${NEXTCLOUD_LOG_PATH}" ]; then
-        ${OCC} log:file --file "${NEXTCLOUD_LOG_PATH}"
-        if [ -f "${CURRENT_LOG_PATH}" ]; then
-            ${SUDO_USER} mv "${CURRENT_LOG_PATH}" "${NEXTCLOUD_LOG_PATH}"
-        fi
-    fi
 
     ${OCC} config:system:set skeletondirectory --value=''
     ${OCC} config:system:set default_phone_region --value="${NEXTCLOUD_DEFAULT_PHONE_REGION}"
