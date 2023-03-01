@@ -9,11 +9,13 @@ use OCA\Files_External\Lib\StorageConfig;
 use OCP\IUser;
 
 class AuthMechanismGfarm extends AuthMechanism {
-	// NOTE: cannot be changed later
+	// NOTE: cannot be changed after release
 	public const SCHEME_GFARM_SHARED_KEY = 'gfarm_shared_key';
 	public const SCHEME_GFARM_GSI_MYPROXY = 'gfarm_gsi_myproxy';
+	# TODO change name: gfarm_gsi_x509proxy -> gfarm_gsi_x509privkey
 	public const SCHEME_GFARM_GSI_X509_PROXY = 'gfarm_gsi_x509proxy';
-	//public const SCHEME_GFARM_GSI_X509_PRIV_KEY = 'gfarm_gsi_x509privkey';
+	//public const SCHEME_GFARM_GSI_X509_PRIVKEY = 'gfarm_gsi_x509privkey';
+	public const SCHEME_GFARM_XOAUTH2_JWTAGENT = 'gfarm_xoauth2_jwtagent';
 
 	public const SCHEME_KEY_PREFIX = 'scheme_';
 
@@ -30,6 +32,8 @@ class AuthMechanismGfarm extends AuthMechanism {
 			return self::SCHEME_GFARM_GSI_MYPROXY;
 		} elseif (self::has_scheme($args, self::SCHEME_GFARM_GSI_X509_PROXY)) {
 			return self::SCHEME_GFARM_GSI_X509_PROXY;
+		} elseif (self::has_scheme($args, self::SCHEME_GFARM_XOAUTH2_JWTAGENT)) {
+			return self::SCHEME_GFARM_XOAUTH2_JWTAGENT;
 		}
 		return null;
 	}

@@ -137,6 +137,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 		$this->gfarm_dir = $arguments['gfarm_dir'];
 		$this->user = $arguments['user']; // Gfarm user or Myproxy user
 		$this->password = $arguments['password'];
+		if (isset($arguments['url'])) {
+			$this->url = $arguments['url'];
+		} else {
+			$this->url = null;
+		}
 		$this->nextcloud_user = $this->getAccessUser();
 
 		$this->arguments = $arguments;
@@ -411,6 +416,9 @@ abstract class GfarmAuth {
 				  === AuthMechanismGfarm::SCHEME_GFARM_GSI_MYPROXY) {
 			return new GfarmAuthGsiMyProxy($gfarm);
 		} elseif ($auth_scheme
+				  === AuthMechanismGfarm::SCHEME_GFARM_XOAUTH2_JWTAGENT) {
+			return new GfarmAuthXOAuth2JWTAgent($gfarm);
+		} elseif ($auth_scheme
 				  === AuthMechanismGfarm::SCHEME_GFARM_GSI_X509_PROXY) {
 			//$this->auth = new GfarmAuthGsiX509PrivateKey($this); //TODO
 			throw $gfarm->invalid_arg_exception("not implemented yet");
@@ -419,7 +427,7 @@ abstract class GfarmAuth {
 	}
 
 	protected function init(Gfarm $gf, $type) {
-		$this->type = $type;
+		$this->type = $type;  # SEE ALSO: GFARM_MOUNT script
 		$this->gf = $gf;
 	}
 
@@ -477,15 +485,18 @@ abstract class GfarmAuth {
 		return file_put_contents($filename, $content, LOCK_EX);
 	}
 
+	# "client auth ..." from gfstatus
 	private const SUPPORT_AUTH_TYPE_GSI = 'gsi';
 	private const SUPPORT_AUTH_TYPE_TLS = 'tls';
 	private const SUPPORT_AUTH_TYPE_KERBEROS = 'kerberos';
+	private const SUPPORT_AUTH_TYPE_SASL = 'sasl';
 
-	// type => filename
+	// type => filename (GFARM_MOUNTPOINT_POOL/type)
 	private const SUPPORT_AUTH = array(
 		GfarmAuth::SUPPORT_AUTH_TYPE_GSI => 'SUPPORT_AUTH_TYPE_GSI',
 		GfarmAuth::SUPPORT_AUTH_TYPE_TLS => 'SUPPORT_AUTH_TYPE_TLS',
 		GfarmAuth::SUPPORT_AUTH_TYPE_KERBEROS => 'SUPPORT_AUTH_TYPE_KERBEROS',
+		GfarmAuth::SUPPORT_AUTH_TYPE_SASL => 'SUPPORT_AUTH_TYPE_SASL',
 		);
 
 	private function support_auth_common($type) {
@@ -508,7 +519,7 @@ abstract class GfarmAuth {
 client auth gsi     : available
 client auth tls     : not available
 client auth kerberos: not available
-
+client auth sasl    : not available
 EOF;
 			$lines = explode("\n",
 					 str_replace(array("\r\n", "\r", "\n"), "\n",
@@ -551,6 +562,10 @@ EOF;
 		return $this->support_auth_common(self::SUPPORT_AUTH_TYPE_KERBEROS);
 	}
 
+	protected function support_auth_sasl() {
+		return $this->support_auth_common(self::SUPPORT_AUTH_TYPE_SASL);
+	}
+
 	public const METHOD_SHARED     = 's';
 	public const METHOD_TLS_SHARED = 'S';
 	public const METHOD_TLS_CLIENT = 'T';
@@ -558,6 +573,8 @@ EOF;
 	public const METHOD_GSI        = 'G';
 	public const METHOD_KRB_AUTH   = 'k';
 	public const METHOD_KRB        = 'K';
+	public const METHOD_SASL_AUTH  = 'a';
+	public const METHOD_SASL       = 'A';
 
 	private function enabled($a, $b) {
 		return ($a === $b) ? "enable" : "disable";
@@ -572,11 +589,15 @@ EOF;
 		$enable_G = $this->enabled($method, self::METHOD_GSI);
 		$enable_k = $this->enabled($method, self::METHOD_KRB_AUTH);
 		$enable_K = $this->enabled($method, self::METHOD_KRB);
+		$enable_a = $this->enabled($method, self::METHOD_SASL_AUTH);
+		$enable_A = $this->enabled($method, self::METHOD_SASL);
 
 		$delete_tls = "";
 		$delete_gsi = "";
 		$delete_kerberos = "";
+		$delete_sasl = "";
 
+		# not supported
 		if (! $this->support_auth_tls()) {
 			$delete_tls = "# ";
 		}
@@ -585,6 +606,9 @@ EOF;
 		}
 		if (! $this->support_auth_kerberos()) {
 			$delete_kerberos = "# ";
+		}
+		if (! $this->support_auth_sasl()) {
+			$delete_sasl = "# ";
 		}
 
 		$conf_str = <<<EOF
@@ -595,9 +619,48 @@ auth {$enable_s} sharedsecret *
 {$delete_gsi}auth {$enable_G} gsi *
 {$delete_kerberos}auth {$enable_k} kerberos_auth *
 {$delete_kerberos}auth {$enable_K} kerberos *
+{$delete_sasl}auth {$enable_a} sasl_auth *
+{$delete_sasl}auth {$enable_A} sasl *
 
 EOF;
 		return $conf_str;
+	}
+
+	protected function run_command_with_password($command, $password) {
+		$this->gf->debug($command);
+		$descriptorspec = array(
+			0 => array("pipe", "r"),
+			#1 => array("pipe", "w"),
+			#2 => array("file", "/tmp/nextcloud-gfarm-debug.txt", "a"),
+			1 => array("file", "/dev/null", "w"),
+			2 => array("pipe", "w"),
+			);
+		$cwd = '/';
+		$env = array();
+		$process = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
+		$output = null;
+		$retval = null;
+		if (is_resource($process)) {
+			fwrite($pipes[0], "$password\n");
+			fclose($pipes[0]);
+			#$output = stream_get_contents($pipes[1]);
+			$output = stream_get_contents($pipes[2]);
+			if (isset($pipes[1])) {
+				fclose($pipes[1]);
+			}
+			if (isset($pipes[2])) {
+				fclose($pipes[2]);
+			}
+			$retval = proc_close($process);
+			$this->gf->debug("retval=$retval");
+		}
+		if ($retval === 0) {
+			$this->gf->debug("true");
+			return true;
+		} else {
+			$this->gf->debug("false");
+			return false;
+		}
 	}
 }
 
@@ -711,6 +774,8 @@ class GfarmAuthGsiMyProxy extends GfarmAuth {
 		$command = self::MYPROXY_LOGON
 				   . " " . escapeshellarg($user)
 				   . " " . escapeshellarg($proxy);
+		#TODO
+		#return $this->run_command_with_password($command, $password)
 		$this->gf->debug($command);
 
 		$descriptorspec = array(
@@ -751,6 +816,48 @@ class GfarmAuthGsiMyProxy extends GfarmAuth {
 			$this->gf->debug("false");
 			return false;
 		}
+	}
+}
+
+class GfarmAuthXOAuth2JWTAgent extends GfarmAuth {
+	public const TYPE = "jwt-agent";
+	public const JWT_AGENT = "jwt-agent";
+
+	public function __construct(Gfarm $gf) {
+		$this->init($gf, self::TYPE);
+		$this->secureconn_info_set('support_auth_sasl', self::METHOD_SASL, self::METHOD_SASL_AUTH);
+	}
+
+	public function conf_init() {
+		$conf_str = <<<EOF
+sasl_mechanisms   XOAUTH2
+
+EOF;
+		$conf_str = $conf_str . $this->auth_conf();
+		// overwrite
+		return $this->file_put($this->gfarm_conf(), $conf_str);
+	}
+
+	public function conf_ready() {
+		return file_exists($this->gfarm_conf());
+	}
+
+	public function conf_clear() {
+		unlink($this->gfarm_conf());
+	}
+
+	public function authenticated(&$output) {
+		return $this->gf->gfarm_check_auth($output);
+	}
+
+	public function logon(&$output) {
+		$url = $this->gf->url;
+		$user = $this->gf->user;
+		$passphrase = $this->gf->password;
+		$command = self::JWT_AGENT
+				   . " -s " . escapeshellarg($url)
+				   . " -l " . escapeshellarg($user);
+		return $this->run_command_with_password($command, $passphrase);
 	}
 }
 

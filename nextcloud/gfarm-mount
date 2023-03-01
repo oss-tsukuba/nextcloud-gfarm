@@ -43,6 +43,7 @@ LOG_DEBUG "$@"
 
 check_auth()
 {
+    # SEE ALSO: app-gfarm/html/custom_apps/files_external_gfarm/lib/Storage/Gfarm.php
     case "$auth_type" in
         sharedsecret)
             LOG_DEBUG "gfkey -e"
@@ -56,6 +57,12 @@ check_auth()
             # swap stdout and stderr
             # return stderr
             grid-proxy-info -exists 3>&2 2>&1 1>&3
+            return $?
+            ;;
+        jwt-agent)
+            LOG_DEBUG "jwt-parse (TODO)"
+            # TODO
+            [ -f /tmp/jwt_user_u${UID}/token.jwt ]
             return $?
             ;;
         *)
