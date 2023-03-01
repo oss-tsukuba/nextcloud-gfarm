@@ -300,7 +300,7 @@ fi
 # The install and update script is only triggered when a default
 # command is used (apache-foreground or php-fpm). If you use a custom
 # command you have to enable the install / update with
-# NEXTCLOUD_UPDATE (default: 0)
+# NEXTCLOUD_UPDATE (official default: 0)
 # (default on nextcloud-gfarm: 1)
 export NEXTCLOUD_UPDATE=${NEXTCLOUD_UPDATE:-1}
 

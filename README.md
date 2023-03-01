@@ -326,6 +326,8 @@ OUTPUT_DIRECTORY/nextcloud-gfarm-backup-YYYYmmdd-HHMM.tar will be created.
     - WARNING: Local database will be removed.
 - remove `./secrets/*` files and `config.env` if needed.
 - run `./volume-restore.sh INPUT_FILE`
+- If nextcloud container cannot start in case of version mismatch after restore, edit `config.env` and set `NEXTCLOUD_UPDATE=0`, and `make reborn`
+- edit `config.env` and set `NEXTCLOUD_UPDATE=1`
 
 ### Backup of GFARM-BACKUP
 
@@ -349,7 +351,6 @@ Even if Nextcloud database is broken or lost, you can restore from backup:
 - run `make down-REMOVE_VOLUMES` if needed.
     - WARNING: Local database will be removed.
 - deploy `./secrets/*` files and `config.env` manually.
-- edit `config.env` and set `NEXTCLOUD_UPDATE=0`
 - run `make reborn`
 
 ## Logging
@@ -383,13 +384,11 @@ You can describe docker-compose.override.yml to change logging driver.
 
 ## Upgrade to a newer Nextcloud
 
-- run `make backup`
+- create backup (SEE `Backup and Restore` section)
 - edit `config.env`
-    - set `NEXTCLOUD_UPDATE=1`
     - increase `NEXTCLOUD_VERSION` by exactly 1 more than current major version
        - run `show-nextcloud-version` to show current version
 - run `make reborn`
-- edit `config.env` and set `NEXTCLOUD_UPDATE=0`
 
 SEE ALSO:
 
