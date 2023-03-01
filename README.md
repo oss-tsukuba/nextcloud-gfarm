@@ -45,6 +45,7 @@ Optional requirements only for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
 
 - Nextcloud 23
 - Nextcloud 24
+- Nextcloud 25
 
 ## Supported Gfarm authentication methods
 
