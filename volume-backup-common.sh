@@ -13,7 +13,8 @@ VERSION_FILE_NAME="version.txt"
 
 BACKUP_FILES=("${SECRETS_DIR_NAME}" "${CONF_FILE_NAME}")
 
-IMAGE=${PROJECT_NAME}_nextcloud
+# SEE ALSO: docker-compose.yml/nextcloud/image
+IMAGE=nextcloud-gfarm:local
 IMAGE_SIMPLE=alpine
 
 #COMPRESS_PROG=bzip2
