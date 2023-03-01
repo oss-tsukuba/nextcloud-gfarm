@@ -411,6 +411,19 @@ NOTE: If the upgrade fails:
 
 Undo NEXTCLOUD_VERSION and see `Restore` section.
 
+## Warnings of /settings/admin/overview
+
+Follow the warnings.
+
+For example, the following case:
+
+```
+The database is missing some indexes. Due to the fact that adding indexes on big tables could take some time they were not added automatically. By running "occ db:add-missing-indices" those missing indexes could be added manually while the instance keeps running. Once the indexes are added queries to those tables are usually much faster.
+Missing index "preferences_app_key" in table "oc_preferences".
+```
+
+- run `make shell`
+- run `html/occ db:add-missing-indices` (for the above case)
 
 ## Change DB password
 
