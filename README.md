@@ -182,7 +182,6 @@ Default is specified by `docker-compose.yml`.
     - `gfarm2rc` (optional) (copy from `~/.gfarm2rc`)
     - `gfarm_shared_key` (optional) (copy from `~/.gfarm_shared_key`)
     - `user_proxy_cert` (optional) (copy from `/tmp/x509up_u<UID>`)
-- SASL_USER: sasl_user of gfarm2.conf
 
 ### Optional parameters
 Default is specified by `docker-compose.yml`.

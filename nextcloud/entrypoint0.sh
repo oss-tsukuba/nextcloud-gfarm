@@ -214,8 +214,7 @@ if [ -n "${XOAUTH2_USER_CLAIM}" ]; then
     cat <<EOF > ${sasl_libdir}/sasl2/gfarm.conf
 xoauth2_user_claim: ${XOAUTH2_USER_CLAIM}
 EOF
-fi
-if [ -n "${SASL_USER}" ]; then
+
     cat <<EOF >> "${GFARM2RC}"
 #log_level debug
 #log_auth_verbose enable
@@ -225,10 +224,9 @@ auth disable gsi *
 auth enable sasl *
 
 sasl_mechanisms XOAUTH2
-sasl_user "${SASL_USER}"
 EOF
+    chown0 "${GFARM2RC}"
 fi
-chown0 "${GFARM2RC}"
 
 if [ ${IMPORT_CA_FROM_TLS_CERTIFICATES_DIR} -eq 1 ]; then
     for entry in $(ls -1 ${TLS_CERTIFICATES_DIR}/*.[0-9]); do
@@ -255,7 +253,7 @@ cat <<EOF > ${JWT_AGENT_FOR_DEV}
 set -eux
 TOKEN="\$1"
 JWT_AGENT_URL=https://jwt-server
-echo -n "\${TOKEN}" | ${UNSET_HTTP_PROXY} jwt-agent -s \${JWT_AGENT_URL} -l ${SASL_USER}
+echo -n "\${TOKEN}" | ${UNSET_HTTP_PROXY} jwt-agent -s \${JWT_AGENT_URL} -l user1
 gfhost -lv
 EOF
 chmod +x ${JWT_AGENT_FOR_DEV}
