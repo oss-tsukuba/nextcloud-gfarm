@@ -66,8 +66,10 @@ RUN echo ${NEXTCLOUD_VERSION} \
   && make install \
   \
   # jwt-parse
-  && apt-get -y install jq \
-  && install -t /usr/local/bin -m 755 util/jwt-parse/jwt-parse  \
+  && if [ -f util/jwt-parse/jwt-parse ]; then \
+        apt-get -y install jq \
+     && install -t /usr/local/bin -m 755 util/jwt-parse/jwt-parse  \
+   ; fi \
   \
   # gfarm2fs \
   && cd ${WORKDIR} \
