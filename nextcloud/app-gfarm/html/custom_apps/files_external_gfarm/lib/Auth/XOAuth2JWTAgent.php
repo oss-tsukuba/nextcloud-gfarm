@@ -21,14 +21,14 @@ class XOAuth2JWTAgent extends AuthMechanismGfarm {
 			->addParameters(
 				[
 					(new DefinitionParameter('user', $l->t('Username')))
-					->setTooltip($l->t('for OpenID provider and jwt-server')),
+					->setTooltip($l->t('Username for OpenID provider and jwt-server')),
 
 					(new DefinitionParameter('password', $l->t('Passphrase')))
 					->setType(DefinitionParameter::VALUE_PASSWORD)
-					->setTooltip($l->t('from jwt-server')),
+					->setTooltip($l->t('Passphrase from jwt-server')),
 
 					(new DefinitionParameter('url', $l->t('URL')))
-					->setTooltip($l->t('of jwt-server')),
+					->setTooltip($l->t('URL of jwt-server')),
 
 					])
 			->finish();  // AuthMechanismGfarm
