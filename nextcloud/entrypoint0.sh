@@ -231,7 +231,7 @@ fi
 if [ ${IMPORT_CA_FROM_TLS_CERTIFICATES_DIR} -eq 1 ]; then
     for entry in $(ls -1 ${TLS_CERTIFICATES_DIR}/*.[0-9]); do
         bname=$(basename "$entry")
-        ln -s "$entry" /usr/local/share/ca-certificates/${bname}.crt
+        ln -fs "$entry" /usr/local/share/ca-certificates/${bname}.crt
     done
     update-ca-certificates
 fi
