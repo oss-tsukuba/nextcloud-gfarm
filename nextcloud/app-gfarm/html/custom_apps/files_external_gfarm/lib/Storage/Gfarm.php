@@ -211,7 +211,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	private function id_init() {
-		// NOTE: password is not available for Id
+		// NOTE: password is not available for Id,
+		// because password is not always given every time.
 		$method = $this->auth->auth_method();
 		$user = $this->auth->username();
 		$gfarm_dir = $this->gfarm_dir;
@@ -243,6 +244,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 	private function mountpoint_init() {
 		// return "/tmp/gf/METHOD_USER_BASENAME_HASH(base64)"
+		// id = id_init()
 		// HASH = base64_encode(hash(id+password))
 		$method = $this->auth->auth_method();
 		$user = $this->auth->username();
