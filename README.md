@@ -80,6 +80,9 @@ Optional requirements only for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
         - PROTOCOL=http  : for `docker-compose.override.yml.http`
 - edit `config.env` for further changes. (see details below)
     - correct and add parameters.
+- create or copy files for your environment
+    - copy gfarm.conf in GFARM_CONF_DIR
+    - etc. (for example: files for GSI_CERTIFICATES_DIR)
 - check and edit `docker-compose.override.yml`
     - If you do not need symlink of `docker-compose.override.yml`, remove it.
     - use one of other `docker-compose.override.yml.*`
