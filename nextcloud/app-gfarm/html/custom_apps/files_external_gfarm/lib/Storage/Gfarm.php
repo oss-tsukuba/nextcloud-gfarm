@@ -649,9 +649,7 @@ EOF;
 		if ($env === null) {
 			$env = array();
 		}
-		$this->gf->debug("proc_open");
 		$process = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
-		$this->gf->debug("proc_open done");
 		$retval = null;
 		if (is_resource($process)) {
 			fwrite($pipes[0], "$password\n");
@@ -874,13 +872,7 @@ EOF;
 
 		// cannot get the stderr of jwt-agent
 		$output2 = null;
-		$ret = $this->run_command_with_password($command, $passphrase, $env, $output2);
-		if ($ret) {
-			// TODO WORKAROUND: wait for starting jwt-agent
-			$this->gf->debug('sleep(5)');
-			sleep(5);
-		}
-		return $ret;
+		return $this->run_command_with_password($command, $passphrase, $env, $output2);
 	}
 
 	public function jwt_user_path() {
