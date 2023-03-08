@@ -8,7 +8,8 @@ mountpoint="$3"
 auth_type="$4"
 gfarm_conf="$5"
 x509proxy="$6"
-trace_id="$7"
+jwt_user_path="$7"
+trace_id="$8"
 
 source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
@@ -17,12 +18,18 @@ lockfile="${mountpoint}.lock"
 
 [ -z "${gfarm_conf}" ] && exit 1
 
+# use anytime (preferred over ~/.gfarm2rc
 GFARM_CONFIG_FILE="${gfarm_conf}"
 export GFARM_CONFIG_FILE
 
 if [ -n "${x509proxy}" ]; then
     X509_USER_PROXY="${x509proxy}"
     export X509_USER_PROXY
+fi
+
+if [ -n "${jwt_user_path}" ]; then
+    JWT_USER_PATH="${jwt_user_path}"
+    export JWT_USER_PATH
 fi
 
 LOG_DEBUG()
@@ -60,9 +67,8 @@ check_auth()
             return $?
             ;;
         jwt-agent)
-            LOG_DEBUG "jwt-parse (TODO)"
-            # TODO
-            [ -f /tmp/jwt_user_u${UID}/token.jwt ]
+            LOG_DEBUG "jwt-agent --status"
+            jwt-agent --status
             return $?
             ;;
         *)

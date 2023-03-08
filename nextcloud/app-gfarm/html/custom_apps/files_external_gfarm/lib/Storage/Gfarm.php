@@ -20,7 +20,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 	public const GFARM_MOUNTPOINT_POOL = "/tmp/gf/";
 
-	private $enable_debug = false;
+	private $enable_debug = false;  // true if NEXTCLOUD_GFARM_DEBUG=1
 
 	public $debug_traceid = NULL;
 	public $nextcloud_user = NULL;
@@ -333,6 +333,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 				   . " "
 				   . escapeshellarg($this->auth->x509_proxy_cert())
 				   . " "
+				   . escapeshellarg($this->auth->jwt_user_path())
+				   . " "
 				   . escapeshellarg($this->debug_traceid)
 				   ;
 		$output = null;
@@ -403,6 +405,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 	}
 
+	// override
+	public function stat($path) {
+		$this->debug("stat(" . $path . ")");
+		return parent::stat($path);
+	}
 }
 
 abstract class GfarmAuth {
@@ -471,10 +478,11 @@ abstract class GfarmAuth {
 	}
 
 	public function x509_proxy_cert() {
-		if (!isset($this->x509proxy)) {
-			$this->x509proxy = $this->gf->mountpoint . ".x509_proxy_cert";
-		}
-		return $this->x509proxy;
+		return "__DUMMY__";
+	}
+
+	public function jwt_user_path() {
+		return "__DUMMY__";
 	}
 
 	protected function file_put($filename, $content) {
@@ -628,7 +636,7 @@ EOF;
 		return $conf_str;
 	}
 
-	protected function run_command_with_password($command, $password) {
+	protected function run_command_with_password($command, $password, $env, &$output) {
 		$this->gf->debug($command);
 		$descriptorspec = array(
 			0 => array("pipe", "r"),
@@ -638,15 +646,20 @@ EOF;
 			2 => array("pipe", "w"),
 			);
 		$cwd = '/';
-		$env = array();
+		if ($env === null) {
+			$env = array();
+		}
+		$this->gf->debug("proc_open");
 		$process = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
-		$output = null;
+		$this->gf->debug("proc_open done");
 		$retval = null;
 		if (is_resource($process)) {
 			fwrite($pipes[0], "$password\n");
 			fclose($pipes[0]);
-			#$output = stream_get_contents($pipes[1]);
-			$output = stream_get_contents($pipes[2]);
+			if ($output != null) {
+				#$output = stream_get_contents($pipes[1]);
+				$output = stream_get_contents($pipes[2]);
+			}
 			if (isset($pipes[1])) {
 				fclose($pipes[1]);
 			}
@@ -654,7 +667,7 @@ EOF;
 				fclose($pipes[2]);
 			}
 			$retval = proc_close($process);
-			$this->gf->debug("retval=$retval");
+			$this->gf->debug("retval=$retval" . ", output=" . $output);
 		}
 		if ($retval === 0) {
 			$this->gf->debug("true");
@@ -662,6 +675,37 @@ EOF;
 		} else {
 			$this->gf->debug("false");
 			return false;
+		}
+	}
+
+	protected function unlink($filename) {
+		if(is_file($filename) && @unlink($filename)){
+			return 0;
+		} else if (is_file($filename)) {
+			// cannot unlink
+			return 1;
+		} else {
+			// not exist
+			return 2;
+		}
+	}
+
+	protected function delall($filename) {
+		if (is_dir($filename) && !is_link($filename)) {
+			$entries = scandir($filename);
+			foreach ($entries as $ent) {
+				if ($ent != "." && $ent != "..") {
+					if (is_dir($filename . "/" . $ent)
+						&& !is_link($filename . "/" . $ent)) {
+						$this->delall($filename . "/" . $ent);
+					} else {
+						$this->unlink($filename . "/" . $ent);
+					}
+				}
+			}
+			@rmdir($filename);
+		} else {
+			$this->unlink($filename);
 		}
 	}
 }
@@ -722,9 +766,9 @@ EOF;
 	}
 
 	public function conf_clear() {
-		unlink($this->gfarm_conf());
-		unlink($this->gfarm_usermap());
-		unlink($this->gfarm_shared_key());
+		$this->unlink($this->gfarm_conf());
+		$this->unlink($this->gfarm_usermap());
+		$this->unlink($this->gfarm_shared_key());
 	}
 
 	public function authenticated(&$output) {
@@ -738,7 +782,7 @@ EOF;
 
 class GfarmAuthGsiMyProxy extends GfarmAuth {
 	public const TYPE = "myproxy";
-	//public const MYPROXY_LOGON = "/nc-gfarm/dummy-myproxy-logon";
+	//public const MYPROXY_LOGON = "/nc-gfarm/dummy-myproxy-logon"; // for dev
 	public const MYPROXY_LOGON = "/nc-gfarm/myproxy-logon";
 
 	public function __construct(Gfarm $gf) {
@@ -759,12 +803,19 @@ class GfarmAuthGsiMyProxy extends GfarmAuth {
 	}
 
 	public function conf_clear() {
-		unlink($this->gfarm_conf());
-		unlink($this->x509_proxy_cert());
+		$this->unlink($this->gfarm_conf());
+		$this->unlink($this->x509_proxy_cert());
 	}
 
 	public function authenticated(&$output) {
 		return $this->gf->gfarm_check_auth($output);
+	}
+
+	public function x509_proxy_cert() {
+		if (!isset($this->_x509proxy)) {
+			$this->_x509proxy = $this->gf->mountpoint . ".x509_proxy_cert";
+		}
+		return $this->_x509proxy;
 	}
 
 	public function logon(&$output) {
@@ -776,48 +827,7 @@ class GfarmAuthGsiMyProxy extends GfarmAuth {
 		$command = self::MYPROXY_LOGON
 				   . " " . escapeshellarg($user)
 				   . " " . escapeshellarg($proxy);
-		#TODO
-		#return $this->run_command_with_password($command, $password)
-		$this->gf->debug($command);
-
-		$descriptorspec = array(
-			0 => array("pipe", "r"),
-			#1 => array("pipe", "w"),
-			#2 => array("file", "/tmp/nextcloud-gfarm-debug.txt", "a"),
-			1 => array("file", "/dev/null", "w"),
-			2 => array("pipe", "w"),
-			);
-
-		$cwd = '/';
-		$env = array();
-
-		$process = proc_open($command, $descriptorspec, $pipes, $cwd, $env);
-
-		$output = null;
-		$retval = null;
-		if (is_resource($process)) {
-			fwrite($pipes[0], "$password\n");
-			fclose($pipes[0]);
-			#$output = stream_get_contents($pipes[1]);
-			$output = stream_get_contents($pipes[2]);
-
-			if (isset($pipes[1])) {
-				fclose($pipes[1]);
-			}
-			if (isset($pipes[2])) {
-				fclose($pipes[2]);
-			}
-
-			$retval = proc_close($process);
-			$this->gf->debug("retval=$retval");
-		}
-		if ($retval === 0) {
-			$this->gf->debug("true");
-			return true;
-		} else {
-			$this->gf->debug("false");
-			return false;
-		}
+		return $this->run_command_with_password($command, $password, null, $output);
 	}
 }
 
@@ -845,7 +855,8 @@ EOF;
 	}
 
 	public function conf_clear() {
-		unlink($this->gfarm_conf());
+		$this->unlink($this->gfarm_conf());
+		$this->delall($this->jwt_user_path());
 	}
 
 	public function authenticated(&$output) {
@@ -859,8 +870,27 @@ EOF;
 		$command = self::JWT_AGENT
 				   . " -s " . escapeshellarg($url)
 				   . " -l " . escapeshellarg($user);
-		return $this->run_command_with_password($command, $passphrase);
+		$env = array('JWT_USER_PATH' => $this->jwt_user_path());
+
+		// cannot get the stderr of jwt-agent
+		$output2 = null;
+		$ret = $this->run_command_with_password($command, $passphrase, $env, $output2);
+		if ($ret) {
+			// TODO WORKAROUND: wait for starting jwt-agent
+			$this->gf->debug('sleep(5)');
+			sleep(5);
+		}
+		return $ret;
 	}
+
+	public function jwt_user_path() {
+		if (!isset($this->_jwt_user_path)) {
+			$this->_jwt_user_path = $this->gf->mountpoint . ".jwt/token.jwt";
+		}
+		return $this->_jwt_user_path;
+	}
+
+
 }
 
 // TODO GfarmAuthGsiX509PrivateKey

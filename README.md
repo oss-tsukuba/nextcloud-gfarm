@@ -50,7 +50,8 @@ Optional requirements only for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
 ## Supported Gfarm authentication methods
 
 - External storage
-    - GSI, myproxy-logon
+    - GSI + myproxy-logon
+    - XOAUTH2 + jwt-agent
     - Gfarm shared key
 
 - System data directory (NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1)

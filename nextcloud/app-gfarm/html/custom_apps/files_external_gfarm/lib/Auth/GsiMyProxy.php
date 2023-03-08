@@ -17,15 +17,15 @@ class GsiMyProxy extends AuthMechanismGfarm {
 		$this
 			->setIdentifier(self::SCHEME_GFARM_GSI_MYPROXY)
 			->setScheme(self::SCHEME_GFARM_GSI_MYPROXY)
-			->setText($l->t('GSI:myproxy-logon'))
+			->setText($l->t('GSI+myproxy-logon'))
 			->addParameters(
 				[
 					(new DefinitionParameter('user', $l->t('Username')))
-					->setTooltip($l->t('MyProxy username')),
+					->setTooltip($l->t('Username for myproxy-logon')),
 
 					(new DefinitionParameter('password', $l->t('Passphrase')))
 					->setType(DefinitionParameter::VALUE_PASSWORD)
-					->setTooltip($l->t('for myproxy-logon')),
+					->setTooltip($l->t('Passphrase for myproxy-logon')),
 
 					])
 			->finish();  // AuthMechanismGfarm

@@ -17,7 +17,7 @@ class XOAuth2JWTAgent extends AuthMechanismGfarm {
 		$this
 			->setIdentifier(self::SCHEME_GFARM_XOAUTH2_JWTAGENT)
 			->setScheme(self::SCHEME_GFARM_XOAUTH2_JWTAGENT)
-			->setText($l->t('XOAUTH2:jwt-agent (DO NOT USE)'))
+			->setText($l->t('XOAUTH2+jwt-agent'))
 			->addParameters(
 				[
 					(new DefinitionParameter('user', $l->t('Username')))
