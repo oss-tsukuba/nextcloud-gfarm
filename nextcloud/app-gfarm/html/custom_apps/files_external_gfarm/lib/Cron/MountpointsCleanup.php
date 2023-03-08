@@ -49,6 +49,14 @@ class MountpointsCleanup extends TimedJob {
 		}
 	}
 
+	private function info($msg) {
+		syslog(LOG_INFO, $msg);
+	}
+
+	private function error($msg) {
+		syslog(LOG_ERR, $msg);
+	}
+
 	protected function run($arguments) {
 		$this->debug("MountpointsCleanup(for Gfarm) start");
 		$service = \OC::$server->getGlobalStoragesService();
@@ -94,7 +102,7 @@ class MountpointsCleanup extends TimedJob {
 				$mountpoint = $storage->mountpoint;
 			}
 			$mountpoint_list[] = $mountpoint;
-			$this->debug("mountpoint from settings: " . $mountpoint);
+			$this->debug("mountpoint from DB: " . $mountpoint);
 		}
 
 		// umount
@@ -106,8 +114,8 @@ class MountpointsCleanup extends TimedJob {
 				&& ! in_array($mounted, $mountpoint_list, true)) {
 				// umount unknown mp (removed or changed from settings)
 				try {
-					Storage\Gfarm::umount_static($mounted);
-					$this->debug("auto umount: " . $mounted);
+					Storage\Gfarm::umount_static($this, $mounted);
+					$this->info("auto umount: " . $mounted);
 				} catch (Exception $e) {
 					// ignore
 				} catch (Error $e) {

@@ -365,14 +365,27 @@ class Gfarm extends \OC\Files\Storage\Local {
 		return $this->mount_common($mode, $output);
 	}
 
-	public static function umount_static($mountpoint) {
+	// for Cron/MountpointsCleanup.php
+	public static function umount_static($cronjob, $mountpoint) {
 		$command = self::GFARM_UMOUNT . " " . escapeshellarg($mountpoint);
 		$output = null;
 		$retval = null;
 		exec($command, $output, $retval);
+		GfarmAuthXOAuth2JWTAgent::jwt_agent_stop($cronjob, $mountpoint);
+		foreach (glob($mountpoint . '.*/*') as $filename) {
+			try {
+				@unlink($filename);
+			} catch (Error $e) {
+				// ignore
+			}
+		}
 		foreach (glob($mountpoint . '.*') as $filename) {
 			try {
-				$ret = unlink($filename);
+				if (is_dir($filename)) {
+					@rmdir($filename);
+				} else {
+					@unlink($filename);
+				}
 			} catch (Error $e) {
 				// ignore
 			}
@@ -654,7 +667,7 @@ EOF;
 		if (is_resource($process)) {
 			fwrite($pipes[0], "$password\n");
 			fclose($pipes[0]);
-			if ($output != null) {
+			if ($output !== null) {
 				#$output = stream_get_contents($pipes[1]);
 				$output = stream_get_contents($pipes[2]);
 			}
@@ -832,6 +845,7 @@ class GfarmAuthGsiMyProxy extends GfarmAuth {
 class GfarmAuthXOAuth2JWTAgent extends GfarmAuth {
 	public const TYPE = "jwt-agent";
 	public const JWT_AGENT = "jwt-agent";
+	public const TOKEN_FILE = ".jwt/token.jwt";
 
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
@@ -877,12 +891,22 @@ EOF;
 
 	public function jwt_user_path() {
 		if (!isset($this->_jwt_user_path)) {
-			$this->_jwt_user_path = $this->gf->mountpoint . ".jwt/token.jwt";
+			$this->_jwt_user_path = $this->gf->mountpoint . self::TOKEN_FILE;
 		}
 		return $this->_jwt_user_path;
 	}
 
-
+	public static function jwt_agent_stop($cronjob, $mountpoint) {
+		$token_file = $mountpoint . self::TOKEN_FILE;
+		if (is_file($token_file)) {
+			$jwt_agent = "JWT_USER_PATH='$token_file' " . self::JWT_AGENT . " --stop";
+			$output = null;
+			exec($jwt_agent, $output, $retval);
+			if ($retval !== 0) {
+				$cronjob->error('could not stop jwt-agent for '. $token_file);
+			}
+		}
+	}
 }
 
 // TODO GfarmAuthGsiX509PrivateKey
