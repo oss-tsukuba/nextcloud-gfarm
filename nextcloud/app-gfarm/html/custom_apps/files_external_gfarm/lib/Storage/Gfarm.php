@@ -129,14 +129,14 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 		// parameters ---------------------------------------
 		$this->secureconn = true; // default
-		if (isset($arguments['insecureconn'])) {  // for id
+		if (isset($arguments['insecureconn'])) {
 			$insecureconn = $arguments['insecureconn'];
 			if ($insecureconn === 1 || $insecureconn === true) {
 				$this->secureconn = false;
 			}
 		}
-		$this->gfarm_dir = $arguments['gfarm_dir']; // for id
-		$this->user = $arguments['user']; // for id
+		$this->gfarm_dir = $arguments['gfarm_dir'];
+		$this->user = $arguments['user'];
 		$this->password = $arguments['password'];
 		if (isset($arguments['url'])) {
 			$this->url = $arguments['url'];
@@ -167,7 +167,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 			}
 		}
 
-		$this->auth = GfarmAuth::create($this);
+		$this->auth = GfarmAuth::create($this);  // may throw exception
+
 		// mountpoint is not ready here
 		$this->id_init();
 
@@ -298,10 +299,6 @@ class Gfarm extends \OC\Files\Storage\Local {
 		if ($this->gfarm_check_mount($output)) { // shortcut
 			// already mounted
 			return;
-		}
-
-		if ($this->secureconn && ! $this->auth->secureconn_supported()) {
-			throw $this->auth_exception("secureconn unsupported");
 		}
 
 		$remount = false;
@@ -464,25 +461,21 @@ abstract class GfarmAuth {
 		$this->gf = $gf;
 	}
 
-	protected function secureconn_info_set($enabled_func, $secure, $insecure) {
-		$this->sec = $this->$enabled_func();
-		if ($this->gf->secureconn && $this->sec) {
+	// for __construct()
+	protected function method_select($secure, $insecure) {
+		if ($this->gf->secureconn) {
 			$this->method = $secure;
 		} else {
 			$this->method = $insecure;
 		}
 	}
 
-	public function secureconn_supported() {
-		return $this->sec;
+	public function auth_method() {
+		return $this->method;
 	}
 
 	public function username() {
 		return $this->gf->user;
-	}
-
-	public function auth_method() {
-		return $this->method;
 	}
 
 	// The followings MUST be called after $gf->mountpoint_init()
@@ -737,7 +730,10 @@ class GfarmAuthGfarmSharedKey extends GfarmAuth {
 
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
-		$this->secureconn_info_set('support_auth_tls', self::METHOD_TLS_SHARED, self::METHOD_SHARED);
+		if ($gf->secureconn && ! $this->support_auth_tls()) {
+			$gf->auth_exception("TLS secure connection for Gfarm shared sey is not supported");
+		}
+		$this->method_select(self::METHOD_TLS_SHARED, self::METHOD_SHARED);
 	}
 
 	private function gfarm_usermap() {
@@ -809,7 +805,10 @@ class GfarmAuthGsiMyProxy extends GfarmAuth {
 
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
-		$this->secureconn_info_set('support_auth_gsi', self::METHOD_GSI, self::METHOD_GSI_AUTH);
+		if (! $this->support_auth_gsi()) {
+			$gf->auth_exception("GSI authentication is not supported");
+		}
+		$this->method_select(self::METHOD_GSI, self::METHOD_GSI_AUTH);
 	}
 
 	public function conf_init() {
@@ -860,7 +859,10 @@ class GfarmAuthXOAuth2JWTAgent extends GfarmAuth {
 
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
-		$this->secureconn_info_set('support_auth_sasl', self::METHOD_SASL, self::METHOD_SASL_AUTH);
+		if (! $this->support_auth_sasl()) {
+			$gf->auth_exception("SASL authentication is not supported");
+		}
+		$this->method_select(self::METHOD_SASL, self::METHOD_SASL_AUTH);
 	}
 
 	public function conf_init() {
