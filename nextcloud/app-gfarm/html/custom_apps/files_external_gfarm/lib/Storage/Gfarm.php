@@ -731,7 +731,7 @@ class GfarmAuthGfarmSharedKey extends GfarmAuth {
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
 		if ($gf->secureconn && ! $this->support_auth_tls()) {
-			$gf->auth_exception("TLS secure connection for Gfarm shared sey is not supported");
+			throw $gf->auth_exception("TLS secure connection for Gfarm shared sey is not supported");
 		}
 		$this->method_select(self::METHOD_TLS_SHARED, self::METHOD_SHARED);
 	}
@@ -806,7 +806,7 @@ class GfarmAuthGsiMyProxy extends GfarmAuth {
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
 		if (! $this->support_auth_gsi()) {
-			$gf->auth_exception("GSI authentication is not supported");
+			throw $gf->auth_exception("GSI authentication is not supported");
 		}
 		$this->method_select(self::METHOD_GSI, self::METHOD_GSI_AUTH);
 	}
@@ -860,7 +860,7 @@ class GfarmAuthXOAuth2JWTAgent extends GfarmAuth {
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
 		if (! $this->support_auth_sasl()) {
-			$gf->auth_exception("SASL authentication is not supported");
+			throw $gf->auth_exception("SASL authentication is not supported");
 		}
 		$this->method_select(self::METHOD_SASL, self::METHOD_SASL_AUTH);
 	}
