@@ -120,28 +120,31 @@ class Gfarm extends \OC\Files\Storage\Local {
 			$mount = false;
 		}
 		if ($mount === true) {
+			// set 'mount=false' in MountpointsCleanup.php
 			if (isset($arguments['mount'])) {
 				$mount = $arguments['mount'];
 			}
 		}
 		$this->mount = $mount;
 
+		// parameters ---------------------------------------
 		$this->secureconn = true; // default
-		if (isset($arguments['insecureconn'])) {
+		if (isset($arguments['insecureconn'])) {  // for id
 			$insecureconn = $arguments['insecureconn'];
 			if ($insecureconn === 1 || $insecureconn === true) {
 				$this->secureconn = false;
 			}
 		}
-
-		$this->gfarm_dir = $arguments['gfarm_dir'];
-		$this->user = $arguments['user']; // Gfarm user or Myproxy user
+		$this->gfarm_dir = $arguments['gfarm_dir']; // for id
+		$this->user = $arguments['user']; // for id
 		$this->password = $arguments['password'];
 		if (isset($arguments['url'])) {
 			$this->url = $arguments['url'];
 		} else {
-			$this->url = null;
+			$this->url = '';
 		}
+		// end of parameters --------------------------------
+
 		$this->nextcloud_user = $this->getAccessUser();
 
 		$this->arguments = $arguments;
@@ -243,26 +246,34 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	private function mountpoint_init() {
-		// return "/tmp/gf/METHOD_USER_BASENAME_HASH(base64)"
+		// return "/tmp/gf/<METHOD>_<USER>_<BASENAME>_<HASH(base64)>"
 		// id = id_init()
-		// HASH = base64_encode(hash(id+password))
+		// HASH = base64_encode(hash(id+password+url))
 		$method = $this->auth->auth_method();
 		$user = $this->auth->username();
 		$gfarm_dir = $this->gfarm_dir;
 		//$secure = $this->secureconn_str();
+
 		$password = $this->password;
 		$id = $this->id;
+		$url = $this->url;
+		$hash_src =  $id . $password . $url;
+		//$this->debug($hash_src);
+
 		#$hash_algo = 'sha512/224';
 		$hash_algo = 'sha1';
 
 		$pattern = '/[^\w\d]+/';
 		$replacement = '';
+
 		$user_mod = preg_replace($pattern, $replacement, $user);
+		$user_mod = mb_strimwidth($user_mod, 0, 16, '..', 'utf8');
+
 		$bn = basename($gfarm_dir);
 		$bn = preg_replace($pattern, $replacement, $bn);
+		$bn = mb_strimwidth($bn, 0, 16, '..', 'utf8');
 
-		$hash_src =  $id . $password;
-		//$this->debug($hash_src);
+		// base64 for filename
 		$hash_str = base64_encode(hash($hash_algo, $hash_src, true));
 		$hash_str = str_replace('/', '-', $hash_str);
 		$hash_str = str_replace('=', '', $hash_str);
