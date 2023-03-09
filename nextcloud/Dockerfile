@@ -51,7 +51,7 @@ RUN echo ${NEXTCLOUD_VERSION} \
   && WORKDIR=/root \
   && cd ${WORKDIR} \
   && if [ -n "${GFARM_SRC_URL}" ]; then \
-       curl -sLJO ${GFARM_SRC_URL} \
+       curl -fsLJO ${GFARM_SRC_URL} \
        && ARCH=`ls -1 gfarm-*.tar.gz` \
        && tar xf ${ARCH} \
        && DIRNAME=`echo ${ARCH} | sed 's/\.tar\.gz$//g'` \
@@ -74,7 +74,7 @@ RUN echo ${NEXTCLOUD_VERSION} \
   # gfarm2fs \
   && cd ${WORKDIR} \
   && if [ -n "${GFARM2FS_SRC_URL}" ]; then \
-       curl -sLJO ${GFARM2FS_SRC_URL} \
+       curl -fsLJO ${GFARM2FS_SRC_URL} \
        && ARCH=`ls -1 gfarm2fs-*.tar.gz` \
        && tar xf ${ARCH} \
        && DIRNAME=`echo ${ARCH} | sed 's/\.tar\.gz$//g'` \
@@ -92,7 +92,7 @@ RUN echo ${NEXTCLOUD_VERSION} \
   && cd ${WORKDIR} \
   && if [ -n "${JWT_AGENT_SRC_GIT_URL}" ]; then \
        GO_TAR=go1.20.linux-amd64.tar.gz \
-       && curl -sLJO https://go.dev/dl/${GO_TAR} \
+       && curl -fsLJO https://go.dev/dl/${GO_TAR} \
        && tar -C /usr/local -xzf ${GO_TAR} \
        && ln -s /usr/local/go/bin/go /usr/local/bin \
        && DIRNAME=jwt-agent \
