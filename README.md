@@ -1,4 +1,4 @@
-# nextcloud-gfarm
+# Nextcloud-Gfarm
 
 ## Overview
 
@@ -16,6 +16,16 @@
 
 For other details, please refer to
 [nextcloud (DOCKER OFFICIAL IMAGE)](https://github.com/docker-library/docs/blob/master/nextcloud/README.md).
+
+## Security Considerations
+
+- Gfarm-user's credentials are stored in Nextcloud's database.
+  - Only passwords/pass-phrases are encrypted and stored by the random secret key in Nextcloud configuration file.
+- Within Nextcloud container, a local user (www-data) accesses Gfarm mountpoints on behalf of all Gfarm-users.
+- Nextcloud-Gfarm administrators have access to Gfarm-user's credentials and mounted files within Nextcloud container.
+- Once a Gfarm-file has been accessed, the filename is stored in Nextcloud's database.
+  - The file-contents are not stored in Nextcloud's database.
+- For additional Nextcloud information, please refer to Nextcloud official pages.
 
 ## Requirements
 
@@ -178,9 +188,9 @@ Default is specified by `docker-compose.yml`.
 ### Gfarm parameters only when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
 - GFARM_USER: Gfarm user name to access GFARM_DATA_PATH and GFARM_BACKUP_PATH
 - GFARM_DATA_PATH: Gfarm data directory
-    - NOTE: Do not share GFARM_DATA_PATH with other nextcloud-gfarm.
+    - NOTE: Do not share GFARM_DATA_PATH with other Nextcloud-Gfarm.
 - GFARM_BACKUP_PATH: Gfarm backup directory
-    - NOTE: Do not share GFARM_BACKUP_PATH with other nextcloud-gfarm.
+    - NOTE: Do not share GFARM_BACKUP_PATH with other Nextcloud-Gfarm.
 - MYPROXY_USER: username for myproxy server (optional)
 - GSI_USER_DIR: path to `~/.globus` on host OS
 - GFARM_CONF_USER_DIR: path to parent directory on host OS for the following files (Please make a special directory and copy the files)
@@ -442,7 +452,7 @@ Missing index "preferences_app_key" in table "oc_preferences".
 
 NOTE: Password for root user and nextcloud user of mariadb is the same.
 
-NOTE: Nextcloud may not have official instructions on how to change the password.  Therefore, nextcloud-gfarm has implemented the change process for the password in `./nextcloud/entrypoint0.sh`.
+NOTE: Nextcloud may not have official instructions on how to change the password.  Therefore, Nextcloud-Gfarm has implemented the change process for the password in `./nextcloud/entrypoint0.sh`.
 
 ## Reset Nextcloud admin password
 
@@ -482,7 +492,7 @@ https://docs.nextcloud.com/server/latest/admin_manual/configuration_user/reset_a
           - `Value` : your preferred limit (in bytes)
 
 
-### nextcloud-gfarm configurations
+### Nextcloud-Gfarm configurations
 
 - config.env (additional parameters)
 ```
