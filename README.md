@@ -518,3 +518,4 @@ OIDC_LOGIN_DEFAULT_QUOTA=1000000000
 - and run `make init-dev`
 - and run `./copy_home_files.sh` to copy files into containers
 - or create `template-orverride.env` for your environment
+- add "jwt-server,www.nextcloud.com,www.startpage.com,www.eff.org,www.edri.org" to no_proxy when using apt-cacher-ng
