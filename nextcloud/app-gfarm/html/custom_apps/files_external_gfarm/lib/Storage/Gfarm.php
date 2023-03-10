@@ -912,11 +912,16 @@ EOF;
 	public static function jwt_agent_stop($cronjob, $mountpoint) {
 		$token_file = $mountpoint . self::TOKEN_FILE;
 		if (is_file($token_file)) {
-			$jwt_agent = "JWT_USER_PATH='$token_file' " . self::JWT_AGENT . " --stop";
+			$stop = "JWT_USER_PATH='$token_file' " . self::JWT_AGENT . " --stop";
 			$output = null;
-			exec($jwt_agent, $output, $retval);
+			exec($stop, $output, $retval);
 			if ($retval !== 0) {
-				$cronjob->error('could not stop jwt-agent for '. $token_file);
+				$status = "JWT_USER_PATH='$token_file' " . self::JWT_AGENT . " --status";
+				$output = null;
+				exec($status, $output, $retval);
+				if ($retval === 0) {
+					$cronjob->error('could not stop jwt-agent for '. $token_file);
+				}
 			}
 		}
 	}

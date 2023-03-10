@@ -43,17 +43,17 @@ class MountpointsCleanup extends TimedJob {
 		}
 	}
 
-	private function debug($msg) {
+	public function debug($msg) {
 		if ($this->enable_debug) {
 			syslog(LOG_DEBUG, $msg);
 		}
 	}
 
-	private function info($msg) {
+	public function info($msg) {
 		syslog(LOG_INFO, $msg);
 	}
 
-	private function error($msg) {
+	public function error($msg) {
 		syslog(LOG_ERR, $msg);
 	}
 
