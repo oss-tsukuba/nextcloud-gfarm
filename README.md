@@ -153,6 +153,9 @@ docker-compose.override.yml for your environment.
 
 ## Configuration file (config.env)
 
+You can override the values in `config.env` file with your environment variables.
+For details: [Ways to set environment variables in Compose](https://docs.docker.com/compose/environment-variables/set-environment-variables/)
+
 ### Configuration format
 
 ```
