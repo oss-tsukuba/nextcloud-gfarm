@@ -45,7 +45,7 @@ RUN echo ${NEXTCLOUD_VERSION} \
   pbzip2 \
   # for SASL authentication
   && apt-get -y install sasl2-bin libsasl2-modules-db libsasl2-dev \
- libsasl2-modules libsasl2-modules-gssapi-mit \
+  libsasl2-modules libsasl2-modules-gssapi-mit \
   \
   # Gfarm \
   && WORKDIR=/root \
@@ -61,9 +61,11 @@ RUN echo ${NEXTCLOUD_VERSION} \
    ; fi \
   && echo DIRNAME=${DIRNAME} \
   && cd ${DIRNAME} \
-  && ./configure --with-globus --without-openldap --without-postgresql \
+  && ./configure --with-globus --without-openldap --without-postgresql --disable-check-python-mod \
   && make -j 4 \
-  && make install \
+  && (cd include/gfarm && make install) \
+  && (cd lib && make install) \
+  && (cd gftool && make install) \
   \
   # jwt-parse
   && if [ -f util/jwt-parse/jwt-parse ]; then \

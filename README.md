@@ -41,11 +41,13 @@ Optional requirements only for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
 - GSI user proxy certificate (`/tmp/x509up_u<UID>`)
 - GSI myproxy server (hostname + password)
 
-## Confirmed Versions
+## Target Versions
 
 - Nextcloud 23
 - Nextcloud 24
 - Nextcloud 25
+- Gfarm 2.7.21 or later
+- Gfarm 2.8.x
 
 ## Supported Gfarm authentication methods
 
