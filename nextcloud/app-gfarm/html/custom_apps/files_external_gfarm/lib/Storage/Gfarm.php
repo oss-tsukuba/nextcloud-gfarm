@@ -50,8 +50,12 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 	}
 
+	public function info($message) {
+		syslog(LOG_INFO, $this->log_prefix() . $message);
+	}
+
 	public function error($message) {
-			syslog(LOG_ERR, $this->log_prefix() . $message);
+		syslog(LOG_ERR, $this->log_prefix() . $message);
 	}
 
 	private function exception_params() {
@@ -310,9 +314,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 		if (! $this->auth->authenticated($output)) {
 			$this->debug("auth->authenticated() output=" . $output);
 			if (! $this->auth->conf_init()) { // reset
+				$this->gfarm_umount();
 				throw $this->auth_exception("cannot recreate files for authentication: " . $output);
 			}
 			if (! $this->auth->logon($output)) {
+				$this->gfarm_umount();
 				throw $this->auth_exception("logon failed: " . $output);
 			}
 			if (! $this->auth->authenticated($output)) {
@@ -323,6 +329,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 
 		if (! $this->gfarm_mount($remount, $output)) {
+			$this->gfarm_umount();
 			throw $this->auth_exception("gfarm mount failed: " . $output);
 		}
 	}
@@ -375,12 +382,13 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	// for Cron/MountpointsCleanup.php
-	public static function umount_static($cronjob, $mountpoint) {
+	public static function umount_static($logobj, $mountpoint) {
 		$command = self::GFARM_UMOUNT . " " . escapeshellarg($mountpoint);
 		$output = null;
 		$retval = null;
 		exec($command, $output, $retval);
-		@GfarmAuthXOAuth2JWTAgent::jwt_agent_stop($cronjob, $mountpoint);
+
+		@GfarmAuthXOAuth2JWTAgent::jwt_agent_stop($logobj, $mountpoint);
 		foreach (glob($mountpoint . '.*/*') as $filename) {
 			try {
 				@unlink($filename);
@@ -414,16 +422,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	public function gfarm_umount() {
-		$retval = self::umount_static($this->mountpoint);
+		$retval = self::umount_static($this, $this->mountpoint);
 		if ($retval === 0) {
 				$this->debug("gfarm_umount done");
 		} else {
-				$this->error("gfarm_umount failed");
-		}
-		try {
-			$this->auth->conf_clear();
-		} catch (Exception $e) {
-			// ignore
+				$this->error("gfarm_umount failed (or not mounted)");
 		}
 	}
 
@@ -484,7 +487,6 @@ abstract class GfarmAuth {
 	abstract public function conf_init();
 
 	abstract public function conf_ready();
-	abstract public function conf_clear();
 	abstract public function authenticated(&$output);
 	abstract public function logon(&$output);
 
@@ -799,12 +801,6 @@ EOF;
 				&& !file_exists($this->gfarm_shared_key()));
 	}
 
-	public function conf_clear() {
-		$this->unlink($this->gfarm_conf());
-		$this->unlink($this->gfarm_usermap());
-		$this->unlink($this->gfarm_shared_key());
-	}
-
 	public function authenticated(&$output) {
 		return $this->gf->gfarm_check_auth($output);
 	}
@@ -837,11 +833,6 @@ class GfarmAuthGsiMyProxy extends GfarmAuth {
 	public function conf_ready() {
 		return (file_exists($this->gfarm_conf())
 				&& file_exists($this->x509_proxy_cert()));
-	}
-
-	public function conf_clear() {
-		$this->unlink($this->gfarm_conf());
-		$this->unlink($this->x509_proxy_cert());
 	}
 
 	public function authenticated(&$output) {
@@ -897,11 +888,6 @@ EOF;
 		return file_exists($this->gfarm_conf());
 	}
 
-	public function conf_clear() {
-		$this->unlink($this->gfarm_conf());
-		$this->delall($this->jwt_user_path());
-	}
-
 	public function authenticated(&$output) {
 		return $this->gf->gfarm_check_auth($output);
 	}
@@ -929,7 +915,7 @@ EOF;
 		return $this->_jwt_user_path;
 	}
 
-	public static function jwt_agent_stop($cronjob, $mountpoint) {
+	public static function jwt_agent_stop($logobj, $mountpoint) {
 		$token_file = $mountpoint . self::TOKEN_FILE;
 		if (is_file($token_file)) {
 			$stop = "JWT_USER_PATH='$token_file' " . self::JWT_AGENT . " --stop";
@@ -940,7 +926,7 @@ EOF;
 				$output = null;
 				exec($status, $output, $retval);
 				if ($retval === 0) {
-					$cronjob->error('could not stop jwt-agent for '. $token_file);
+					$logobj->error('could not stop jwt-agent for '. $token_file);
 				}
 			}
 		}

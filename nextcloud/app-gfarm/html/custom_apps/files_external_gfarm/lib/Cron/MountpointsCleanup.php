@@ -43,22 +43,24 @@ class MountpointsCleanup extends TimedJob {
 		}
 	}
 
+	public $LOG_PREFIX = "MountpointsCleanup(Gfarm): ";
+
 	public function debug($msg) {
 		if ($this->enable_debug) {
-			syslog(LOG_DEBUG, $msg);
+			syslog(LOG_DEBUG, $this->LOG_PREFIX . $msg);
 		}
 	}
 
 	public function info($msg) {
-		syslog(LOG_INFO, $msg);
+		syslog(LOG_INFO, $this->LOG_PREFIX . $msg);
 	}
 
 	public function error($msg) {
-		syslog(LOG_ERR, $msg);
+		syslog(LOG_ERR, $this->LOG_PREFIX . $msg);
 	}
 
 	protected function run($arguments) {
-		$this->debug("MountpointsCleanup(for Gfarm) start");
+		$this->debug("start");
 		$service = \OC::$server->getGlobalStoragesService();
 		// OCA\Files_External\Lib\StorageConfig
 		$configs = $service->getStorageForAllUsers();
