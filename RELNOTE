@@ -1,0 +1,17 @@
+Release note for Nextcloud-Gfarm 1.0.1
+======================================
+
+[2023.3.16]
+
+Updated feature
+* support Gfarm 2.7.21 or later
+
+Release note for Nextcloud-Gfarm 1.0.0
+======================================
+
+[2023.3.9]
+
+This is a Nextcloud container with Gfarm backend storage, which
+extends the official Nextcloud container image.  It includes an
+external storage app for Gfarm that enables access to Gfarm file
+system.
