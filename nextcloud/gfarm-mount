@@ -53,23 +53,33 @@ check_auth()
     # SEE ALSO: app-gfarm/html/custom_apps/files_external_gfarm/lib/Storage/Gfarm.php
     case "$auth_type" in
         sharedsecret)
-            LOG_DEBUG "gfkey -e"
+            LOG_DEBUG "CHECK: gfkey -e"
             # swap stdout and stderr
             # return stderr
-            gfkey -e 3>&2 2>&1 1>&3
-            return $?
+            if gfkey -e 3>&2 2>&1 1>&3; then
+                return 0
+            else
+                return $?
+            fi
             ;;
         gsi|myproxy)
-            LOG_DEBUG "grid-proxy-info"
+            LOG_DEBUG "CHECK: grid-proxy-info"
             # swap stdout and stderr
             # return stderr
-            grid-proxy-info -exists 3>&2 2>&1 1>&3
-            return $?
+            if grid-proxy-info -exists 3>&2 2>&1 1>&3; then
+                return 0
+            else
+                return $?
+            fi
             ;;
         jwt-agent)
-            LOG_DEBUG "jwt-agent --status"
-            jwt-agent --status
-            return $?
+            LOG_DEBUG "CHECK: jwt-agent --status"
+            # use stdout in Storage/Gfarm.php
+            if jwt-agent --status; then
+                return 0
+            else
+                return $?
+            fi
             ;;
         *)
             LOG_ERR "unknown auth_type: $auth_type"
@@ -94,18 +104,20 @@ check_mount_quick()
 remount=0
 case "$mode" in
     MOUNT)
+        # THROUGH
         ;;
     REMOUNT)
         remount=1
+        # THROUGH
         ;;
     CHECK_MOUNT)
         check_auth || exit $?
-        check_mount_quick
-        exit $?
+        check_mount_quick || exit $?
+        exit 0
         ;;
     CHECK_AUTH)
-        check_auth
-        exit $?
+        check_auth || exit $?
+        exit 0
         ;;
     *)
         LOG_ERR "unknown mode: $mode"
@@ -188,8 +200,11 @@ if [ $num -le 0 ]; then
     exit 1
 fi
 
-mount_gfarm2fs "${mountpoint}" "${gfarm_path}" 3>&2 2>&1 1>&3
-retval=$?
+if mount_gfarm2fs "${mountpoint}" "${gfarm_path}" 3>&2 2>&1 1>&3; then
+    retval=0
+else
+    retval=$?
+fi
 if [ $retval -ne 0 ]; then
     LOG_ERR "gfarm2fs mount failed: mountpoint=${mountpoint}"
 fi

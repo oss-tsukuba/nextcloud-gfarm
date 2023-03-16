@@ -308,6 +308,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 			}
 		}
 		if (! $this->auth->authenticated($output)) {
+			$this->debug("auth->authenticated() output=" . $output);
 			if (! $this->auth->conf_init()) { // reset
 				throw $this->auth_exception("cannot recreate files for authentication: " . $output);
 			}
@@ -379,7 +380,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 		$output = null;
 		$retval = null;
 		exec($command, $output, $retval);
-		GfarmAuthXOAuth2JWTAgent::jwt_agent_stop($cronjob, $mountpoint);
+		@GfarmAuthXOAuth2JWTAgent::jwt_agent_stop($cronjob, $mountpoint);
 		foreach (glob($mountpoint . '.*/*') as $filename) {
 			try {
 				@unlink($filename);
@@ -495,11 +496,11 @@ abstract class GfarmAuth {
 	}
 
 	public function x509_proxy_cert() {
-		return "__DUMMY__";
+		return "/dev/null";
 	}
 
 	public function jwt_user_path() {
-		return "__DUMMY__";
+		return "/dev/null";
 	}
 
 	protected function file_put($filename, $content) {
@@ -653,15 +654,25 @@ EOF;
 		return $conf_str;
 	}
 
-	protected function run_command_with_password($command, $password, $env, &$output) {
+	protected function run_command_with_password($command, $password, $env, &$stdout, &$stderr) {
 		$this->gf->debug($command);
-		$descriptorspec = array(
-			0 => array("pipe", "r"),
-			#1 => array("pipe", "w"),
-			#2 => array("file", "/tmp/nextcloud-gfarm-debug.txt", "a"),
-			1 => array("file", "/dev/null", "w"),
-			2 => array("pipe", "w"),
-			);
+		if ($stdout !== null) {  // use stdout or stderr
+			$descriptorspec = array(
+				0 => array("pipe", "r"),
+				1 => array("pipe", "w"),
+				2 => array("file", "/dev/null", "w"),
+				);
+			$stderr = null;
+		} else {  // stderr
+			$descriptorspec = array(
+				0 => array("pipe", "r"),
+				#1 => array("pipe", "w"),
+				#2 => array("file", "/tmp/nextcloud-gfarm-debug.txt", "a"),
+				1 => array("file", "/dev/null", "w"),
+				2 => array("pipe", "w"),
+				);
+			$stdout = null;
+		}
 		$cwd = '/';
 		if ($env === null) {
 			$env = array();
@@ -671,9 +682,14 @@ EOF;
 		if (is_resource($process)) {
 			fwrite($pipes[0], "$password\n");
 			fclose($pipes[0]);
-			if ($output !== null) {
-				#$output = stream_get_contents($pipes[1]);
-				$output = stream_get_contents($pipes[2]);
+			$output = "";
+			if ($stdout !== null) {
+				$stdout = stream_get_contents($pipes[1]);
+				$output = $stdout;
+			}
+			if ($stderr !== null) {
+				$stderr = stream_get_contents($pipes[2]);
+				$output = $stderr;
 			}
 			if (isset($pipes[1])) {
 				fclose($pipes[1]);
@@ -848,7 +864,9 @@ class GfarmAuthGsiMyProxy extends GfarmAuth {
 		$command = self::MYPROXY_LOGON
 				   . " " . escapeshellarg($user)
 				   . " " . escapeshellarg($proxy);
-		return $this->run_command_with_password($command, $password, null, $output);
+		$env = null;
+		$stdout = null;
+		return $this->run_command_with_password($command, $password, $env, $stdout, $output);
 	}
 }
 
@@ -897,9 +915,11 @@ EOF;
 				   . " -l " . escapeshellarg($user);
 		$env = array('JWT_USER_PATH' => $this->jwt_user_path());
 
-		// cannot get the stderr of jwt-agent
-		$output2 = null;
-		return $this->run_command_with_password($command, $passphrase, $env, $output2);
+		$output = "";
+		// cannot get the stderr of jwt-agent (freeze if trying to get output)
+		$stdout = null;
+		$stderr = null;
+		return $this->run_command_with_password($command, $passphrase, $env, $stdout, $stderr);
 	}
 
 	public function jwt_user_path() {
