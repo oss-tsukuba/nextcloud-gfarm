@@ -84,7 +84,7 @@ check_auth()
 check_mount_quick()
 {
     # ex. www-data    1576       1  0 14:54 ?        00:00:00 gfarm2fs -s -o loglevel=info,nonempty,modules=subdir,entry_timeout=60,negative_timeout=5,attr_timeout=60,gfs_stat_timeout=60,auto_cache,big_writes -o subdir=/abcdefghijklmn /tmp/gf/A_user1_abcdefghijklmn_V2ZCNfLhrHgUSKNDnFjRirqOlLo
-    if ps -u $MYNAME -f | grep -q " gfarm2fs .* ${mountpoint}\$"; then
+    if ps -u $MYNAME -f | grep -q " [g]farm2fs .* ${mountpoint}\$"; then
         return 0
     else
         return 1
