@@ -111,7 +111,6 @@ case "$mode" in
         # THROUGH
         ;;
     CHECK_MOUNT)
-        check_auth || exit $?
         check_mount_quick || exit $?
         exit 0
         ;;
