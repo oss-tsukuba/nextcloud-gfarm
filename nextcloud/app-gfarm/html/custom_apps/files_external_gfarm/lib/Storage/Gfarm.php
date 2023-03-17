@@ -290,27 +290,33 @@ class Gfarm extends \OC\Files\Storage\Local {
 			throw $this->auth_exception("secureconn unsupported");
 		}
 
-		$remount = false;
+		$conf_init = false;
 		if (! $this->auth->conf_ready()) {
 			if (! $this->auth->conf_init()) {
 				throw $this->auth_exception("cannot create files for authentication");
 			}
+			$conf_init = true;
 		}
 		if (! $auth_ok) {
-			if (! $this->auth->conf_init()) { // reset
-				throw $this->auth_exception("cannot recreate files for authentication");
+			if (! $conf_init) {
+				if (! $this->auth->conf_init()) { // reset
+					$this->gfarm_umount();
+					throw $this->auth_exception("cannot recreate files for authentication");
+				}
 			}
 			if (! $this->auth->logon($output)) {
+				$this->gfarm_umount();
 				throw $this->auth_exception("logon failed: " . $output);
 			}
 			if (! $this->auth->authenticated($output)) {
 				$this->gfarm_umount();
 				throw $this->auth_exception("authentication failed: " . $output);
 			}
-			$remount = true;
 		}
 
+		$remount = true;  // remount anytime
 		if (! $this->gfarm_mount($remount, $output)) {
+			$this->gfarm_umount();
 			throw $this->auth_exception("gfarm mount failed: " . $output);
 		}
 	}
