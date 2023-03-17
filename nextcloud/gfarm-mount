@@ -2,6 +2,9 @@
 
 set -eu -o pipefail
 
+source /nc-gfarm/config.sh
+source ${CONFIG_LIB}
+
 mode="$1"
 gfarm_path="$2"
 mountpoint="$3"
@@ -11,8 +14,7 @@ x509proxy="$6"
 jwt_user_path="$7"
 trace_id="$8"
 
-source /nc-gfarm/config.sh
-source ${CONFIG_LIB}
+MYNAME=www-data
 
 lockfile="${mountpoint}.lock"
 
@@ -89,16 +91,27 @@ check_auth()
     return 1
 }
 
+# This cannot notice abnormal termination of gfarm2fs (ex. pkill -9 gfarm2fs)
+# check_mount_quick()
+# {
+#     # check quickly
+#     for mp in $(mount -t fuse.gfarm2fs | cut -d " " -f 3- | awk -F" type fuse" '{print $1}'); do
+#         if [ "$mountpoint" = "$mp" ]; then
+#             LOG_DEBUG "already mounted: $mountpoint"
+#             return 0
+#         fi
+#     done
+#     return 1
+# }
+
 check_mount_quick()
 {
-    # check quickly
-    for mp in $(mount -t fuse.gfarm2fs | cut -d " " -f 3- | awk -F" type fuse" '{print $1}'); do
-        if [ "$mountpoint" = "$mp" ]; then
-            LOG_DEBUG "already mounted: $mountpoint"
-            return 0
-        fi
-    done
-    return 1
+    # ex. www-data    1576       1  0 14:54 ?        00:00:00 gfarm2fs -s -o loglevel=info,nonempty,modules=subdir,entry_timeout=60,negative_timeout=5,attr_timeout=60,gfs_stat_timeout=60,auto_cache,big_writes -o subdir=/abcdefghijklmn /tmp/gf/A_user1_abcdefghijklmn_V2ZCNfLhrHgUSKNDnFjRirqOlLo
+    if ps -u $MYNAME -f | grep -q " gfarm2fs .* ${mountpoint}\$"; then
+        return 0
+    else
+        return 1
+    fi
 }
 
 remount=0
