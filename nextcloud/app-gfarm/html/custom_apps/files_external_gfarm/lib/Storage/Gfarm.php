@@ -277,7 +277,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 	private function mount_start() {
 		$output = '';
-		if ($this->gfarm_check_mount($output)) { // shortcut
+
+		$auth_ok = $this->auth->authenticated($output);
+		$this->debug("auth->authenticated() output=" . $output);
+		if ($auth_ok && $this->gfarm_check_mount($output)) { // shortcut
+			$this->debug("auth->gfarm_check_mount() output=" . $output);
 			// already mounted
 			return;
 		}
@@ -292,9 +296,9 @@ class Gfarm extends \OC\Files\Storage\Local {
 				throw $this->auth_exception("cannot create files for authentication");
 			}
 		}
-		if (! $this->auth->authenticated($output)) {
+		if (! $auth_ok) {
 			if (! $this->auth->conf_init()) { // reset
-				throw $this->auth_exception("cannot recreate files for authentication: " . $output);
+				throw $this->auth_exception("cannot recreate files for authentication");
 			}
 			if (! $this->auth->logon($output)) {
 				throw $this->auth_exception("logon failed: " . $output);
@@ -470,9 +474,9 @@ abstract class GfarmAuth {
 	protected function file_put($filename, $content) {
 		if (! file_exists($filename)) {
 			touch($filename);
-			if (! chmod($filename, 0600)) {
-				return false;
-			}
+		}
+		if (! chmod($filename, 0600)) {
+			return false;
 		}
 		return file_put_contents($filename, $content, LOCK_EX);
 	}
