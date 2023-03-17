@@ -168,10 +168,13 @@ $(TARGET_SHELL): shell@%:
 	$(COMPOSE) exec $* /bin/sh
 
 logs:
-	$(COMPOSE) logs nextcloud
+	$(MAKE) logs@nextcloud
 
 logs-follow:
-	$(COMPOSE) logs --follow nextcloud
+	$(MAKE) logs-follow@nextcloud
+
+logs-all-follow:
+	$(COMPOSE) logs --tail 10 --follow
 
 nextcloud.log:
 	$(OCC) log:tail 10000 | sed 's/\s*$$//g'
@@ -183,7 +186,7 @@ $(TARGET_LOGS): logs@%:
 	$(COMPOSE) logs $*
 
 $(TARGET_LOGS_FOLLOW): logs-follow@%:
-	$(COMPOSE) logs --follow $*
+	$(COMPOSE) logs --tail 10000 --follow $*
 
 $(TARGET_LOGS_TIME): logs-time@%:
 	$(COMPOSE) logs --timestamps $*
