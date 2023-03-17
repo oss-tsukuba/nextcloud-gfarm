@@ -366,7 +366,9 @@ class Gfarm extends \OC\Files\Storage\Local {
 		return $this->mount_common($mode, $output);
 	}
 
+	// for Cron/MountpointsCleanup.php
 	public static function umount_static($mountpoint) {
+		$logobj->debug("umount_static start: ". $mountpoint);
 		$command = self::GFARM_UMOUNT . " " . escapeshellarg($mountpoint);
 		$output = null;
 		$retval = null;
@@ -406,6 +408,11 @@ class Gfarm extends \OC\Files\Storage\Local {
 		}
 	}
 
+	// override
+	public function stat($path) {
+		//$this->debug("stat(" . $path . ")");
+		return parent::stat($path);
+	}
 }
 
 abstract class GfarmAuth {
