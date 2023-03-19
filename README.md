@@ -488,6 +488,7 @@ SEE ALSO:
 - Summary
   - Create new realm
   - Create new client
+    - `Access Type`:`confidential`
     - `Valid Redirect URI`: `https://<Nextcloud name>/*`
     - `ID Token Signature Algorithm`: `RS256`
     - Please check and copy (and paste): `Credentials` -> 'Secret'
@@ -502,6 +503,7 @@ SEE ALSO:
     - Edit `Attributes` for each user
       - `Key` : `ownCloudQuota`
       - `Value` : your preferred limit (in bytes)
+  - Add users
 
 ### Nextcloud-Gfarm configurations
 
@@ -518,7 +520,9 @@ OIDC_LOGIN_CLIENT_SECRET=...
 OIDC_LOGIN_DEFAULT_QUOTA=1000000000
 ```
 
-- other parameters: `nextcloud/oidc.config.php.tmpl`
+- Details, and other parameters: `nextcloud/oidc.config.php.tmpl`
+  - OIDC_LOGIN_DEFAULT_QUOTA: 0 or -1 means `Unlimited`
+    - If you want to allow Nextcloud to manage quotas, comment out the line of `nextcloud/oidc.config.php.tmpl`.
 - and `make reborn`
 
 ## For developers
