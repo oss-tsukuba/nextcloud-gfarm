@@ -16,6 +16,8 @@ if [ ! -d "${OUT_DIR}" ]; then
     exit 1
 fi
 
+OUT_DIR=$(realpath ${OUT_DIR})
+
 call_on_error()
 {
     make occ-maintenancemode-off
