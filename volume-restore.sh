@@ -11,6 +11,12 @@ if [ -z "${IN_FILE}" ]; then
     exit 1
 fi
 
+if [ ! -f "${IN_FILE}" ]; then
+    echo "${IN_FILE}: No such file"
+    exit 1
+fi
+
+IN_FILE=$(realpath ${IN_FILE})
 NAME_TAR=$(basename ${IN_FILE})
 
 SUFFIX=${NAME_TAR##*.}
@@ -71,7 +77,7 @@ yesno() {
         esac
 }
 
-num=$(make -s volume-list | wc -l)
+num=$(make -s volume-list 2> /dev/null | wc -l)
 if [ ${num} -gt 0 ]; then
     yesno "ERASE ALL LOCAL DATA. Continue?" || exit 1
     # remove old volumes
@@ -82,6 +88,7 @@ fi
 ${COMPOSE} up --no-start
 
 for vol in $(make -s volume-list); do
+    echo "copying volume: ${vol}"
     ${DOCKER} run --rm \
               -v "${vol}:/${vol}:rw" \
               -v "${WORKDIR}:/workdir:ro" \
