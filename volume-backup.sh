@@ -34,8 +34,6 @@ mkdir ${WORKDIR}
 
 make occ-maintenancemode-on
 
-echo "Copying..."
-
 # "tar: file changed as we read it" may occur
 # immediately after starting maintenancemode-on
 retry() {
@@ -46,6 +44,7 @@ retry() {
 }
 
 for vol in $(make -s volume-list); do
+    echo "copying volume: ${vol}"
     retry ${DOCKER} run --rm \
            -v "${vol}:/${vol}:ro" \
            -v "${WORKDIR}:/backup" \
