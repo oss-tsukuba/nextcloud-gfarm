@@ -11,6 +11,11 @@ if [ -z "${OUT_DIR}" ]; then
     exit 1
 fi
 
+if [ ! -d "${OUT_DIR}" ]; then
+    echo "${OUT_DIR}: No such directory"
+    exit 1
+fi
+
 call_on_error()
 {
     make occ-maintenancemode-off

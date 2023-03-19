@@ -341,18 +341,21 @@ Two types are available:
   - not include:  certs, /var/log of nextcloud, other logs
   - not include: `config.env`, `secrets/*`
 
+Nextcloud cannot be accessed during backup.
+
 ### Backup of LOCAL-BACKUP
 
-- run `./volume-backup.sh OUTPUT_DIRECTORY`
+- run `mkdir <OUTPUT_DIRECTORY>`
+- run `./volume-backup.sh <OUTPUT_DIRECTORY>`
 
-OUTPUT_DIRECTORY/nextcloud-gfarm-backup-YYYYmmdd-HHMM.tar will be created.
+<OUTPUT_DIRECTORY>/nextcloud-gfarm-backup-YYYYmmdd-HHMM.tar will be created.
 
 ### Restore of LOCAL-BACKUP
 
 - run `make down-REMOVE_VOLUMES` if needed.
   - WARNING: Local database will be removed.
 - remove `./secrets/*` files and `config.env` if needed.
-- run `./volume-restore.sh INPUT_FILE`
+- run `./volume-restore.sh <INPUT_FILE>`
 - If nextcloud container cannot start in case of version mismatch after restore, edit `config.env` and set `NEXTCLOUD_UPDATE=0`, and `make reborn`
 - edit `config.env` and set `NEXTCLOUD_UPDATE=1`
 
