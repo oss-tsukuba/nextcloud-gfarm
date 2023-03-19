@@ -380,7 +380,7 @@ Even if Nextcloud database is broken or lost, you can restore from backup:
 
 - run `make down-REMOVE_VOLUMES` if needed.
   - WARNING: Local database will be removed.
-- deploy `./secrets/*` files and `config.env` manually.
+- deploy `certs`, `./secrets/*` files and `config.env` manually.
 - run `make reborn`
 
 ## Logging
