@@ -530,3 +530,8 @@ OIDC_LOGIN_DEFAULT_QUOTA=1000000000
   - and run `./copy_home_files.sh` to copy files into containers
 - or create `template-orverride.env` for your environment, and run `make init`
 - To use apt-cacher-ng, add "jwt-server,www.nextcloud.com,www.startpage.com,www.eff.org,www.edri.org" to no_proxy
+
+- How to update Nextcloud-Gfarm version
+  - update `version.sh`
+  - `git tag -a <VERSION> -m 'v<VERSION>'`
+  - `git push origin <VERSION>`
