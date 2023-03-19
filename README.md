@@ -337,7 +337,7 @@ Two types are available:
 - GFARM-BACKUP (Backup to files on Gfarm filesystem)
   - available only when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
   - periodic automatic backup
-  - include: data, db. nextcloud files
+  - include: data, db, nextcloud files
   - not include:  certs, /var/log of nextcloud, other logs
   - not include: `config.env`, `secrets/*`
 
