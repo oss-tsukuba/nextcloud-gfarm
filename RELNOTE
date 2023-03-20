@@ -1,3 +1,12 @@
+Release note for Nextcloud-Gfarm 1.0.2
+======================================
+
+[2023.3.20]
+
+Updated feature
+* update README.md
+* make Gfarm access robust
+
 Release note for Nextcloud-Gfarm 1.0.1
 ======================================
 
