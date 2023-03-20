@@ -37,8 +37,9 @@ create_pass_file() {
     FILE="$1"
     VAL="$2"
 
-    echo "${VAL}" > "${FILE}"
+    touch "${FILE}"
     chmod 600 "${FILE}"
+    echo "${VAL}" > "${FILE}"
     echo "${FILE}: created"
 }
 
@@ -59,7 +60,7 @@ read_input() {
 }
 
 if ! check_existence "${NEXTCLOUD_ADMIN_PASS_FILE}"; then
-    PASS=$(read_input "${NEXTCLOUD_ADMIN_PASS_FILE} (empty:auto)" "")
+    PASS=$(read_input "Enter Nextcloud admin password (default auto-generated)" "")
     if [ -z "${PASS}" ]; then
         PASS=$(gen_pass_stdout)
     fi
@@ -82,9 +83,9 @@ trap cleanup 1 2 15 ERR
 
 PROTOCOL=
 
-echo "Please input parameters: VALUE for KEY [DEFAULT]"
-echo "Specifying empty and enter means using DEFAULT value."
-echo "Specifying \"\" and enter means empty (or means disabled)."
+echo "Please input parameters"
+echo "default is shown in the brackets."
+echo "Specifying \"\" means empty (disabled)."
 
 if [ -f "${ENV_FILE_OVERRIDE}" ]; then
     ENV_FILE_TEMPLATE="${ENV_FILE_OVERRIDE}"
