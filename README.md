@@ -2,39 +2,39 @@
 
 ## Overview
 
-- Nextcloud container with Gfarm as back-end storage.
-  - Use official Nextcloud container image.
-  - Upgradable.
-- External storage app for Gfarm enables mapping of Gfarm user and Nextcloud user.
-- (OPTIONAL) NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1 : Use one Gfarm user and the system data directory for all Nextcloud users.
-  - Some operations will be slow.
-  - NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1 : Back up system files and database to Gfarm automatically.
+- Nextcloud container with Gfarm backend storage.
+  - it extends the official Nextcloud container image.
+  - the base Nextcloud container version can be upgraded.
+- This includes an external storage app for Gfarm that enables access to Gfarm file system.
+- (OPTIONAL) It is possible to use Gfarm file system as a system data directory by NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
+  - It uses a Gfarm system user for all Nextcloud users.
+  - It backs up system files and database to Gfarm automatically.
     - Backup-file of database is encrypted.
-  - NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1 : Restore from Gfarm automatically when local data (docker volume) is empty.
-- Reverse proxy is required in front of this Nextcloud if you want to use https.
-  - Example of Docker Compose configuration file to use https is included.
+  - It restores from Gfarm automatically when local data (docker volume) is empty.
+  - Some operations may be slow.
+- Reverse proxy is required in front of the Nextcloud in case of https.
+  - Docker Compose configuration file example for https is included.
 
 For other details, please refer to
 [nextcloud (DOCKER OFFICIAL IMAGE)](https://github.com/docker-library/docs/blob/master/nextcloud/README.md).
 
 ## Security Considerations
 
-- Gfarm-user's credentials are stored in Nextcloud's database.
-  - Only passwords/pass-phrases are encrypted and stored by the random secret key in Nextcloud configuration file.
-- Within Nextcloud container, a local user (www-data) accesses Gfarm mountpoints on behalf of all Gfarm-users.
-- Nextcloud-Gfarm administrators have access to Gfarm-user's credentials and mounted files within Nextcloud container.
-- Once a Gfarm-file has been accessed, the filename is stored in Nextcloud's database.
-  - The file-contents are not stored in Nextcloud's database.
+- Gfarm user's credentials (shared keys or passwords) are stored in Nextcloud's database.
+  - Shared keys or passwords are encrypted by a random secret key in Nextcloud configuration file.
+- Within Nextcloud container, a local user (www-data) accesses Gfarm mountpoints on behalf of Gfarm users.
+- Nextcloud-Gfarm administrators have capability to access Gfarm user's credentials and mounted files within Nextcloud container.
+- Once a Gfarm file has been accessed, the filename is stored in Nextcloud's database.
+  - The file contents are not stored in the Nextcloud's database.
 - For additional Nextcloud information, please refer to Nextcloud official pages.
 
 ## Requirements
 
 - [Docker Engine and Docker Compose v2](https://docs.docker.com/engine/install/)
-  - (Docker Desktop is not required.)
+  - Docker Desktop is not required.
 - Gfarm configuration file (gfarm2.conf)
-  - There is no need to install Gfarm on the host OS.
+  - Gfarm is not required to install on the host OS.
 - GNU make
-  - All applications will be build in container.
 - `/bin/bash`
 - openssl command
 - curl command
@@ -43,7 +43,7 @@ Optional requirements:
 
 - CA certificate files (ex. /etc/grid-security/certificates)
 
-Optional requirements only for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
+Optional requirements in case of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
 
 - Gfarm user configuration (~/.gfarm2rc)
 - Gfarm shared key (~/.gfarm_shared_key)
@@ -61,11 +61,11 @@ Optional requirements only for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
 
 ## Supported Gfarm authentication methods
 
-- External storage
+- For external storage
   - GSI + myproxy-logon
   - Gfarm shared key
 
-- System data directory (NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1)
+- For system data directory (NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1)
   - Gfarm shared key
     - TLS connection (for Gfarm 2.8 or later)
   - GSI, myproxy-logon
@@ -74,54 +74,42 @@ Optional requirements only for NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
 
 ## Quick start
 
-- install Docker and Docker Compose
-- run `make init` to configure parameters and create `config.env`.
-  (or run `make init-hpci` for HPCI shared storage.)
-  - `KEY [DEFAULT]: <your input to set VALUE>`
-    - for KEY and VALUE, see details below
-  - input a password file for Nextcloud admin.
-    - Don't forget `./secrets/nextcloud_admin_password`
-    - The password is for restoring from backup,
-      and for Nextcloud login as admin user.
-  - create a password file for MariaDB automatically.
-    - check `./secrets/db_password`
-    - (used by Nextcloud to connect MariaDB)
-  - (not recommended, slow) If you want to use one Gfarm user and a Gfarm directory as Nextcloud system data directory, specify NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1.
-  - create symlink of `docker-compose.override.yml` automatically.
-    - PROTOCOL=https : for `docker-compose.override.yml.https`
-    - PROTOCOL=http  : for `docker-compose.override.yml.http`
-- edit `config.env` for further changes. (see details below)
-  - correct and add parameters.
+- install [Docker Engine and Docker Compose v2](https://docs.docker.com/engine/install/)
+- run `make init` to create `config.env`
+  (or run `make init-hpci` for HPCI shared storage)
+  - input a password for Nextcloud admin.
+    - It is a login password for admin, and also used to restore from the backup.
+    - It is stored in `./secrets/nextcloud_admin_password`
+  - A password file for MariaDB `./secrets/db_password` is generated automatically.
+  - (not recommended, slow) If you want to use a Gfarm directory as Nextcloud system data directory, specify NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1.
+  - A symlink `docker-compose.override.yml` is created automatically.
+    - it links to `docker-compose.override.yml.https` in case of PROTOCOL=https
+    - it links to `docker-compose.override.yml.http` in case of PROTOCOL=http
+- edit `config.env` if necessary (see details below)
 - create or copy files for your environment
-  - copy gfarm.conf in GFARM_CONF_DIR
-  - etc. (for example: files for GSI_CERTIFICATES_DIR)
+  - copy gfarm2.conf in GFARM_CONF_DIR
+  - copy CA files in GSI_CERTIFICATES_DIR
 - check and edit `docker-compose.override.yml`
-  - If you do not need symlink of `docker-compose.override.yml`, remove it.
-  - use one of other `docker-compose.override.yml.*`
-  - or write new `docker-compose.override.yml` for your environment
+  - It is a symlink.  You need to remove (and copy it from the template) before editing.
 - run `make check-config` to check configurations.
 - run `make selfsigned-cert-generate` to activate HTTPS when using HTTPS.
+  - This is for testing purposes only.  Use an appropriate server certificate.  See below.
 - run `make reborn` to create and start containers.
   - If containers exist, these will be recreated.
   - Persistent data (DB, configuration files, and etc.) is not removed.
-- If NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1,
-  - input password of myproxy-logon or grid-proxy-init for Gfarm authentication method (when not using .gfarm_shared_key)
-- copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume when using HTTPS and not using self-signed certificate.
+  - In case of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1, it is necessary to input password of myproxy-logon or grid-proxy-init for a Gfarm system user if not using a shared secret key authentication.
+- If not using a self-signed certificate, copy certificate files for HTTPS to `nextcloud-gfarm-revproxy-1:/etc/nginx/certs` volume.
   - NOTE: HTTPS port is disabled when certificate files do not exist.
   - prepare the following files
     - ${SERVER_NAME}.key (SSL_KEY)
     - ${SERVER_NAME}.csr (SSL_CSR)
     - ${SERVER_NAME}.crt (SSL_CERT)
     - and run `sudo docker cp <filename> nextcloud-gfarm-revproxy-1:/etc/nginx/certs/<filename>` to copy a file
-    - and run `make restart@revproxy`
-  - or run `make selfsigned-cert-generate` to generate and copy self-signed certificate
-    - and run `make selfsigned-cert-fingerprint` to show fingerprint
-  - or (not surveyed:) write new docker-compose.override.yml and use acme-companion for nginx-proxy to use Let's Encrypt certificate
+  - or write new docker-compose.override.yml and use, for example, acme-companion for nginx-proxy to use Let's Encrypt certificate.  See below.
     - <https://github.com/nginx-proxy/acme-companion>
     - <https://github.com/nginx-proxy/acme-companion/blob/main/docs/Docker-Compose.md>
     - <https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/with-nginx-proxy/mariadb/fpm/docker-compose.yml>
-  - or etc.
-- run `make restart@revproxy` after certificate files for HTTPS are updated.
+- run `make restart@revproxy` if certificate files for HTTPS are updated.
 - open the URL in a browser
   - example: `https://<hostname>/`
   - example: `https://<hostname>:<port>/`
@@ -143,11 +131,21 @@ Please refer to
 [Make your Nextcloud available from the internet](https://github.com/nextcloud/docker/blob/master/README.md#make-your-nextcloud-available-from-the-internet)
 
 docker-compose.override.yml.https is an example to setup
-using a reverse proxy and using self signed certificates.
+using a reverse proxy and using a self signed certificate.
 
-You can use other reverse proxy and describe
+It is possible to use another reverse proxy by describing
 docker-compose.override.yml for your environment.
-(Details are not given here.)
+
+## Trash
+
+When deleting files, Nextcloud moves them to a trash bin in the local storage.
+It may take time or cause storage shortage issues if the file size is large.
+You can disable this feature by disable 'Deleted files' app or the following
+commands;
+```
+$ make shell
+$ html/occ app:disable files_trashbin
+```
 
 ## Configuration file (config.env)
 
@@ -328,28 +326,27 @@ make shell-root
 Two types are available:
 
 - LOCAL-BACKUP (Backup to a local file)
-  - manually backup required
-  - include: `config.env`, `secrets/*`
-  - include data, db, nextcloud files, certs, log(/var/log of nextcloud only)
-    (backup docker volumes from `make volume-list`)
+  - this is a manual backup
+  - it backs up `config.env` and `secrets/*`
+  - it backs up docker volumes in `make volume-list` that include data, db, nextcloud files, certs and logs (/var/log of nextcloud)
 
 - GFARM-BACKUP (Backup to files on Gfarm filesystem)
-  - available only when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
-  - periodic automatic backup
-  - include: data, db, nextcloud files
-  - not include:  certs, /var/log of nextcloud, other logs
-  - not include: `config.env`, `secrets/*`
+  - only available in case of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
+  - it periodically backs up automatically
+  - it backs up data, db and nextcloud files
+  - it does not back up certs, /var/log of nextcloud and other logs
+  - it does not back up `config.env` and `secrets/*`
 
 Nextcloud cannot be accessed during backup.
 
-### Backup of LOCAL-BACKUP
+### Backup by LOCAL-BACKUP
 
 - run `mkdir <OUTPUT_DIRECTORY>`
 - run `./volume-backup.sh <OUTPUT_DIRECTORY>`
 
 <OUTPUT_DIRECTORY>/nextcloud-gfarm-backup-YYYYmmdd-HHMM.tar will be created.
 
-### Restore of LOCAL-BACKUP
+### Restore from LOCAL-BACKUP
 
 - run `make down-REMOVE_VOLUMES` if needed.
   - WARNING: Local database will be removed.
@@ -358,7 +355,7 @@ Nextcloud cannot be accessed during backup.
 - If nextcloud container cannot start in case of version mismatch after restore, edit `config.env` and set `NEXTCLOUD_UPDATE=0`, and `make reborn`
 - edit `config.env` and set `NEXTCLOUD_UPDATE=1`
 
-### Backup of GFARM-BACKUP
+### Backup by GFARM-BACKUP
 
 Nextcloud database will be automatically backed up to Gfarm filesystem
 according to NEXTCLOUD_BACKUP_TIME.
@@ -411,20 +408,20 @@ You can describe docker-compose.override.yml to change logging driver.
 
 ## Upgrade to a newer Nextcloud
 
-- create backup (SEE `Backup and Restore` section)
+- create backup (See `Backup and Restore` section)
 - edit `config.env`
-  - increase `NEXTCLOUD_VERSION` by exactly 1 more than current major version
-    - run `show-nextcloud-version` to show current version
+  - increase `NEXTCLOUD_VERSION` by exactly 1 from the current major version
+    - to show the current version, run `show-nextcloud-version`
 - run `make reborn`
 
 SEE ALSO:
 <https://github.com/nextcloud/docker/blob/master/README.md#update-to-a-newer-version>
 
 It is only possible to upgrade one major version at a time.
-For example, if you want to upgrade from version 22 to 24, you will
-have to upgrade from version 22 to 23, then from 23 to 24.
+For example, if you want to upgrade from version 22 to 24, you
+need to upgrade to 23 first, and then to 24.
 
-NOTE: Downgrading is not supported.
+NOTE: Downgrade is not supported.
 
 For example, if the following error occurred, set `NEXTCLOUD_VERSION=22` in `config.env`.
 
@@ -435,7 +432,7 @@ nextcloud-gfarm_nextcloud_1 exited with code 1
 
 NOTE: If the upgrade fails:
 
-Undo NEXTCLOUD_VERSION and see `Restore` section.
+Restore NEXTCLOUD_VERSION to the original version and see `Restore` section.
 
 ## Warnings of /settings/admin/overview
 
