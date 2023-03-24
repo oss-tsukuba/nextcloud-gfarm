@@ -368,7 +368,6 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 	// for Cron/MountpointsCleanup.php
 	public static function umount_static($mountpoint) {
-		$logobj->debug("umount_static start: ". $mountpoint);
 		$command = self::GFARM_UMOUNT . " " . escapeshellarg($mountpoint);
 		$output = null;
 		$retval = null;
