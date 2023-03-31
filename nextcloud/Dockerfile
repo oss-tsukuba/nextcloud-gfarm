@@ -93,7 +93,8 @@ RUN echo ${NEXTCLOUD_VERSION} \
   # jwt-agent \
   && cd ${WORKDIR} \
   && if [ -n "${JWT_AGENT_SRC_GIT_URL}" ]; then \
-       GO_TAR=go1.20.linux-amd64.tar.gz \
+       arch=`dpkg --print-architecture` \
+       && GO_TAR=go1.20.2.linux-${arch}.tar.gz \
        && curl -fsLJO https://go.dev/dl/${GO_TAR} \
        && tar -C /usr/local -xzf ${GO_TAR} \
        && ln -s /usr/local/go/bin/go /usr/local/bin \
