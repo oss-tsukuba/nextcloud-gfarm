@@ -1,3 +1,13 @@
+Release note for Nextcloud-Gfarm 1.0.4
+======================================
+
+[2023.4.1]
+
+Updated feature
+* support arm64
+* more robust sanity check
+* update default version to Gfarm 2.7.22 and Gfarm2fs 1.2.17
+
 Release note for Nextcloud-Gfarm 1.0.3
 ======================================
 
