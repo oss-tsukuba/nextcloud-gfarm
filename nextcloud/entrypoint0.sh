@@ -211,7 +211,7 @@ fi # end of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
 
 if [ -n "${XOAUTH2_USER_CLAIM}" ]; then
     sasl_libdir=$(pkg-config --variable=libdir libsasl2)
-    cat <<EOF > ${sasl_libdir}/sasl2/gfarm.conf
+    cat <<EOF > ${sasl_libdir}/sasl2/gfarm-client.conf
 xoauth2_user_claim: ${XOAUTH2_USER_CLAIM}
 EOF
 
