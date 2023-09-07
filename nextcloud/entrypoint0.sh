@@ -82,8 +82,10 @@ fi
 copy0 "${NEXTCLOUD_ADMIN_PASSWORD_FILE}" "${NEXTCLOUD_ADMIN_PASSWORD_FILE_FOR_USER}"
 mkdir -p "${FLAG_DIR}"
 
+# copy and edit gfarm2.conf
 cp "${GFARM2_CONF_ORIG}" "${GFARM_CONF}"
 echo "attr_cache_timeout ${GFARM_ATTR_CACHE_TIMEOUT}" >> "${GFARM_CONF}"
+sed -i '/^local_user_map /d' "${GFARM_CONF}"
 chown0 "${GFARM_CONF}"
 
 # NOTE: gsi.conf is installed from GCT package
