@@ -143,7 +143,6 @@ services:
       - SYS_ADMIN
     devices:
       - /dev/fuse:/dev/fuse
-    privileged: false
     secrets:
       - nextcloud_admin_password
       - db_password
