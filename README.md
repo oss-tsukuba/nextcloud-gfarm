@@ -56,6 +56,8 @@ Optional requirements in case of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
 - Nextcloud 23
 - Nextcloud 24
 - Nextcloud 25
+- Nextcloud 26
+- Nextcloud 27
 - Gfarm 2.7.21 or later
 - Gfarm 2.8.x
 
@@ -440,7 +442,7 @@ NOTE: If the upgrade fails:
 
 Restore NEXTCLOUD_VERSION to the original version and see `Restore` section.
 
-## Warnings of /settings/admin/overview
+## Warnings displayed on /settings/admin/overview
 
 Follow the warnings.
 
