@@ -102,6 +102,9 @@ else
 fi
 ${OCC} config:system:set --type=boolean --value=${DEBUG_MODE} debug
 
+# hide "Get your own free account" in public folder
+${OCC} config:system:set simpleSignUpLink.shown --value=false --type=boolean
+
 APPS_ENABLE="
 files_external
 files_external_gfarm
