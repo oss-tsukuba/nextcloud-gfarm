@@ -152,6 +152,13 @@ else
     ln -s /dev/null "${ACCESS_LOG_FILE}"
 fi
 
+# LimitRequestBody for Apache
+# https://httpd.apache.org/docs/current/en/mod/core.html#limitrequestbody
+echo "LimitRequestBody ${NEXTCLOUD_GFARM_UPLOAD_LIMIT}" > /etc/apache2/conf-enabled/upload_limit.conf
+
+# disable chunked upload to avoid using the local temporary directory.
+${OCC} config:app:set files max_chunk_size --value 0
+
 # for backup.sh
 touch "${NEXTCLOUD_LOG_PATH}"
 mkdir -p "${BACKUP_DIR}"

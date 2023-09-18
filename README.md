@@ -217,6 +217,10 @@ Default is specified by `docker-compose.yml`.
 
 Default is specified by `docker-compose.yml`.
 
+- NEXTCLOUD_GFARM_UPLOAD_LIMIT: the upload limit (bytes) for big files (0: unlimited, default) (ex. 1073741824)
+    - 0 is not recommended.
+    - Please determine the limit and announce it to users.
+    - If the limit is reached, "An unknown error has occurred" occurs. (HTTP error code 413)
 - NEXTCLOUD_GFARM_DEBUG: debug mode (0: disable)
 - http_proxy: http_proxy environment variable
 - https_proxy: http_proxy environment variable
