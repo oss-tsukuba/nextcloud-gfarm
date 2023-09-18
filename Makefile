@@ -76,6 +76,9 @@ selfsigned-cert-check-config:
 selfsigned-cert-fingerprint:
 	$(EXEC_COMMON_ROOT) revproxy /cert-fingerprint.sh
 
+selfsigned-cert-logs:
+	$(SSC_COMPOSE) logs
+
 check-config:
 	$(COMPOSE) config
 
