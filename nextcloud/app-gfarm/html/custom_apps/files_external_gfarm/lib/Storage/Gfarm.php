@@ -497,6 +497,8 @@ abstract class GfarmAuth {
 	abstract public function authenticated(&$output);
 	abstract public function logon(&$output);
 
+	public $gfconf = null;
+
 	public function gfarm_conf() {
 		if (!isset($this->gfconf)) {
 			$this->gfconf = $this->gf->mountpoint . ".gfarm2.conf";
@@ -752,6 +754,8 @@ EOF;
 
 class GfarmAuthGfarmSharedKey extends GfarmAuth {
 	public const TYPE = "sharedsecret";
+	public $usermap = null;
+	public $shared_key = null;
 
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
@@ -821,6 +825,7 @@ class GfarmAuthGsiMyProxy extends GfarmAuth {
 	public const TYPE = "myproxy";
 	//public const MYPROXY_LOGON = "/nc-gfarm/dummy-myproxy-logon"; // for dev
 	public const MYPROXY_LOGON = "/nc-gfarm/myproxy-logon";
+	public $_x509proxy = null;
 
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
@@ -872,6 +877,7 @@ class GfarmAuthXOAuth2JWTAgent extends GfarmAuth {
 	public const TYPE = "jwt-agent";
 	public const JWT_AGENT = "jwt-agent";
 	public const TOKEN_FILE = ".jwt/token.jwt";
+	public $_jwt_user_path = null;
 
 	public function __construct(Gfarm $gf) {
 		$this->init($gf, self::TYPE);
