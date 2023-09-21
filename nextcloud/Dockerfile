@@ -66,6 +66,7 @@ RUN echo ${NEXTCLOUD_VERSION} \
   && (cd include/gfarm && make install) \
   && (cd lib && make install) \
   && (cd gftool && make install) \
+  && (cd pkgconfig && make install) \
   \
   # jwt-parse
   && if [ -f util/jwt-parse/jwt-parse ]; then \
