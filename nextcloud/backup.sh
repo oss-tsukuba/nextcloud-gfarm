@@ -9,8 +9,8 @@ source /nc-gfarm/config.sh
 source ${CONFIG_LIB}
 
 if [ ${NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR} -ne 1 ]; then
-    echo >&2 "not available when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR != 1"
-    exit 0
+    ERR "not available when NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR != 1"
+    exit 1
 fi
 
 BACKUP_FLAG="/tmp/nc-gfarm-backup"

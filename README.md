@@ -462,6 +462,7 @@ Missing index "preferences_app_key" in table "oc_preferences".
 
 ## Change DB password
 
+- (only available in case of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1)
 - run `make backup`
 - run `make down-REMOVE_VOLUMES`
   - clear password for root user of mariadb
@@ -482,6 +483,8 @@ NOTE: Nextcloud may not have official instructions on how to change the password
   - The Password in DB will also be updated.
 - run `make reborn` to reflect the password file in container.
 - run `make backup` to change the password for backup data.
+  - only available in case of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1
+
 
 SEE ALSO:
 
