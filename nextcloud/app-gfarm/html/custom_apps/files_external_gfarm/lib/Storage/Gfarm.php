@@ -417,7 +417,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 		$retry_max = 10;
 		for ($i = 0; $i < $retry_max; $i++) {
 			try {
-				if (rmdir($mountpoint)) {
+				if (@rmdir($mountpoint)) {
 					break;
 				}
 			} catch (Error $e) {
