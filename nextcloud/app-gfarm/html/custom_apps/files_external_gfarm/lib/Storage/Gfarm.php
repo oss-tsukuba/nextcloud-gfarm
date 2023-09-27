@@ -22,6 +22,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 	private $enable_debug = false;  // true if NEXTCLOUD_GFARM_DEBUG=1
 
+	public $id = NULL;
 	public $debug_traceid = NULL;
 	public $nextcloud_user = NULL;
 	public $storage_owner = NULL;
@@ -163,7 +164,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 		// required by GfarmAuth::create
 		if (! file_exists(self::GFARM_MOUNTPOINT_POOL)) {
 			try {
-				mkdir(self::GFARM_MOUNTPOINT_POOL, 0700, true);
+				@mkdir(self::GFARM_MOUNTPOINT_POOL, 0700, true);
 			} catch (Error $e) {
 			}
 			if (! file_exists(self::GFARM_MOUNTPOINT_POOL)) {
@@ -288,7 +289,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 		$recursive = false;
 		if ($this->mount && !file_exists($mountpoint)) {
 			try {
-				mkdir($mountpoint, 0700, $recursive); // may race
+				@mkdir($mountpoint, 0700, $recursive);
 			} catch (Error $e) {
 			}
 			if (! file_exists($mountpoint)) {
