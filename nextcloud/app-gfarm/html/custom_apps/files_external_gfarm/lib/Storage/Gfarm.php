@@ -23,6 +23,13 @@ class Gfarm extends \OC\Files\Storage\Local {
 	private $enable_debug = false;  // true if NEXTCLOUD_GFARM_DEBUG=1
 
 	public $id = NULL;
+	public $auth = NULL;
+	public $mount = NULL;
+	public $mount_type = NULL;
+	public $config = NULL;
+	public $arguments = NULL;
+	public $password = NULL;
+	public $url = NULL;
 	public $debug_traceid = NULL;
 	public $nextcloud_user = NULL;
 	public $storage_owner = NULL;
@@ -447,6 +454,8 @@ class Gfarm extends \OC\Files\Storage\Local {
 
 abstract class GfarmAuth {
 	public const LOCAL_USER = "www-data";
+	public $type = NULL;
+	public $gf = NULL;
 
 	// NOTE: $this->gf->mountpoint is not used yet
 	public static function create($gfarm) {
