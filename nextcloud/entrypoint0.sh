@@ -53,6 +53,12 @@ EOF
 ### reload and export environment variables
 source /nc-gfarm/config.sh
 
+# create GFARM_MOUNTPOINT_POOL directory.
+# SEE ALSO: nextcloud/app-gfarm/html/custom_apps/files_external_gfarm/lib/Storage/Gfarm.php
+GFARM_MOUNTPOINT_POOL=/gf
+mkdir -p ${GFARM_MOUNTPOINT_POOL}
+chown ${NEXTCLOUD_USER}:${NEXTCLOUD_USER} ${GFARM_MOUNTPOINT_POOL}
+
 print_dbpassword() {
     cat ${MYSQL_PASSWORD_FILE} | head -1
 }

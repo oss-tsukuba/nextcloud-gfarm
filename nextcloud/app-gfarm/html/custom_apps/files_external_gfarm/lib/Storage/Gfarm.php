@@ -18,7 +18,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	const GFARM_MOUNT = "/nc-gfarm/gfarm-mount";
 	const GFARM_UMOUNT = "fusermount -u";
 
-	public const GFARM_MOUNTPOINT_POOL = "/tmp/gf/";
+	public const GFARM_MOUNTPOINT_POOL = "/gf/";
 
 	private $enable_debug = false;  // true if NEXTCLOUD_GFARM_DEBUG=1
 
@@ -168,17 +168,10 @@ class Gfarm extends \OC\Files\Storage\Local {
 			throw $this->invalid_arg_exception("not implemented yet");
 		}
 
-		// required by GfarmAuth::create
-		if (! file_exists(self::GFARM_MOUNTPOINT_POOL)) {
-			try {
-				@mkdir(self::GFARM_MOUNTPOINT_POOL, 0700, true);
-			} catch (Error $e) {
-			}
-			if (! file_exists(self::GFARM_MOUNTPOINT_POOL)) {
-				throw $this->invalid_arg_exception("cannot create directory: " . self::GFARM_MOUNTPOINT_POOL);
-			}
-		}
-
+		// GfarmAuth::create() uses GFARM_MOUNTPOINT_POOL
+		//if (! file_exists(self::GFARM_MOUNTPOINT_POOL)) {
+		//	throw $this->invalid_arg_exception("No GFARM_MOUNTPOINT_POOL: " . self::GFARM_MOUNTPOINT_POOL);
+		//}
 		$this->auth = GfarmAuth::create($this);  // may throw exception
 
 		// mountpoint is not ready here
@@ -730,6 +723,7 @@ EOF;
 		}
 	}
 
+	// not used
 	protected function unlink($filename) {
 		if(is_file($filename) && @unlink($filename)){
 			return 0;
@@ -742,6 +736,7 @@ EOF;
 		}
 	}
 
+	// not used
 	protected function delall($filename) {
 		if (is_dir($filename) && !is_link($filename)) {
 			$entries = scandir($filename);
