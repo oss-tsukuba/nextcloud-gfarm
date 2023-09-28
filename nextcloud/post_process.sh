@@ -17,6 +17,7 @@ ${OCC} maintenance:mode --off || true
 create_mount_point()
 {
     if [ -d "${TMP_DATA_DIR}" ]; then
+        # NOTE: remove TMP_DATA_DIR
         ${SUDO_USER} rm -rf "${TMP_DATA_DIR}"
     fi
     ${SUDO_USER} mv "${DATA_DIR}" "${TMP_DATA_DIR}"
@@ -49,12 +50,14 @@ else # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
     # ${DATA_DIR} is not used.
     if [ ! -h "${DATA_DIR}" -a -d "${DATA_DIR}" ]; then
         if [ -d "${TMP_DATA_DIR}" ]; then
+            # NOTE: remove TMP_DATA_DIR
             ${SUDO_USER} rm -rf "${TMP_DATA_DIR}"
         fi
         ${SUDO_USER} mv "${DATA_DIR}" "${TMP_DATA_DIR}"
     fi
     # for compatibility, but not necessary
     ln -f -s "${LOCAL_DATA_DIR}" "${DATA_DIR}"
+    chown -h "${NEXTCLOUD_USER}:${NEXTCLOUD_USER}" "${DATA_DIR}"
 fi # NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR
 
 #cat "${MAIN_CONFIG}"  # for debug
