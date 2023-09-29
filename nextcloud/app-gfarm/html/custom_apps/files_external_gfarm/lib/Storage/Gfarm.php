@@ -449,6 +449,7 @@ abstract class GfarmAuth {
 	public const LOCAL_USER = "www-data";
 	public $type = NULL;
 	public $gf = NULL;
+	public $method = NULL;
 
 	// NOTE: $this->gf->mountpoint is not used yet
 	public static function create($gfarm) {
