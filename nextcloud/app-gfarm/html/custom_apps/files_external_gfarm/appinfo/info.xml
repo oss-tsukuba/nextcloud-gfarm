@@ -17,7 +17,7 @@
     <bugs>https://github.com/oss-tsukuba/nextcloud-gfarm/issues</bugs>
     <repository type="git">https://github.com/oss-tsukuba/nextcloud-gfarm.git</repository>
     <dependencies>
-        <nextcloud min-version="20" max-version="27"/>
+        <nextcloud min-version="20" max-version="29"/>
     </dependencies>
 
     <background-jobs>
