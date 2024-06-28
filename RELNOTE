@@ -1,3 +1,19 @@
+Release note for Nextcloud-Gfarm 2.0.0
+======================================
+
+[2024.6.28]
+
+New feature
+* support XOAUTH2 by jwt-agent
+* support uploading big files
+
+New configuration parameter
+* NEXTCLOUD_GFARM_UPLOAD_LIMIT - default is 0 (unlimited)
+
+Updated feature
+* support Nextcloud 29
+* update default version to Gfarm 2.8.4 and Gfarm2fs 1.2.21
+
 Release note for Nextcloud-Gfarm 1.0.4
 ======================================
 
