@@ -231,18 +231,20 @@ class Gfarm extends \OC\Files\Storage\Local {
 		$this->id = 'gfarm::' . sha1($method . $user . $gfarm_dir . $secure);
 	}
 
+	// https://github.com/nextcloud/server/blob/master/lib/private/Files/Storage/Local.php
 	// override
-	public function isLocal() {
+	public function isLocal(): bool {
 		return false;
 	}
 
 	// override
-	public function getId() {
+	public function getId(): string {
 		return $this->id;
 	}
 
+	// https://github.com/nextcloud/server/blob/master/lib/private/Files/Storage/Common.php
 	// override
-	public function instanceOfStorage($class) {
+	public function instanceOfStorage($class): bool {
 		if (ltrim($class, '\\') === 'OC\Files\Storage\Local') {
 			// to avoid calling rename() in moveFromStorage()
 			// when a file is deleted.
@@ -439,7 +441,7 @@ class Gfarm extends \OC\Files\Storage\Local {
 	}
 
 	// override
-	public function stat($path) {
+	public function stat($path): array|false {
 		//$this->debug("stat(" . $path . ")");
 		return parent::stat($path);
 	}

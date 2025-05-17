@@ -41,12 +41,19 @@ class AuthMechanismGfarm extends AuthMechanism {
 	protected function finish() {
 		// to recognize AuthMechanism scheme type (value is not used)
 		$scheme = $this->getScheme();
-		$this->addParameter(
-			(new DefinitionParameter('scheme_' . $scheme, 'scheme'))
-			->setType(DefinitionParameter::VALUE_HIDDEN)
-			->setFlag(DefinitionParameter::FLAG_OPTIONAL)
-			);
+		$param = new DefinitionParameter(self::SCHEME_KEY_PREFIX . $scheme, 'scheme');
+
+		if (defined('OCA\Files_External\Lib\DefinitionParameter::VALUE_HIDDEN')) {
+			$param = $param->setType(DefinitionParameter::VALUE_HIDDEN);
+		} else {
+			// Nextcloud 30.0.11 or later
+			$param = $param->setType(DefinitionParameter::VALUE_TEXT)
+				->setFlag(DefinitionParameter::FLAG_HIDDEN);
+		}
+		$param = $param->setFlag(DefinitionParameter::FLAG_OPTIONAL);
 		// NOTE: effective for all after FLAG_OPTIONAL
+
+		$this->addParameter($param);
 	}
 
 	// StorageModifierTrait
