@@ -53,7 +53,7 @@ Optional requirements in case of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
 
 ## Target Versions
 
-- Nextcloud 23 to 29
+- Nextcloud 23 to 31
 - Gfarm 2.7.21 or later
 - Gfarm 2.8.x
 
@@ -419,7 +419,7 @@ You can describe docker-compose.override.yml to change logging driver.
 - create backup (See `Backup and Restore` section)
 - edit `config.env`
   - increase `NEXTCLOUD_VERSION` by exactly 1 from the current major version
-    - to show the current version, run `show-nextcloud-version`
+    - to show the current version, run `make show-nextcloud-version`
 - run `make reborn`
 
 SEE ALSO:
