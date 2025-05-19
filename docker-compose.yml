@@ -163,7 +163,7 @@ services:
       - MYSQL_USER=nextcloud
       - MYSQL_PASSWORD_FILE=/run/secrets/db_password
       - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
-    image: mariadb:10.5
+    image: mariadb:11.4
     volumes:
       - db:/var/lib/mysql
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
