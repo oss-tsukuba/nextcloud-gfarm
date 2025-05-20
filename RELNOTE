@@ -1,3 +1,11 @@
+Release note for Nextcloud-Gfarm 2.1.1
+======================================
+
+[2025.5.20]
+
+Updated feature
+* update mariadb from 10.5 to 11.4
+
 Release note for Nextcloud-Gfarm 2.1.0
 ======================================
 
