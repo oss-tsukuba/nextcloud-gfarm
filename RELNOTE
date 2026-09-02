@@ -1,3 +1,12 @@
+Release note for Nextcloud-Gfarm 2.2.1
+======================================
+
+[NOT-RELEASED-YET]
+
+Updated feature
+* support Nextcloud 34
+* disable NEXTCLOUD_FILES_SCAN_TIME by default
+
 Release note for Nextcloud-Gfarm 2.2.0
 ======================================
 
