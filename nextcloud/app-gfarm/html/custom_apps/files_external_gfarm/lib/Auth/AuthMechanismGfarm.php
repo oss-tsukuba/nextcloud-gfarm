@@ -39,21 +39,7 @@ class AuthMechanismGfarm extends AuthMechanism {
 	}
 
 	protected function finish() {
-		// to recognize AuthMechanism scheme type (value is not used)
-		$scheme = $this->getScheme();
-		$param = new DefinitionParameter(self::SCHEME_KEY_PREFIX . $scheme, 'scheme');
-
-		if (defined('OCA\Files_External\Lib\DefinitionParameter::VALUE_HIDDEN')) {
-			$param = $param->setType(DefinitionParameter::VALUE_HIDDEN);
-		} else {
-			// Nextcloud 30.0.11 or later
-			$param = $param->setType(DefinitionParameter::VALUE_TEXT)
-				->setFlag(DefinitionParameter::FLAG_HIDDEN);
-		}
-		$param = $param->setFlag(DefinitionParameter::FLAG_OPTIONAL);
-		// NOTE: effective for all after FLAG_OPTIONAL
-
-		$this->addParameter($param);
+		// Do nothing
 	}
 
 	// StorageModifierTrait
@@ -64,24 +50,35 @@ class AuthMechanismGfarm extends AuthMechanism {
 	public function manipulateStorageConfig(StorageConfig &$storage, ?IUser $iuser = null) {
 		// $iuser (session user) is not used
 
+		$scheme = $this->getScheme();
+		$storage->setBackendOption(self::SCHEME_KEY_PREFIX . $scheme, true);
+
 		$storage->setBackendOption('manipulated', true);
 
 		$type = $storage->getType();
 		// StorageConfig::MOUNT_TYPE_*
 		$storage->setBackendOption('mount_type', $type);
 
+		// @see https://github.com/nextcloud/server/commit/1a5b545fe82ff4d21aac57762ae4a2a3082a0b11
+		$personalType = 2;  // From html/apps/files_external/lib/Lib/StorageConfig.php
+		if (defined(StorageConfig::class . '::MOUNT_TYPE_PERSONAL')) {  // For NC 29+
+			$personalType = StorageConfig::MOUNT_TYPE_PERSONAL;
+		} elseif (defined(StorageConfig::class . '::MOUNT_TYPE_PERSONAl')) {
+			$personalType = StorageConfig::MOUNT_TYPE_PERSONAl;
+		}
+
 		$owner = self::ADMIN_NAME;
-		if ($type === StorageConfig::MOUNT_TYPE_PERSONAl) {
+		if ($type === $personalType) {
 			$values = $storage->getApplicableUsers();
 			if (count($values) > 0) {
 				$owner = $values[0];
 			} else {
 				throw new \UnexpectedValueException(
-					'no owner of StorageConfig::MOUNT_TYPE_PERSONAl');
+					'no owner of StorageConfig::MOUNT_TYPE_PERSONAL');
 			}
 			if ($owner === self::ADMIN_NAME) {
 				throw new \UnexpectedValueException(
-					'invalid owner of StorageConfig::MOUNT_TYPE_PERSONAl');
+					'invalid owner of StorageConfig::MOUNT_TYPE_PERSONAL');
 			}
 		}
 		$storage->setBackendOption('storage_owner', $owner);

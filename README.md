@@ -53,7 +53,7 @@ Optional requirements in case of NEXTCLOUD_GFARM_USE_GFARM_FOR_DATADIR=1:
 
 ## Target Versions
 
-- Nextcloud 23 to 33
+- Nextcloud 23 to 34
 - Gfarm 2.7.21 or later
 - Gfarm 2.8.x
 
@@ -345,7 +345,7 @@ Two types are available:
   - it does not back up certs, /var/log of nextcloud and other logs
   - it does not back up `config.env` and `secrets/*`
 
-Nextcloud cannot be accessed during backup.
+While a backup is in progress, Nextcloud enters maintenance mode and becomes unavailable to users.
 
 ### Backup by LOCAL-BACKUP
 
@@ -542,7 +542,21 @@ OIDC_LOGIN_DEFAULT_QUOTA=1000000000
 - or create `template-orverride.env` for your environment, and run `make init`
 - To use apt-cacher-ng, add "jwt-server,www.nextcloud.com,www.startpage.com,www.eff.org,www.edri.org" to no_proxy
 
-- How to update Nextcloud-Gfarm version
+- How to change Nextcloud-Gfarm version
   - update `version.sh`
   - `git tag -a <VERSION> -m 'v<VERSION>'`
   - `git push origin <VERSION>`
+
+- How to upgrade Nextcloud version
+  - update `template-common.env`:`NEXTCLOUD_VERSION`
+  - update `nextcloud/app-gfarm/html/custom_apps/files_external_gfarm/appinfo/info.xml`:`max-version`
+  - operate `Upgrade to a newer Nextcloud` section
+  - test Nextcloud-Gfarm
+    - check `Administoration settings` -> `Overview`
+    - check `External storage` -> `Add external storage` -> `Gfarm`
+      - add new Gfarm folder
+      - change the existing Gfarm folder (chgange Gfarm directory)
+      - check if the old directory was automatically unmounted (use `df` command)
+    - check logs (`Logging`)
+  - and, set up a new environment and verify operations
+  - If modified, set up a new environment and verify operation on previous versions to check compatibility
