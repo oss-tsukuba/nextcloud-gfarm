@@ -544,6 +544,7 @@ OIDC_LOGIN_DEFAULT_QUOTA=1000000000
 
 - How to change Nextcloud-Gfarm version
   - update `version.sh`
+  - update `nextcloud/app-gfarm/html/custom_apps/files_external_gfarm/appinfo/info.xml`:`version`
   - `git tag -a <VERSION> -m 'v<VERSION>'`
   - `git push origin <VERSION>`
 
