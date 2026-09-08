@@ -49,11 +49,7 @@ cat "${WORKDIR}/${VERSION_FILE_NAME}"
 exist_error() {
     FILE="$1"
     if [ -d "${FILE}" ]; then
-        num=$(ls -1 "${FILE}" | wc -l)
-        if [ ${num} -gt 0 ]; then
-            echo "ERROR: ${FILE}: not empty directory"
-            exit 1
-        fi
+        echo "ERROR: ${FILE}: directory exists"
     elif [ -e "${FILE}" ]; then
         echo "ERROR: ${FILE}: file exists"
         exit 1

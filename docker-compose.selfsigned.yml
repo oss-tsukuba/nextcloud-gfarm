@@ -10,6 +10,9 @@ services:
       - SSL_CSR=/certs/${SERVER_NAME}.csr
       - SSL_CERT=/certs/${SERVER_NAME}.crt
       - SSL_DNS=${SERVER_NAME}
+      - CA_EXPIRE=${CA_EXPIRE:-3650}
+      - SSL_EXPIRE=${SSL_EXPIRE:-3650}
+      - SSL_SIZE=${SSL_SIZE:-4096}
     volumes:
       - certs:/certs
     network_mode: none

@@ -4,7 +4,7 @@
     <name>External Storage: Gfarm</name>
     <summary>Integrate Gfarm as an external storage</summary>
     <description><![CDATA[Gfarm Backend for External storage support.]]></description>
-    <version>2.2.0</version>
+    <version>2.2.1</version>
     <licence>agpl</licence>
     <author>oss-tsukuba</author>
     <namespace>Files_external_gfarm</namespace>
@@ -17,7 +17,7 @@
     <bugs>https://github.com/oss-tsukuba/nextcloud-gfarm/issues</bugs>
     <repository type="git">https://github.com/oss-tsukuba/nextcloud-gfarm.git</repository>
     <dependencies>
-        <nextcloud min-version="20" max-version="33"/>
+        <nextcloud min-version="20" max-version="34"/>
     </dependencies>
 
     <background-jobs>
