@@ -40,6 +40,11 @@ LOG_DEBUG()
     DEBUG "[${trace_id}] $@"
 }
 
+LOG_WARN()
+{
+    WARN "[${trace_id}] $@"
+}
+
 LOG_ERR()
 {
     # stdout for Exception
@@ -146,8 +151,8 @@ fi
 
 lock_expired()
 {
-    min=1
-    num=$(find "$lockfile" -maxdepth 0 -type d -mmin +${min} > /dev/null 2>&1 | wc -l)
+    min=1  # find rounds mmin down, delaying the match beyond the nominal threshold.
+    num=$(find "$lockfile" -maxdepth 0 -type d -mmin +${min} 2> /dev/null | wc -l)
     if [ -e "$lockfile" -a  $num -eq 1 ]; then
         return 0  # expired
     fi
@@ -156,8 +161,18 @@ lock_expired()
 
 lock_and_wait()
 {
+    max_wait=120
+    # Bash's SECONDS variable tracks elapsed seconds since the shell started.
+    wait_start=$SECONDS
     while ! mkdir "$lockfile" > /dev/null 2>&1; do
         if lock_expired; then
+            LOG_WARN "stale lock may be left behind: lockfile=${lockfile}; continuing without lock"
+            # Treat a sufficiently old lock directory as a leftover lock and stop waiting.
+            break
+        fi
+        if [ $((SECONDS - wait_start)) -ge ${max_wait} ]; then
+            LOG_WARN "lock wait timed out after ${max_wait} seconds: lockfile=${lockfile}; continue without lock"
+            # Fallback timeout if stale-lock detection does not match.
             break
         fi
         LOG_DEBUG "wait for other mount"
