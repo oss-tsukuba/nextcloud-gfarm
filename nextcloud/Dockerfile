@@ -27,9 +27,9 @@ RUN echo ${NEXTCLOUD_VERSION} \
   libpq-dev \
   libglobus-gssapi-gsi-dev \
   pkg-config \
-  libfuse-dev \
+  libfuse3-dev \
   libacl1-dev \
-  fuse \
+  fuse3 \
   globus-gsi-cert-utils-progs \
   globus-proxy-utils \
   myproxy \

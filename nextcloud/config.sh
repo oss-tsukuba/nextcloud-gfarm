@@ -117,8 +117,8 @@ TMP_DATA_DIR="${DATA_DIR}.bak"
 LOGDIR="/var/log/nextcloud"
 NEXTCLOUD_LOG_PATH="${LOGDIR}/nextcloud.log"
 
-GFARM2FS_DISABLE_MT="-s"
-MNT_OPT="${GFARM2FS_DISABLE_MT} -o loglevel=${GFARM2FS_LOGLEVEL},nonempty,modules=subdir,entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache,big_writes"
+GFARM2FS_DISABLE_MT=""
+MNT_OPT="${GFARM2FS_DISABLE_MT} -o loglevel=${GFARM2FS_LOGLEVEL},modules=subdir,entry_timeout=${FUSE_ENTRY_TIMEOUT},negative_timeout=${FUSE_NEGATIVE_TIMEOUT},attr_timeout=${FUSE_ATTR_TIMEOUT},gfs_stat_timeout=${GFARM_ATTR_CACHE_TIMEOUT},auto_cache"
 
 NEXTCLOUD_USER="www-data"
 NEXTCLOUD_USER_ID=$(id -u ${NEXTCLOUD_USER})
